@@ -3,114 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brawl Stars - Ranked Leaderboard</title>
-    <!-- TailwindCSS for the clean Demonlist dark theme layout -->
+    <title>Brawl Stars Ranked Leaderboard</title>
+    <!-- TailwindCSS framework for styling -->
     <script src="https://tailwindcss.com"></script>
-    <!-- PapaParse library to smoothly parse your CSV data -->
+    <!-- PapaParse to read the CSV dataset -->
     <script src="https://cloudflare.com"></script>
     <style>
         body {
-            background-color: #0b111e; /* Ultra-dark background inspired by Demonlist */
-            color: #e2e8f0;
+            background-color: #080c14; /* Core Demonlist background color */
+            color: #afb3b9;
         }
+        /* Custom scrollbar matching the dark theme layout */
+        ::-webkit-scrollbar { wht: 8px; width: 8px; }
+        ::-webkit-scrollbar-track { background: #080c14; }
+        ::-webkit-scrollbar-thumb { background: #1b273d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #253754; }
     </style>
 </head>
-<body class="font-sans antialiased min-h-screen pb-12">
+<body class="font-sans antialiased min-h-screen flex flex-col md:flex-row">
 
-    <!-- NAVIGATION BAR -->
-    <nav class="bg-[#0f172a] border-b border-gray-800 px-6 py-4 flex items-center justify-between shadow-lg">
-        <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white shadow-md shadow-blue-500/20">🏆</div>
-            <span class="font-black tracking-wider text-xl uppercase text-white">BRAWL RANKED LIST</span>
+    <!-- LEFT SIDEBAR PANEL (Exact Demonlist Navigation Geometry) -->
+    <aside class="w-full md:w-80 bg-[#0c1220] border-b md:border-b-0 md:border-r border-gray-900/60 p-6 flex flex-col justify-between shrink-0">
+        <div>
+            <!-- Header Brand -->
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-9 h-9 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-xl flex items-center justify-center font-black text-black shadow-lg shadow-amber-500/10">⚡</div>
+                <div>
+                    <h1 class="font-black tracking-wider text-md uppercase text-white leading-none">BRAWL LIST</h1>
+                    <span class="text-[10px] tracking-widest uppercase font-bold text-gray-500">Ranked Leaderboard</span>
+                </div>
+            </div>
+
+            <!-- Stats Overview Card -->
+            <div class="bg-[#11192b] border border-gray-900/50 rounded-xl p-4 mb-6">
+                <span class="block text-[10px] uppercase tracking-wider font-bold text-gray-500">System Mode</span>
+                <span class="text-sm font-black text-blue-400 uppercase tracking-wide">Pro Tier Elo (11,250+)</span>
+                <div class="mt-3 pt-3 border-t border-gray-800/40 flex justify-between text-xs">
+                    <span class="text-gray-400">Tracked Seasons:</span>
+                    <span class="font-bold text-white font-mono">Mar 2025 - Jul 2026</span>
+                </div>
+            </div>
+
+            <!-- Real-time Alphanumeric Search Engine -->
+            <div class="relative">
+                <input type="text" id="searchBar" onkeyup="filterPlayers()" placeholder="Search player or tag..." 
+                       class="w-full bg-[#11192b] border border-gray-900 text-sm rounded-xl px-4 py-3 pl-10 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
+                <span class="absolute left-3.5 top-3.5 text-xs opacity-40">🔍</span>
+            </div>
         </div>
-        <div class="text-sm text-gray-400 font-medium">All-Time Pro Seasons</div>
-    </nav>
 
-    <!-- MAIN DASHBOARD AREA -->
-    <main class="max-w-4xl mx-auto px-4 mt-8">
-        
-        <!-- DYNAMIC SEARCH BAR -->
-        <div class="mb-6 relative">
-            <input type="text" id="searchBar" onkeyup="filterPlayers()" placeholder="Search player name or tag..." 
-                   class="w-full bg-[#131c2e] border border-gray-800 rounded-xl px-5 py-4 pl-12 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-inner transition-all">
-            <span class="absolute left-4 top-4 text-gray-500">🔍</span>
+        <!-- Footer Module -->
+        <div class="mt-8 pt-4 border-t border-gray-900/40 text-[10px] text-gray-600 font-mono tracking-tight text-center md:text-left">
+            Inspired by Geometry Dash Demonlist<br>© 2026 Competitive Analytics Engine
+        </div>
+    </aside>
+
+    <!-- RIGHT CONTAINER MODULE (Leaderboard Content Feed) -->
+    <main class="flex-1 p-6 md:p-10 max-w-4xl overflow-y-auto h-screen">
+        <div class="mb-6 flex items-center justify-between">
+            <h2 class="text-xs uppercase tracking-widest font-black text-gray-400">Active Structural Standings</h2>
+            <span id="playerCount" class="text-xs font-mono font-bold bg-[#11192b] border border-gray-900 text-gray-400 px-3 py-1 rounded-md">0 Players Registered</span>
         </div>
 
-        <!-- LEADERBOARD DYNAMIC CARDS CONTAINER -->
-        <div id="leaderboard" class="space-y-4">
-            <!-- CSV lines inject here automatically as Demonlist style layout components -->
-            <div class="text-center text-gray-500 py-12 animate-pulse">Loading competitive ranking database...</div>
+        <!-- Dynamic List Container -->
+        <div id="leaderboard" class="space-y-2.5">
+            <div class="text-center text-sm text-gray-600 py-12 animate-pulse font-mono uppercase tracking-wider">Syncing tracking database grid...</div>
         </div>
     </main>
 
-    <!-- JAVASCRIPT LOGIC ENGINE -->
+    <!-- PROCESSING LOGIC ENGINE -->
     <script>
         let allPlayers = [];
 
-        // 1. Load and parse local leaderboard dataset file
         Papa.parse('leaderboard.csv', {
             download: true,
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
                 allPlayers = results.data;
+                document.getElementById('playerCount').innerText = `${allPlayers.length} Players Registered`;
                 displayLeaderboard(allPlayers);
             },
-            error: function(err) {
+            error: function() {
                 document.getElementById('leaderboard').innerHTML = 
-                    `<div class="text-center text-red-500 bg-red-950/30 border border-red-900 rounded-xl p-6">
-                        Error: Failed to fetch 'leaderboard.csv'. Please verify that the data file is placed in the exact same workspace directory.
+                    `<div class="text-center text-xs font-mono uppercase tracking-wider text-red-400 bg-red-950/20 border border-red-900/40 rounded-xl p-6">
+                        Data Stream Error: Failed to target 'leaderboard.csv'. Check root folder paths.
                      </div>`;
             }
         });
 
-        // 2. Build the structural dynamic UI horizontal card modules
         function displayLeaderboard(players) {
             const container = document.getElementById('leaderboard');
             container.innerHTML = '';
 
             if (players.length === 0) {
-                container.innerHTML = '<div class="text-center text-gray-500 py-8">No matching records found.</div>';
+                container.innerHTML = '<div class="text-center text-xs font-mono uppercase tracking-wider text-gray-600 py-8">No matrix records matched query</div>';
                 return;
             }
 
             players.forEach((player, index) => {
-                // Maps structural definitions smoothly against your French active Google Sheets columns
-                const pseudo = player['Pseudo'] || 'Unknown Player';
-                const tag = player['Tag Joueur'] || '';
+                const pseudo = player['Pseudo'] || 'Unknown Operator';
+                const tag = player['Tag Joueur'] || '#000000';
                 const points = player['Points Total'] || '0';
                 const peakRank = player['Meilleur Rang'] || '-';
 
+                // Assigning podium aesthetics matching standard tier list badges
+                let rankBadgeColor = "text-blue-500 bg-blue-950/20 border-blue-900/30";
+                let nameColor = "text-white";
+                
+                if (index === 0) {
+                    rankBadgeColor = "text-yellow-400 bg-yellow-950/30 border-yellow-700/40 font-black";
+                    nameColor = "text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-400 to-yellow-200 font-extrabold";
+                } else if (index === 1) {
+                    rankBadgeColor = "text-slate-300 bg-slate-900/40 border-slate-700/40";
+                    nameColor = "text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-slate-300 font-bold";
+                } else if (index === 2) {
+                    rankBadgeColor = "text-amber-600 bg-amber-950/20 border-amber-900/30";
+                    nameColor = "text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 font-bold";
+                }
+
                 const card = document.createElement('div');
-                card.className = "card-item bg-[#131c2e] border border-gray-800/80 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-5 hover:border-gray-700 hover:bg-[#162238] transition-all shadow-md group";
+                card.className = "bg-[#0c1220] border border-gray-900/60 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 hover:border-gray-800/80 hover:bg-[#101729] transition-all duration-150 group";
                 
                 card.innerHTML = `
-                    <div class="flex items-center space-x-5 w-full sm:w-auto">
-                        <!-- Simulated illustrated block asset matching Demonlist custom headers -->
-                        <div class="w-24 h-16 bg-[#0b111e] rounded-lg border border-gray-800 flex items-center justify-center text-xs text-gray-600 font-bold tracking-tight relative overflow-hidden group-hover:border-gray-700 transition-colors shrink-0">
-                            <span class="z-10 opacity-40 uppercase tracking-tighter">Ranked Pro</span>
-                            <div class="absolute inset-0 bg-gradient-to-tr from-blue-600/5 to-transparent"></div>
+                    <div class="flex items-center space-x-4 w-full sm:w-auto">
+                        <!-- Numerical Badge -->
+                        <div class="w-10 h-10 rounded-lg border flex items-center justify-center text-xs font-mono ${rankBadgeColor} shrink-0 shadow-inner">
+                            ${index + 1}
                         </div>
                         
-                        <!-- Player Metadata Block -->
+                        <!-- Profile Metadata -->
                         <div>
-                            <div class="flex items-baseline space-x-2">
-                                <span class="text-sm font-bold text-blue-500">#${index + 1}</span>
-                                <h2 class="text-lg font-black text-white tracking-wide group-hover:text-blue-400 transition-colors">${pseudo}</h2>
-                            </div>
-                            <p class="text-xs font-mono text-gray-500 mt-0.5">${tag}</p>
+                            <h2 class="text-sm font-bold tracking-wide transition-colors ${nameColor} group-hover:text-blue-400">${pseudo}</h2>
+                            <p class="text-[10px] font-mono text-gray-600 tracking-tight mt-0.5">${tag}</p>
                         </div>
                     </div>
 
-                    <!-- Strategic Metric Fields (Peak Standing and Cumulative Point Scores) -->
-                    <div class="flex items-center space-x-8 text-right w-full sm:w-auto justify-between sm:justify-end border-t border-gray-800/50 sm:border-t-0 pt-3 sm:pt-0">
+                    <!-- Metric Blocks -->
+                    <div class="flex items-center space-x-8 text-right w-full sm:w-auto justify-between sm:justify-end border-t border-gray-950 pt-3 sm:pt-0 sm:border-t-0">
                         <div class="text-left sm:text-right">
-                            <span class="block text-xs uppercase tracking-wider font-bold text-gray-400">Peak Rank</span>
-                            <span class="text-sm font-black text-amber-500 font-mono">Top ${peakRank}</span>
+                            <span class="block text-[9px] uppercase tracking-widest font-bold text-gray-600">Peak Standing</span>
+                            <span class="text-xs font-bold text-amber-500/90 font-mono">Top ${peakRank}</span>
                         </div>
                         <div>
-                            <span class="block text-xs uppercase tracking-wider font-bold text-gray-400">Total Points</span>
-                            <span class="text-xl font-black text-emerald-400 font-mono">${points} <span class="text-xs font-bold text-emerald-600">pts</span></span>
+                            <span class="block text-[9px] uppercase tracking-widest font-bold text-gray-600">Score Weight</span>
+                            <span class="text-sm font-black text-emerald-400 font-mono tracking-tight">${points} <span class="text-[10px] font-bold text-emerald-600">PTS</span></span>
                         </div>
                     </div>
                 `;
@@ -118,7 +155,6 @@
             });
         }
 
-        // 3. Real-time alphanumeric string pattern evaluation (Instant Search Filter)
         function filterPlayers() {
             const query = document.getElementById('searchBar').value.toLowerCase();
             const matchingPlayers = allPlayers.filter(player => {
