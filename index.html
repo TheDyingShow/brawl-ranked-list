@@ -86,6 +86,7 @@
         Papa.parse('leaderboard.csv', {
             download: true,
             header: true,
+            delimiter: ";",
             skipEmptyLines: true,
             complete: function(results) {
                 allPlayers = results.data;
