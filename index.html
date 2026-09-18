@@ -16,18 +16,15 @@
     </style>
 </head>
 <body class="font-sans antialiased min-h-screen flex flex-col md:flex-row">
-
-    <!-- FIXED LEFT SIDEBAR (Demonlist Geometry) -->
     <aside class="w-full md:w-80 bg-[#090f1c] border-b md:border-b-0 md:border-r border-slate-900 p-6 flex flex-col justify-between shrink-0">
         <div>
             <div class="flex items-center space-x-3 mb-8">
-                <div class="w-9 h-9 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-xl flex items-center justify-center font-black text-black shadow-lg shadow-amber-500/20">⚡</div>
+                <div class="w-9 h-9 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-xl flex items-center justify-center font-black text-black shadow-lg">⚡</div>
                 <div>
                     <h1 class="font-black tracking-wider text-md uppercase text-white leading-none">BRAWL LIST</h1>
                     <span class="text-[10px] tracking-widest uppercase font-bold text-slate-500">Ranked Leaderboard</span>
                 </div>
             </div>
-
             <div class="bg-[#0f172a] border border-slate-900 rounded-xl p-4 mb-6 shadow-inner">
                 <span class="block text-[9px] uppercase tracking-widest font-black text-slate-500">System Parameters</span>
                 <span class="text-xs font-bold text-blue-400 uppercase tracking-wide">Pro Tier Elo (11,250+)</span>
@@ -36,43 +33,25 @@
                     <span class="font-bold text-white font-mono">2025 - 2026</span>
                 </div>
             </div>
-
-            <!-- Live Search Bar -->
             <div class="relative mb-6">
-                <input type="text" id="searchBar" onkeyup="searchTrigger()" placeholder="Search player or tag..." 
-                       class="w-full bg-[#0f172a] border border-slate-950 text-xs rounded-xl px-4 py-3.5 pl-10 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-inner">
+                <input type="text" id="searchBar" onkeyup="searchTrigger()" placeholder="Search player or tag..." class="w-full bg-[#0f172a] border border-slate-950 text-xs rounded-xl px-4 py-3.5 pl-10 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all shadow-inner">
                 <span class="absolute left-3.5 top-3.5 text-xs opacity-30">🔍</span>
             </div>
         </div>
-
-        <div class="mt-8 pt-4 border-t border-slate-900 text-[10px] text-slate-600 font-mono tracking-tight text-center md:text-left">
-            Inspired by Geometry Dash Demonlist<br>© 2026 Competitive Analytics
-        </div>
+        <div class="mt-8 pt-4 border-t border-slate-900 text-[10px] text-slate-600 font-mono tracking-tight text-center md:text-left">Inspired by Geometry Dash Demonlist<br>© 2026 Competitive Analytics</div>
     </aside>
-
-    <!-- RIGHT CONTAINER FEED -->
     <main class="flex-1 p-6 md:p-10 max-w-4xl flex flex-col justify-between min-h-screen">
         <div>
             <div class="mb-6 flex items-center justify-between">
                 <h2 class="text-xs uppercase tracking-widest font-black text-slate-400">Standings Database Matrix</h2>
                 <span id="playerCount" class="text-[11px] font-mono font-bold bg-[#090f1c] border border-slate-900 text-slate-400 px-3 py-1 rounded-md">0 Matrix Units</span>
             </div>
-
-            <!-- Grid Container -->
-            <div id="leaderboard" class="space-y-2">
-                <!-- Data injection point -->
-            </div>
+            <div id="leaderboard" class="space-y-2"></div>
         </div>
-
-        <!-- PAGINATION BUTTONS MODULE -->
         <div class="mt-8 pt-6 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono">
-            <button id="btnPrev" onclick="changePage(-1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-4 py-2.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                &larr; Previous 50
-            </button>
+            <button id="btnPrev" onclick="changePage(-1)" class="bg-[#090f1c] border border-slate-800 text-white px-4 py-2.5 rounded-lg disabled:opacity-30 transition-all">&larr; Previous 50</button>
             <span id="pageIndicator" class="text-slate-500 font-bold">Page 1 of 1</span>
-            <button id="btnNext" onclick="changePage(1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-4 py-2.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                Next 50 &rarr;
-            </button>
+            <button id="btnNext" onclick="changePage(1)" class="bg-[#090f1c] border border-slate-800 text-white px-4 py-2.5 rounded-lg disabled:opacity-30 transition-all">Next 50 &rarr;</button>
         </div>
     </main>
 
@@ -88,43 +67,32 @@
             skipEmptyLines: true,
             complete: function(results) {
                 var rawRows = results.data;
-                
                 for (var i = 0; i < rawRows.length; i++) {
                     var row = rawRows[i];
                     var pseudo = row['Username'] || row['username'] || 'Unknown Operator';
                     var tag = row['Tag'] || row['tag'] || '#000000';
                     var points = row['Points'] || row['points'] || '0';
                     var peakRank = row['Best Placement'] || row['best placement'] || '-';
-
                     if (tag && tag.indexOf('#') !== -1) {
-                        allPlayers.push({
-                            pseudo: pseudo,
-                            tag: tag,
-                            points: points,
-                            peakRank: peakRank
-                        });
+                        allPlayers.push({ pseudo: pseudo, tag: tag, points: points, peakRank: peakRank });
                     }
                 }
-                
                 filteredPlayers = allPlayers.slice(0);
                 document.getElementById('playerCount').innerText = allPlayers.length + " Records Loaded";
                 updatePageData();
             },
             error: function() {
-                document.getElementById('leaderboard').innerHTML = 
-                    "<div class='text-center text-xs font-mono uppercase tracking-wider text-red-400 bg-red-950/10 border border-red-900/30 rounded-xl p-6'>System Link Failure: 'leaderboard.csv' data file asset not detected at root path.</div>";
+                document.getElementById('leaderboard').innerHTML = "<div class='text-center text-xs font-mono uppercase text-red-400 bg-red-950/10 border border-red-900/30 rounded-xl p-6'>System Link Failure: 'leaderboard.csv' asset not found.</div>";
             }
         });
 
         function displayPage(pageData, startIndex) {
             var container = document.getElementById('leaderboard');
             container.innerHTML = '';
-
             if (pageData.length === 0) {
-                container.innerHTML = "<div class='text-center text-xs font-mono uppercase tracking-wider text-slate-600 py-8'>No records matched query schema</div>";
+                container.innerHTML = "<div class='text-center text-xs font-mono text-slate-600 py-8'>No records matched query schema</div>";
                 return;
             }
-
             for (var index = 0; index < pageData.length; index++) {
                 var globalIndex = startIndex + index;
                 var player = pageData[index];
@@ -132,10 +100,8 @@
                 var tag = player.tag;
                 var points = player.points;
                 var peakRank = player.peakRank;
-
                 var badgeStyle = "text-slate-400 bg-slate-950/40 border-slate-900";
                 var textStyle = "text-slate-200";
-
                 if (globalIndex === 0) {
                     badgeStyle = "text-yellow-400 bg-yellow-950/20 border-yellow-700/30 font-black shadow-md";
                     textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-400 to-yellow-100 font-black";
@@ -146,54 +112,36 @@
                     badgeStyle = "text-amber-600 bg-amber-950/20 border-amber-900/30 font-bold";
                     textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-amber-100 to-amber-400 font-bold";
                 }
-
                 var card = document.createElement('div');
                 card.className = "demon-card rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all duration-150 group";
-                
-                card.innerHTML = 
-                    "<div class='flex items-center space-x-4 w-full sm:w-auto'>" +
-                        "<div class='w-9 h-9 rounded-lg border flex items-center justify-center text-xs font-mono " + badgeStyle + " shrink-0'>" + (globalIndex + 1) + "</div>" +
-                        "<div>" +
-                            "<h2 class='text-sm font-bold tracking-wide transition-colors " + textStyle + " group-hover:text-blue-400'>" + pseudo + "</h2>" +
-                            "<p class='text-[10px] font-mono text-slate-600 tracking-tight mt-0.5'>" + tag + "</p>" +
-                        "</div>" +
-                    "</div>" +
+                card.innerHTML = "<div class='flex items-center space-x-4 w-full sm:w-auto'>" +
+                    "<div class='w-9 h-9 rounded-lg border flex items-center justify-center text-xs font-mono " + badgeStyle + " shrink-0'>" + (globalIndex + 1) + "</div>" +
+                    "<div><h2 class='text-sm font-bold tracking-wide transition-colors " + textStyle + " group-hover:text-blue-400'>" + pseudo + "</h2>" +
+                    "<p class='text-[10px] font-mono text-slate-600 tracking-tight mt-0.5'>" + tag + "</p></div></div>" +
                     "<div class='flex items-center space-x-8 text-right w-full sm:w-auto justify-between sm:justify-end border-t border-slate-950 pt-3 sm:pt-0 sm:border-t-0'>" +
-                        "<div class='text-left sm:text-right'>" +
-                            "<span class='block text-[8px] uppercase tracking-widest font-bold text-gray-600'>Peak Standing</span>" +
-                            "<span class='text-xs font-bold text-amber-500/90 font-mono'>Top " + peakRank + "</span>" +
-                        "</div>" +
-                        "<div>" +
-                            "<span class='block text-[8px] uppercase tracking-widest font-bold text-gray-600'>Score Weight</span>" +
-                            "<span class='text-xs font-black text-emerald-400 font-mono'>" + points + " <span class='text-[9px] text-emerald-600'>PTS</span></span>" +
-                        "</div>" +
-                    "</div>";
-                
+                    "<div class='text-left sm:text-right'><span class='block text-[8px] uppercase tracking-widest font-bold text-gray-600'>Peak Standing</span>" +
+                    "<span class='text-xs font-bold text-amber-500/90 font-mono'>Top " + peakRank + "</span></div>" +
+                    "<div><span class='block text-[8px] uppercase tracking-widest font-bold text-gray-600'>Score Weight</span>" +
+                    "<span class='text-xs font-black text-emerald-400 font-mono'>" + points + " <span class='text-[9px] text-emerald-600'>PTS</span></span></div></div>";
                 container.appendChild(card);
             }
         }
-
         function updatePageData() {
             var totalPages = Math.ceil(filteredPlayers.length / recordsPerPage) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
-
             var startIndex = (currentPage - 1) * recordsPerPage;
             var endIndex = startIndex + recordsPerPage;
             var sliceData = filteredPlayers.slice(startIndex, endIndex);
-
             displayPage(sliceData, startIndex);
-
             document.getElementById('pageIndicator').innerText = "Page " + currentPage + " of " + totalPages;
             document.getElementById('btnPrev').disabled = (currentPage === 1);
             document.getElementById('btnNext').disabled = (currentPage === totalPages);
         }
-
         function changePage(direction) {
             currentPage += direction;
             updatePageData();
         }
-
         function searchTrigger() {
             var query = document.getElementById('searchBar').value.toLowerCase();
             filteredPlayers = allPlayers.filter(function(player) {
