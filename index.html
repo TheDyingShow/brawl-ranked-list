@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brawl Stars Ranked Leaderboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://tailwindcss.com"></script>
+    <script src="https://cloudflare.com"></script>
     <style>
         body { background-color: #060a12; color: #94a3b8; }
         ::-webkit-scrollbar { width: 6px; }
@@ -60,7 +60,7 @@
 
             <!-- Grid Container -->
             <div id="leaderboard" class="space-y-2">
-                <!-- Javascript maps rows here dynamically -->
+                <!-- Data injection point -->
             </div>
         </div>
 
@@ -75,30 +75,48 @@
             </button>
         </div>
     </main>
-
+    
     <script>
         let allPlayers = [];
         let filteredPlayers = [];
         let currentPage = 1;
         const recordsPerPage = 50;
 
-        // Fetch CSV Dataset with automated casing fallback security
         Papa.parse('leaderboard.csv', {
             download: true,
-            header: true,
-            delimiter: ";",
+            header: false,
             skipEmptyLines: true,
             complete: function(results) {
-                allPlayers = results.data;
+                const rawRows = results.data;
+                
+                if (rawRows.length > 5) {
+                    const headers = rawRows[4]; // Row 5 (index 4) contains our clean column labels
+                    
+                    const usernameIndex = headers.indexOf('Username');
+                    const tagIndex = headers.indexOf('Tag');
+                    const pointsIndex = headers.indexOf('Points');
+                    const bestPlacementIndex = headers.indexOf('Best Placement');
+
+                    for (let i = 5; i < rawRows.length; i++) {
+                        const row = rawRows[i];
+                        if (row[tagIndex] && row[tagIndex].includes('#')) {
+                            allPlayers.push({
+                                pseudo: row[usernameIndex] || 'Unknown Operator',
+                                tag: row[tagIndex] || '#000000',
+                                points: row[pointsIndex] || '0',
+                                peakRank: row[bestPlacementIndex] || '-'
+                            });
+                        }
+                    }
+                }
+                
                 filteredPlayers = [...allPlayers];
                 document.getElementById('playerCount').innerText = `${allPlayers.length} Records Loaded`;
                 updatePageData();
             },
             error: function() {
                 document.getElementById('leaderboard').innerHTML = 
-                    `<div class="text-center text-xs font-mono uppercase tracking-wider text-red-400 bg-red-950/10 border border-red-900/30 rounded-xl p-6">
-                        System Link Failure: 'leaderboard.csv' data file asset not detected at root path.
-                     </div>`;
+                    `<div class="text-center text-xs font-mono uppercase tracking-wider text-red-400 bg-red-950/10 border border-red-900/30 rounded-xl p-6">System Link Failure: 'leaderboard.csv' data file asset not detected at root path.</div>`;
             }
         });
 
@@ -107,24 +125,22 @@
             container.innerHTML = '';
 
             if (pageData.length === 0) {
-                container.innerHTML = '<div class="text-center text-xs font-mono uppercase tracking-wider text-slate-600 py-8">No records matched query schema</div>';
+                container.innerHTML = `<div class="text-center text-xs font-mono uppercase tracking-wider text-slate-600 py-8">No records matched query schema</div>`;
                 return;
             }
 
             pageData.forEach((player, index) => {
                 const globalIndex = startIndex + index;
-                
-                // Flexible mapping structure supports structural sheet variations
-                const pseudo = player['Pseudo'] || player['pseudo'] || player['Player'] || 'Unknown Operator';
-                const tag = player['Tag Joueur'] || player['tag joueur'] || player['Tag'] || '#000000';
-                const points = player['Points Total'] || player['points total'] || '0';
-                const peakRank = player['Meilleur Rang'] || player['meilleur rang'] || '-';
+                const pseudo = player.pseudo;
+                const tag = player.tag;
+                const points = player.points;
+                const peakRank = player.peakRank;
 
                 let badgeStyle = "text-slate-400 bg-slate-950/40 border-slate-900";
                 let textStyle = "text-slate-200";
 
                 if (globalIndex === 0) {
-                    badgeStyle = "text-yellow-400 bg-yellow-950/20 border-yellow-700/30 font-black shadow-md shadow-yellow-500/5";
+                    badgeStyle = "text-yellow-400 bg-yellow-950/20 border-yellow-700/30 font-black shadow-md";
                     textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-400 to-yellow-100 font-black";
                 } else if (globalIndex === 1) {
                     badgeStyle = "text-slate-300 bg-slate-900/30 border-slate-700/30 font-bold";
@@ -139,9 +155,7 @@
                 
                 card.innerHTML = `
                     <div class="flex items-center space-x-4 w-full sm:w-auto">
-                        <div class="w-9 h-9 rounded-lg border flex items-center justify-center text-xs font-mono ${badgeStyle} shrink-0">
-                            ${globalIndex + 1}
-                        </div>
+                        <div class="w-9 h-9 rounded-lg border flex items-center justify-center text-xs font-mono ${badgeStyle} shrink-0">${globalIndex + 1}</div>
                         <div>
                             <h2 class="text-sm font-bold tracking-wide transition-colors ${textStyle} group-hover:text-blue-400">${pseudo}</h2>
                             <p class="text-[10px] font-mono text-slate-600 tracking-tight mt-0.5">${tag}</p>
@@ -149,11 +163,11 @@
                     </div>
                     <div class="flex items-center space-x-8 text-right w-full sm:w-auto justify-between sm:justify-end border-t border-slate-950 pt-3 sm:pt-0 sm:border-t-0">
                         <div class="text-left sm:text-right">
-                            <span class="block text-[8px] uppercase tracking-widest font-bold text-slate-600">Peak Standing</span>
+                            <span class="block text-[8px] uppercase tracking-widest font-bold text-gray-600">Peak Standing</span>
                             <span class="text-xs font-bold text-amber-500/90 font-mono">Top ${peakRank}</span>
                         </div>
                         <div>
-                            <span class="block text-[8px] uppercase tracking-widest font-bold text-slate-600">Score Weight</span>
+                            <span class="block text-[8px] uppercase tracking-widest font-bold text-gray-600">Score Weight</span>
                             <span class="text-xs font-black text-emerald-400 font-mono">${points} <span class="text-[9px] text-emerald-600">PTS</span></span>
                         </div>
                     </div>
@@ -186,9 +200,7 @@
         function searchTrigger() {
             const query = document.getElementById('searchBar').value.toLowerCase();
             filteredPlayers = allPlayers.filter(player => {
-                const pseudo = (player['Pseudo'] || player['pseudo'] || player['Player'] || '').toLowerCase();
-                const tag = (player['Tag Joueur'] || player['tag joueur'] || player['Tag'] || '').toLowerCase();
-                return pseudo.includes(query) || tag.includes(query);
+                return player.pseudo.toLowerCase().includes(query) || player.tag.toLowerCase().includes(query);
             });
             currentPage = 1; 
             updatePageData();
