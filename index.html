@@ -146,28 +146,27 @@
                 var playerPoints = parseInt(points) || 0;
                 var imageId = "28000000"; // Avatar par défaut (Shelly)
 
-                // 2. LE MOTEUR DE GRADES COMPÉTITIFS (S'adapte automatiquement sur toutes les pages)
+                // 2. LE MOTEUR DE GRADES ET PODIUM ULTRA-PRÉCIS
                 if (globalIndex === 0) {
                     badgeStyle = "text-yellow-400 bg-yellow-950/20 border-yellow-700/30 font-black shadow-md shadow-yellow-500/5";
                     textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-400 to-yellow-100 font-black";
-                    imageId = "28001311"; // La Couronne exclusive du Numéro 1 mondial !
-                } else if (playerPoints >= 85) {
-                } else if (playerPoints >= 85) {
-                    badgeStyle = (globalIndex === 1) ? "text-slate-300 bg-slate-900/60 border-slate-600/50 font-black" : "text-orange-500 bg-orange-950/20 border-orange-900/40 font-bold";
-                    textStyle = (globalIndex === 1) ? "text-transparent bg-clip-text bg-gradient-to-r from-slate-100 via-slate-300 to-slate-400 font-bold" : "text-transparent bg-clip-text bg-gradient-to-r from-orange-200 via-orange-400 to-amber-700 font-bold";
-                    imageId = (globalIndex === 1) ? "28000109" : "28000110";
+                    imageId = "28001311"; // #1 : Couronne exclusive de Guasti
+                } else if (globalIndex === 1) {
+                    badgeStyle = "text-slate-300 bg-slate-900/60 border-slate-600/50 font-black shadow-md shadow-slate-500/5";
+                    textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-slate-100 via-slate-300 to-slate-400 font-bold";
+                    imageId = "28000109"; // #2 : Vraie icône Masters Bleue pour Angelboy
+                } else if (globalIndex === 2) {
+                    badgeStyle = "text-orange-500 bg-orange-950/20 border-orange-900/40 font-bold shadow-md shadow-orange-900/5";
+                    textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-orange-200 via-orange-400 to-amber-700 font-bold";
+                    imageId = "28000110"; // #3 : Vraie icône Masters Bronze pour Dompe
                 } else if (playerPoints >= 70) {
-                    // Pour les joueurs du Top 10 à fort score (Ligue Légende)
-                    imageId = "28000045"; 
+                    imageId = "28000045"; // Reste du Top 10 (Ligue Légende)
                 } else if (playerPoints >= 40) {
-                    // Ligue Mythique
-                    imageId = "28000044"; 
+                    imageId = "28000044"; // Ligue Mythique
                 } else if (playerPoints >= 15) {
-                    // Ligue Diamant
-                    imageId = "28000043";
+                    imageId = "28000043"; // Ligue Diamant
                 } else {
-                    // Pour le reste du classement général (Ligue Or de base)
-                    imageId = "28000042";
+                    imageId = "28000042"; // Reste du classement (Ligue Or)
                 }
 
                 // 3. Liaison de l'image sur le serveur d'images stable de Brawlace
