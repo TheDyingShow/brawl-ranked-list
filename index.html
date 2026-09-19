@@ -85,19 +85,39 @@
         // Fetch CSV Dataset with automated casing fallback security
         Papa.parse('leaderboard.csv', {
             download: true,
-            header: true,
+            header: false, // On désactive les en-têtes textuels
             skipEmptyLines: true,
             complete: function(results) {
-                allPlayers = results.data;
-                filteredPlayers = [...allPlayers];
-                document.getElementById('playerCount').innerText = `${allPlayers.length} Records Loaded`;
+                var rawRows = results.data;
+                
+                for (var i = 0; i < rawRows.length; i++) {
+                    var row = rawRows[i]; // row est un tableau contenant chaque élément séparé par une virgule
+                    
+                    if (row && row.length >= 4) {
+                        var tag = row[0] ? row[0].trim() : '#000000';         // Avant la 1ère virgule
+                        var pseudo = row[1] ? row[1].trim() : 'Unknown Player'; // Entre la 1ère et 2e virgule
+                        var points = row[2] ? row[2].trim() : '0';              // Entre la 2e et 3e virgule
+                        var peakRank = row[3] ? row[3].trim() : '-';            // Entre la 3e et 4e virgule
+
+                        // On vérifie que c'est bien une ligne de joueur avec un Tag valide
+                        if (tag.indexOf('#') !== -1) {
+                            allPlayers.push({
+                                pseudo: pseudo,
+                                tag: tag,
+                                points: points,
+                                peakRank: peakRank
+                            });
+                        }
+                    }
+                }
+                
+                filteredPlayers = allPlayers.slice(0);
+                document.getElementById('playerCount').innerText = allPlayers.length + " Records Loaded";
                 updatePageData();
             },
             error: function() {
                 document.getElementById('leaderboard').innerHTML = 
-                    `<div class="text-center text-xs font-mono uppercase tracking-wider text-red-400 bg-red-950/10 border border-red-900/30 rounded-xl p-6">
-                        System Link Failure: 'leaderboard.csv' data file asset not detected at root path.
-                     </div>`;
+                    "<div class='text-center text-xs font-mono uppercase text-red-400 bg-red-950/10 border border-red-900/30 rounded-xl p-6'>System Link Failure: 'leaderboard.csv' asset not found.</div>";
             }
         });
 
@@ -114,10 +134,10 @@
                 const globalIndex = startIndex + index;
                 
                 // Flexible mapping structure supports structural sheet variations
-                const pseudo = player.pseudo || player['Username'] || 'Unknown Operator';
-                const tag = player.tag || player['Tag'] || '#000000';
-                const points = player.points || player['Points'] || '0';
-                const peakRank = player.peakRank || player['Best Placement'] || '-';
+                var pseudo = player.pseudo;
+                var tag = player.tag;
+                var points = player.points;
+                var peakRank = player.peakRank;
 
                 let badgeStyle = "text-slate-400 bg-slate-950/40 border-slate-900";
                 let textStyle = "text-slate-200";
