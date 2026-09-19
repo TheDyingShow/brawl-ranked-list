@@ -161,16 +161,13 @@
                 var cleanTag = tag.replace('#', '');
 
                 // 2. Génération automatique du lien de profil BrawlInsights pour chaque joueur
-                var profileUrl = "https://brawlinsights.com" + cleanTag;
-
-                // 3. Liaison de l'image via la passerelle API Brawl Stars (format webp officiel comme BrawlInsights)
-                var avatarUrl = "https://brawlstars.com" + encodeURIComponent(tag) + "/avatar";
-                
-                // Si l'API Supercell a une restriction de clé, ce lien alternatif BrawlInsights direct prend le relais :
-                var avatarUrlAlt = "https://brawlace.com" + cleanTag + "/avatar.png";
+                var profileUrl = "https://brawlinsights.com/en/player/profile/" + cleanTag;
 
                 var card = document.createElement('div');
                 card.className = "demon-card rounded-xl p-5 min-h-[84px] flex flex-col sm:flex-row items-center justify-between gap-5 transition-all duration-150 group shadow-lg cursor-pointer";
+                card.setAttribute("onclick", "window.open('" + profileUrl + "', '_blank')");
+
+                var imgId = "img-" + cleanTag;
                 
                 // Rendre TOUTE la carte cliquable vers son profil BrawlInsights
                 card.setAttribute("onclick", "window.open('" + profileUrl + "', '_blank')");
@@ -179,9 +176,9 @@
                     "<div class='flex items-center space-x-5 w-full sm:w-auto'>" +
                         "<div class='w-10 h-10 rounded-lg border flex items-center justify-center text-xs font-mono " + badgeStyle + " shrink-0'>" + (globalIndex + 1) + "</div>" +
                         
-                        // CARRE D'AVATAR DYNAMIQUE BRAWLINSIGHTS
+                        // CASE DE L'IMAGE AVEC L'ID DE DIAGNOSTIC
                         "<div class='w-12 h-12 rounded-xl bg-[#070b13] border border-slate-800/80 flex items-center justify-center shrink-0 overflow-hidden relative group-hover:border-slate-700 transition-colors shadow-inner'>" +
-                            "<img src='" + avatarUrlAlt + "' alt='Player Avatar' class='w-full h-full object-cover scale-100' onerror='this.src=\"https://brawlinsights.com\"'>" +
+                            "<img id='" + imgId + "' src='https://brawlinsights.com' alt='Player Avatar' class='w-full h-full object-cover scale-100'>" +
                         "</div>" +
                         
                         "<div>" +
@@ -200,9 +197,28 @@
                             "<span class='text-sm md:text-base font-black text-emerald-400 font-mono'>" + points + " <span class='text-[9px] text-emerald-600'>PTS</span></span>" +
                         "</div>" +
                     "</div>";
-                
+
                 container.appendChild(card);
-            });
+
+                // 3. LE MOTEUR ASPIRATEUR (Scraper) : Il va lire la page BrawlInsights du joueur en arrière-plan
+                (function(targetTag, targetElementId) {
+                    var proxyUrl = "https://allorigins.win" + encodeURIComponent("https://brawlinsights.com" + targetTag);
+                    
+                    fetch(proxyUrl)
+                        .then(response => { if (response.ok) return response.json(); })
+                        .then(data => {
+                            if (data && data.contents) {
+                                // Recherche du code interne de l'image (ex: /player_icon/28001311.webp) dans la page aspirée
+                                var match = data.contents.match(/player_icon\/(\d+)\.webp/);
+                                if (match && match[1]) {
+                                    var realImageId = match[1];
+                                    // Injection du vrai lien BrawlInsights trouvé !
+                                    document.getElementById(targetElementId).src = "https://brawlinsights.com" + realImageId + ".webp";
+                                }
+                            }
+                        })
+                        .catch(err => console.log("BrawlInsights secure shield active for row"));
+                })(cleanTag, imgId);
         }
 
         function updatePageData() {
