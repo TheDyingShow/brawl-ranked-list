@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brawl Stars Ranked Leaderboard</title>
-    <script src="https://tailwindcss.com"></script>
-    <script src="https://cloudflare.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         body { background-color: #060a12; color: #94a3b8; }
         ::-webkit-scrollbar { width: 6px; }
@@ -59,42 +59,47 @@
             </div>
 
             <!-- Grid Container -->
-            <div id="leaderboard" class="space-y-2"></div>
+            <div id="leaderboard" class="space-y-2">
+                <!-- Javascript maps rows here dynamically -->
+            </div>
         </div>
 
         <!-- PAGINATION BUTTONS MODULE -->
         <div class="mt-8 pt-6 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono">
-            <button id="btnPrev" onclick="changePage(-1)" class="bg-[#090f1c] border border-slate-800 text-white px-4 py-2.5 rounded-lg disabled:opacity-30 transition-all">
-                &larr; Previous 50
+            <button id="btnPrev" onclick="changePage(-1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-4 py-2.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                ← Previous 50
             </button>
             <span id="pageIndicator" class="text-slate-500 font-bold">Page 1 of 1</span>
-            <button id="btnNext" onclick="changePage(1)" class="bg-[#090f1c] border border-slate-800 text-white px-4 py-2.5 rounded-lg disabled:opacity-30 transition-all">
-                Next 50 &rarr;
+            <button id="btnNext" onclick="changePage(1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-4 py-2.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                Next 50 →
             </button>
         </div>
     </main>
 
     <script>
-        var allPlayers = [];
-        var filteredPlayers = [];
-        var currentPage = 1;
-        var recordsPerPage = 50;
+        let allPlayers = [];
+        let filteredPlayers = [];
+        let currentPage = 1;
+        const recordsPerPage = 50;
 
+        // Fetch CSV Dataset with automated casing fallback security
         Papa.parse('leaderboard.csv', {
             download: true,
-            header: false,
+            header: false, // On désactive les en-têtes textuels
             skipEmptyLines: true,
             complete: function(results) {
                 var rawRows = results.data;
                 
                 for (var i = 0; i < rawRows.length; i++) {
-                    var row = rawRows[i];
+                    var row = rawRows[i]; // row est un tableau contenant chaque élément séparé par une virgule
+                    
                     if (row && row.length >= 4) {
-                        var tag = row[0] ? row[0].trim() : '#000000';
-                        var pseudo = row[1] ? row[1].trim() : 'Unknown Player';
-                        var points = row[2] ? row[2].trim() : '0';
-                        var peakRank = row[3] ? row[3].trim() : '-';
+                        var tag = row[0] ? row[0].trim() : '#000000';         // Avant la 1ère virgule
+                        var pseudo = row[1] ? row[1].trim() : 'Unknown Player'; // Entre la 1ère et 2e virgule
+                        var points = row[2] ? row[2].trim() : '0';              // Entre la 2e et 3e virgule
+                        var peakRank = row[3] ? row[3].trim() : '-';            // Entre la 3e et 4e virgule
 
+                        // On vérifie que c'est bien une ligne de joueur avec un Tag valide
                         if (tag.indexOf('#') !== -1) {
                             allPlayers.push({
                                 pseudo: pseudo,
@@ -117,61 +122,59 @@
         });
 
         function displayPage(pageData, startIndex) {
-            var container = document.getElementById('leaderboard');
+            const container = document.getElementById('leaderboard');
             container.innerHTML = '';
 
             if (pageData.length === 0) {
-                container.innerHTML = "<div class='text-center text-xs font-mono text-slate-600 py-8'>No records matched query schema</div>";
+                container.innerHTML = '<div class="text-center text-xs font-mono uppercase tracking-wider text-slate-600 py-8">No records matched query schema</div>';
                 return;
             }
 
-            for (var index = 0; index < pageData.length; index++) {
-                var globalIndex = startIndex + index;
-                var player = pageData[index];
+            pageData.forEach((player, index) => {
+                const globalIndex = startIndex + index;
+                
+                // Flexible mapping structure supports structural sheet variations
                 var pseudo = player.pseudo;
                 var tag = player.tag;
                 var points = player.points;
                 var peakRank = player.peakRank;
 
-                var badgeStyle = "text-slate-400 bg-slate-950/40 border-slate-900";
-                var textStyle = "text-slate-200";
+                let badgeStyle = "text-slate-400 bg-slate-950/40 border-slate-900";
+                let textStyle = "text-slate-200";
 
-                // Attribution des ID d'avatars officiels de Brawl Stars selon le classement
-                var avatarId = 28000000 + (globalIndex % 50); 
                 if (globalIndex === 0) {
                     badgeStyle = "text-yellow-400 bg-yellow-950/20 border-yellow-700/30 font-black shadow-md shadow-yellow-500/5";
                     textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-400 to-yellow-100 font-black";
-                    avatarId = 28000044; // Icone spéciale Or pour le numéro 1 (ex: El Primo Couronne)
                 } else if (globalIndex === 1) {
                     badgeStyle = "text-slate-300 bg-slate-900/60 border-slate-600/50 font-black shadow-md shadow-slate-500/5";
                     textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-slate-100 via-slate-300 to-slate-400 font-bold drop-shadow-[0_1px_3px_rgba(255,255,255,0.1)]";
-                    avatarId = 28000045; // Icone spéciale Argent
                 } else if (globalIndex === 2) {
                     badgeStyle = "text-orange-500 bg-orange-950/20 border-orange-900/40 font-bold shadow-md shadow-orange-900/5";
                     textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-orange-200 via-orange-400 to-amber-700 font-bold";
-                    avatarId = 28000046; // Icone spéciale Bronze
                 }
 
-                var avatarUrl = "https://brawlify.com" + avatarId + ".png";
-
                 var card = document.createElement('div');
+                // Augmentation du padding (p-5) et de la hauteur minimale pour aérer la carte
                 card.className = "demon-card rounded-xl p-5 min-h-[84px] flex flex-col sm:flex-row items-center justify-between gap-5 transition-all duration-150 group shadow-lg";
                 
                 card.innerHTML = 
                     "<div class='flex items-center space-x-5 w-full sm:w-auto'>" +
+                        // Badge numérique (Rank)
                         "<div class='w-10 h-10 rounded-lg border flex items-center justify-center text-xs font-mono " + badgeStyle + " shrink-0'>" + (globalIndex + 1) + "</div>" +
                         
-                        // IMAGE DE PROFIL AUTOMATIQUE BRAWL STARS
+                        // EMPLACEMENT FUTUR : PHOTO DE PROFIL (Placeholder)
                         "<div class='w-12 h-12 rounded-xl bg-[#070b13] border border-slate-800/80 flex items-center justify-center shrink-0 overflow-hidden relative group-hover:border-slate-700 transition-colors shadow-inner'>" +
-                            "<img src='" + avatarUrl + "' alt='Brawler' class='w-full h-full object-cover' onerror='this.src=\"https://brawlify.com28000000.png\"'>" +
+                            "<span class='text-[9px] font-mono text-slate-700 tracking-tighter uppercase font-bold select-none'>AVATAR</span>" +
                         "</div>" +
                         
+                        // Informations du joueur
                         "<div>" +
                             "<h2 class='text-sm md:text-base font-bold tracking-wide transition-colors " + textStyle + " group-hover:text-blue-400'>" + pseudo + "</h2>" +
                             "<p class='text-[10px] font-mono text-slate-600 tracking-tight mt-0.5'>" + tag + "</p>" +
                         "</div>" +
                     "</div>" +
                     
+                    // Bloc de statistiques à droite
                     "<div class='flex items-center space-x-8 text-right w-full sm:w-auto justify-between sm:justify-end border-t border-slate-950 pt-3 sm:pt-0 sm:border-t-0'>" +
                         "<div class='text-left sm:text-right'>" +
                             "<span class='block text-[8px] uppercase tracking-widest font-bold text-gray-600'>Peak Standing</span>" +
@@ -184,21 +187,21 @@
                     "</div>";
                 
                 container.appendChild(card);
-            }
+            });
         }
 
         function updatePageData() {
-            var totalPages = Math.ceil(filteredPlayers.length / recordsPerPage) || 1;
+            const totalPages = Math.ceil(filteredPlayers.length / recordsPerPage) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
 
-            var startIndex = (currentPage - 1) * recordsPerPage;
-            var endIndex = startIndex + recordsPerPage;
-            var sliceData = filteredPlayers.slice(startIndex, endIndex);
+            const startIndex = (currentPage - 1) * recordsPerPage;
+            const endIndex = startIndex + recordsPerPage;
+            const sliceData = filteredPlayers.slice(startIndex, endIndex);
 
             displayPage(sliceData, startIndex);
 
-            document.getElementById('pageIndicator').innerText = "Page " + currentPage + " of " + totalPages;
+            document.getElementById('pageIndicator').innerText = `Page ${currentPage} of ${totalPages}`;
             document.getElementById('btnPrev').disabled = (currentPage === 1);
             document.getElementById('btnNext').disabled = (currentPage === totalPages);
         }
@@ -209,9 +212,11 @@
         }
 
         function searchTrigger() {
-            var query = document.getElementById('searchBar').value.toLowerCase();
-            filteredPlayers = allPlayers.filter(function(player) {
-                return player.pseudo.toLowerCase().indexOf(query) !== -1 || player.tag.toLowerCase().indexOf(query) !== -1;
+            const query = document.getElementById('searchBar').value.toLowerCase();
+            filteredPlayers = allPlayers.filter(player => {
+                const pseudo = (player['Pseudo'] || player['pseudo'] || player['Player'] || '').toLowerCase();
+                const tag = (player['Tag Joueur'] || player['tag joueur'] || player['Tag'] || '').toLowerCase();
+                return pseudo.includes(query) || tag.includes(query);
             });
             currentPage = 1; 
             updatePageData();
