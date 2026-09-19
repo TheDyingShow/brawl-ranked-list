@@ -114,10 +114,10 @@
                 const globalIndex = startIndex + index;
                 
                 // Flexible mapping structure supports structural sheet variations
-                const pseudo = player['Pseudo'] || player['pseudo'] || player['Player'] || 'Unknown Operator';
-                const tag = player['Tag Joueur'] || player['tag joueur'] || player['Tag'] || '#000000';
-                const points = player['Points Total'] || player['points total'] || '0';
-                const peakRank = player['Meilleur Rang'] || player['meilleur rang'] || '-';
+                const pseudo = player.pseudo || player['Username'] || 'Unknown Operator';
+                const tag = player.tag || player['Tag'] || '#000000';
+                const points = player.points || player['Points'] || '0';
+                const peakRank = player.peakRank || player['Best Placement'] || '-';
 
                 let badgeStyle = "text-slate-400 bg-slate-950/40 border-slate-900";
                 let textStyle = "text-slate-200";
