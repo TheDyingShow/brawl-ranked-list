@@ -141,23 +141,33 @@
 
                 var badgeStyle = "text-slate-400 bg-slate-950/40 border-slate-900";
                 var textStyle = "text-slate-200";
+                
+                // 1. On définit une icône Masters par défaut pour tout le classement
+                var imageId = "28000000"; 
 
-                var avatarId = 28000000 + (globalIndex % 50); 
+                // 2. On attribue chirurgicalement les VRAIS ID trouvés sur Brawlace pour votre Top 3 !
                 if (globalIndex === 0) {
                     badgeStyle = "text-yellow-400 bg-yellow-950/20 border-yellow-700/30 font-black shadow-md shadow-yellow-500/5";
                     textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-400 to-yellow-100 font-black";
-                    avatarId = 28000044; 
+                    imageId = "28001311"; // La Couronne Or de Guasti tirée de votre lien parfait !
                 } else if (globalIndex === 1) {
                     badgeStyle = "text-slate-300 bg-slate-900/60 border-slate-600/50 font-black shadow-md shadow-slate-500/5";
-                    textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-slate-100 via-slate-300 to-slate-400 font-bold drop-shadow-[0_1px_3px_rgba(255,255,255,0.1)]";
-                    avatarId = 28000045; 
+                    textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-slate-100 via-slate-300 to-slate-400 font-bold";
+                    imageId = "28000109"; // L'icône Masters Bleue/Argent pour Dompe
                 } else if (globalIndex === 2) {
                     badgeStyle = "text-orange-500 bg-orange-950/20 border-orange-900/40 font-bold shadow-md shadow-orange-900/5";
                     textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-orange-200 via-orange-400 to-amber-700 font-bold";
-                    avatarId = 28000046; 
+                    imageId = "28000110"; // L'icône Masters Rouge/Bronze pour sans
+                } else if (globalIndex < 10) {
+                    imageId = "28000045"; // Ligue Légende pour le reste du Top 10
+                } else if (globalIndex < 50) {
+                    imageId = "28000044"; // Ligue Mythique pour le reste du Top 50
                 }
 
-                var avatarUrl = "https://brawlify.com" + avatarId + ".png";
+                // 3. VOTRE LIEN DE RÊVE : Connexion directe au serveur d'images de Brawlace !
+                var avatarUrl = "https://brawlace.com/assets/images/brawlstars/icons-players/" + imageId + ".png";
+                var profileUrl = "https://brawlinsights.com" + tag.replace('#', '');
+
 
                 var card = document.createElement('div');
                 card.className = "demon-card rounded-xl p-5 min-h-[84px] flex flex-col sm:flex-row items-center justify-between gap-5 transition-all duration-150 group shadow-lg";
