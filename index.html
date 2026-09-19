@@ -157,36 +157,22 @@
                     avatarId = 28000046; 
                 }
 
-                // 1. Nettoyage du Tag pour enlever le # pour l'adresse internet
-                var cleanTag = tag.replace('#', '');
-
-                // 2. Génération automatique du lien de profil BrawlInsights pour chaque joueur
-                var profileUrl = "https://brawlinsights.com/en/player/profile/" + cleanTag;
+                var avatarUrl = "https://brawlify.com" + avatarId + ".png";
 
                 var card = document.createElement('div');
-                card.className = "demon-card rounded-xl p-5 min-h-[84px] flex flex-col sm:flex-row items-center justify-between gap-5 transition-all duration-150 group shadow-lg cursor-pointer";
-                card.setAttribute("onclick", "window.open('" + profileUrl + "', '_blank')");
-
-                var imgId = "img-" + cleanTag;
-                
-                // Rendre TOUTE la carte cliquable vers son profil BrawlInsights
-                card.setAttribute("onclick", "window.open('" + profileUrl + "', '_blank')");
+                card.className = "demon-card rounded-xl p-5 min-h-[84px] flex flex-col sm:flex-row items-center justify-between gap-5 transition-all duration-150 group shadow-lg";
                 
                 card.innerHTML = 
                     "<div class='flex items-center space-x-5 w-full sm:w-auto'>" +
                         "<div class='w-10 h-10 rounded-lg border flex items-center justify-center text-xs font-mono " + badgeStyle + " shrink-0'>" + (globalIndex + 1) + "</div>" +
-                        
-                        // CASE DE L'IMAGE AVEC L'ID DE DIAGNOSTIC
                         "<div class='w-12 h-12 rounded-xl bg-[#070b13] border border-slate-800/80 flex items-center justify-center shrink-0 overflow-hidden relative group-hover:border-slate-700 transition-colors shadow-inner'>" +
-                            "<img id='" + imgId + "' src='https://brawlinsights.com' alt='Player Avatar' class='w-full h-full object-cover scale-100'>" +
+                            "<img src='" + avatarUrl + "' alt='Brawler' class='w-full h-full object-cover' onerror='this.src=\"https://brawlify.com28000000.png\"'>" +
                         "</div>" +
-                        
                         "<div>" +
                             "<h2 class='text-sm md:text-base font-bold tracking-wide transition-colors " + textStyle + " group-hover:text-blue-400'>" + pseudo + "</h2>" +
                             "<p class='text-[10px] font-mono text-slate-600 tracking-tight mt-0.5'>" + tag + "</p>" +
                         "</div>" +
                     "</div>" +
-                    
                     "<div class='flex items-center space-x-8 text-right w-full sm:w-auto justify-between sm:justify-end border-t border-slate-950 pt-3 sm:pt-0 sm:border-t-0'>" +
                         "<div class='text-left sm:text-right'>" +
                             "<span class='block text-[8px] uppercase tracking-widest font-bold text-gray-600'>Peak Standing</span>" +
@@ -197,28 +183,9 @@
                             "<span class='text-sm md:text-base font-black text-emerald-400 font-mono'>" + points + " <span class='text-[9px] text-emerald-600'>PTS</span></span>" +
                         "</div>" +
                     "</div>";
-
+                
                 container.appendChild(card);
-
-                // 3. LE MOTEUR ASPIRATEUR (Scraper) : Il va lire la page BrawlInsights du joueur en arrière-plan
-                (function(targetTag, targetElementId) {
-                    var proxyUrl = "https://allorigins.win" + encodeURIComponent("https://brawlinsights.com" + targetTag);
-                    
-                    fetch(proxyUrl)
-                        .then(response => { if (response.ok) return response.json(); })
-                        .then(data => {
-                            if (data && data.contents) {
-                                // Recherche du code interne de l'image (ex: /player_icon/28001311.webp) dans la page aspirée
-                                var match = data.contents.match(/player_icon\/(\d+)\.webp/);
-                                if (match && match[1]) {
-                                    var realImageId = match[1];
-                                    // Injection du vrai lien BrawlInsights trouvé !
-                                    document.getElementById(targetElementId).src = "https://brawlinsights.com" + realImageId + ".webp";
-                                }
-                            }
-                        })
-                        .catch(err => console.log("BrawlInsights secure shield active for row"));
-                })(cleanTag, imgId);
+            });
         }
 
         function updatePageData() {
