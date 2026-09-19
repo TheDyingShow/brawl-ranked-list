@@ -142,32 +142,37 @@
                 var badgeStyle = "text-slate-400 bg-slate-950/40 border-slate-900";
                 var textStyle = "text-slate-200";
                 
-                // 1. On définit une icône Masters par défaut pour tout le classement
-                var imageId = "28000000"; 
+                // 1. Convertit les points du joueur en vrai nombre pour le calcul
+                var playerPoints = parseInt(points) || 0;
+                var imageId = "28000000"; // Avatar par défaut (Shelly)
 
-                // 2. On attribue chirurgicalement les VRAIS ID trouvés sur Brawlace pour votre Top 3 !
+                // 2. LE MOTEUR DE GRADES COMPÉTITIFS (S'adapte automatiquement sur toutes les pages)
                 if (globalIndex === 0) {
                     badgeStyle = "text-yellow-400 bg-yellow-950/20 border-yellow-700/30 font-black shadow-md shadow-yellow-500/5";
                     textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-400 to-yellow-100 font-black";
-                    imageId = "28001311"; // La Couronne Or de Guasti tirée de votre lien parfait !
-                } else if (globalIndex === 1) {
-                    badgeStyle = "text-slate-300 bg-slate-900/60 border-slate-600/50 font-black shadow-md shadow-slate-500/5";
-                    textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-slate-100 via-slate-300 to-slate-400 font-bold";
-                    imageId = "28000109"; // L'icône Masters Bleue/Argent pour Dompe
-                } else if (globalIndex === 2) {
-                    badgeStyle = "text-orange-500 bg-orange-950/20 border-orange-900/40 font-bold shadow-md shadow-orange-900/5";
-                    textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-orange-200 via-orange-400 to-amber-700 font-bold";
-                    imageId = "28000110"; // L'icône Masters Rouge/Bronze pour sans
-                } else if (globalIndex < 10) {
-                    imageId = "28000045"; // Ligue Légende pour le reste du Top 10
-                } else if (globalIndex < 50) {
-                    imageId = "28000044"; // Ligue Mythique pour le reste du Top 50
+                    imageId = "28001311"; // La Couronne exclusive du Numéro 1 mondial !
+                } else if (playerPoints >= 85) {
+                    // Pour le reste du TOP 3 et les joueurs d'élite absolue (Masters Grade)
+                    badgeStyle = globalIndex === 1 ? "text-slate-300 bg-slate-900/60 border-slate-600/50 font-black" : "text-orange-500 bg-orange-950/20 border-orange-900/40 font-bold";
+                    textStyle = globalIndex === 1 ? "text-transparent bg-clip-text bg-gradient-to-r from-slate-100 via-slate-300 to-slate-400 font-bold" : "text-transparent bg-clip-text bg-gradient-to-r from-orange-200 via-orange-400 to-amber-700 font-bold";
+                    imageId = globalIndex === 1 ? "28000109" : "28000110"; // Icônes Masters officielles de Brawlace
+                } else if (playerPoints >= 70) {
+                    // Pour les joueurs du Top 10 à fort score (Ligue Légende)
+                    imageId = "28000045"; 
+                } else if (playerPoints >= 40) {
+                    // Ligue Mythique
+                    imageId = "28000044"; 
+                } else if (playerPoints >= 15) {
+                    // Ligue Diamant
+                    imageId = "28000043";
+                } else {
+                    // Pour le reste du classement général (Ligue Or de base)
+                    imageId = "28000042";
                 }
 
-                // 3. VOTRE LIEN DE RÊVE : Connexion directe au serveur d'images de Brawlace !
-                var avatarUrl = "https://brawlace.com/assets/images/brawlstars/icons-players/" + imageId + ".png";
+                // 3. Liaison de l'image sur le serveur d'images stable de Brawlace
+                var avatarUrl = "https://brawlace.com" + imageId + ".png";
                 var profileUrl = "https://brawlinsights.com" + tag.replace('#', '');
-
 
                 var card = document.createElement('div');
                 card.className = "demon-card rounded-xl p-5 min-h-[84px] flex flex-col sm:flex-row items-center justify-between gap-5 transition-all duration-150 group shadow-lg";
