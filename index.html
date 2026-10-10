@@ -28,6 +28,7 @@
         .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
         .elo-plus { color: #34d399; }
         .elo-minus { color: #f87171; }
+        .row-offline .player-row-sub { opacity: 0.45; }
         @media (min-width: 768px) {
             .content-area { margin-right: 0; transition: margin-right 0.3s ease; }
             body.drawer-open .content-area { margin-right: 24rem; }
@@ -72,6 +73,7 @@
                 <option value="points">Sort: Points</option>
                 <option value="elo">Sort: Elo</option>
                 <option value="peak">Sort: Best placement</option>
+                <option value="activity">Sort: Activity</option>
             </select>
         </div>
 
@@ -90,7 +92,6 @@
             <div id="seasonStatus" class="hidden mb-4 text-[10px] font-mono text-amber-500 bg-amber-950/20 border border-amber-800/30 rounded-lg px-3 py-2"></div>
 
             <div class="overflow-hidden bg-[#0f141f] border border-slate-900 rounded-xl">
-                <!-- HEADER : 1 + 1 + 4 + 2 + 4 = 12 colonnes -->
                 <div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#090f1c] border-b border-slate-900 text-[9px] uppercase tracking-wider font-bold text-slate-500">
                     <div class="col-span-1 text-center">#</div>
                     <div class="col-span-1">Country</div>
@@ -117,14 +118,16 @@
         <button onclick="closeDrawer()" class="text-slate-400 hover:text-white transition-colors text-lg leading-none">✕</button>
     </div>
     <div class="p-5 space-y-4">
-        <div class="flex items-center space-x-4">
+        <!-- Identité centrée (style DemonList) -->
+        <div class="flex flex-col items-center text-center space-y-2">
             <img id="dFlag" class="flag-icon shadow-md" alt="">
-            <div class="min-w-0">
+            <div class="min-w-0 w-full">
                 <h2 id="dName" class="text-lg font-bold text-white truncate"></h2>
                 <p id="dTag" class="text-xs font-mono text-slate-500 mt-0.5"></p>
             </div>
+            <p id="dCountry" class="text-xs text-slate-400"></p>
+            <span id="dStatus" class="hidden text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded"></span>
         </div>
-        <div id="dCountry" class="text-xs text-slate-400"></div>
         <div class="space-y-2">
             <div class="stat-line bg-[#090f1c] border border-slate-800 rounded-lg px-4 py-3">
                 <span class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Points</span>
@@ -139,38 +142,35 @@
                 <span id="dPeak" class="text-lg font-black text-amber-500 font-mono">-</span>
             </div>
         </div>
+        <!-- Boutons profils, juste sous le Peak -->
+        <div class="space-y-2">
+            <a id="dLink" target="_blank" rel="noopener noreferrer"
+               class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
+                View BrawlAce Profile ↗</a>
+            <a id="dLinkBI" target="_blank" rel="noopener noreferrer"
+               class="block text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
+                View Brawl Insights Profile ↗</a>
+        </div>
         <div>
             <span class="block text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-2">Season history</span>
             <div id="dHistory" class="space-y-1 text-xs font-mono"></div>
         </div>
-        <a id="dLink" target="_blank" rel="noopener noreferrer"
-           class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
-            View BrawlAce Profile ↗</a>
     </div>
 </div>
 
 <script>
 // ======================= ELO CONFIG (v4) =======================
-// gain = 500 × (1 − (rank−1)/field)^4 × min(1, (20/field)^0.42) × momentum
-// momentum = max(0, (3000 − elo) / 1500)
-//
-// Calibres :
-//   #1 / 20 joueurs    → +500        #1 / 225 joueurs → +181
-//   #1 / 500 joueurs   → +129        #10 / 100 joueurs → +175
-//   #400 / 450 joueurs  → +2 (plancher participation, éteint au-dessus de ~2700)
-//
-// Pertes : bouclier 12 mois glissants ; au-delà,
-//   perte = −(25 + 0.25 × (elo − médiane du field)), plafonnée à −500
 var START_RATING = 1500;
-var ELO_CEILING = 3000;     // les gains tendent vers zéro en approchant
-var MAX_GAIN = 500;         // dur plafond
-var PLACE_EXP = 4;          // expo "winner takes all" — monte à 6-8 pour durcir
-var FIELD_MIN = 20;         // taille de field de référence (= +500 possible)
-var FIELD_EXP = 0.42;       // prime aux petits fields (calibrée sur les ancres)
-var FLOOR_MOMENTUM = 0.2;   // momentum mini pour toucher le plancher +2
+var ELO_CEILING = 3000;
+var MAX_GAIN = 500;
+var PLACE_EXP = 4;
+var FIELD_MIN = 20;
+var FIELD_EXP = 0.42;
+var FLOOR_MOMENTUM = 0.2;
 var LOSS_BASE = 25;
 var LOSS_SCALE = 0.25;
 var SHIELD_WINDOW = 12;
+var OFFLINE_MONTHS = 12;   // > 12 mois sans pro = "offline"
 
 var SEASONS = [
     { key: 'mars25',      label: 'March 2025' }, { key: 'avril25',     label: 'April 2025' },
@@ -183,6 +183,7 @@ var SEASONS = [
     { key: 'mai26',       label: 'May 2026' },   { key: 'juin26',      label: 'June 2026' },
     { key: 'juillet26',   label: 'July 2026' },  { key: 'aout26',      label: 'August 2026' }
 ];
+var LAST_SEASON_IDX = SEASONS.length - 1;
 
 var COUNTRY_NAMES = {
     'AR':'Argentina','AU':'Australia','AT':'Austria','BE':'Belgium','BO':'Bolivia',
@@ -224,6 +225,9 @@ function escapeHtml(s) {
 function profileUrl(tag) {
     return 'https://brawlace.com/players/%23' + encodeURIComponent(tag.replace(/^#/, ''));
 }
+function insightsUrl(tag) {
+    return 'https://brawlinsights.com/en/player/profile/' + encodeURIComponent(tag.replace(/^#/, ''));
+}
 function getFlagUrl(cc) { return (cc && cc !== 'XX') ? FLAG_CDN + cc.toLowerCase() + '.png' : ''; }
 function countryName(cc) { return (cc && cc !== 'XX' && COUNTRY_NAMES[cc]) ? COUNTRY_NAMES[cc] : ''; }
 
@@ -257,6 +261,14 @@ function tagPlayedIn(tag, seasonIdx) {
     return false;
 }
 
+// Dernière saison jouée (-1 si jamais joué)
+function lastPlayedIdx(tag) {
+    for (var i = LAST_SEASON_IDX; i >= 0; i--) {
+        if (tagPlayedIn(tag, i)) return i;
+    }
+    return -1;
+}
+
 // ======================= ELO v4 =======================
 function computeElo() {
     var ratings = {};
@@ -268,7 +280,6 @@ function computeElo() {
         var fieldSize = players.length;
         var present = {};
 
-        // Médiane des Elo des participants (nouveau joueur compté à 1500)
         var vals = [];
         players.forEach(function(p) {
             present[p.tag] = true;
@@ -277,7 +288,7 @@ function computeElo() {
         vals.sort(function(a, b) { return a - b; });
         var medianR = vals.length ? vals[Math.floor(vals.length / 2)] : START_RATING;
 
-        // ---- JOUEURS PRÉSENTS : gains uniquement, jamais de perte ----
+        // ---- JOUEURS PRÉSENTS : gains uniquement ----
         players.forEach(function(p) {
             var tag = p.tag;
             if (ratings[tag] === undefined) {
@@ -289,16 +300,12 @@ function computeElo() {
             var gain = 0;
 
             if (fieldSize >= 2) {
-                // Winner-takes-all : décote rapide passé le top 10%
                 var pct = (p.placement - 1) / fieldSize;
                 var P = Math.pow(1 - pct, PLACE_EXP);
-                // Prime aux petits fields (power law calibrée)
                 var F = Math.min(1, Math.pow(FIELD_MIN / fieldSize, FIELD_EXP));
                 var raw = MAX_GAIN * P * F;
-                // Momentum : rendements décroissants proche du plafond
                 var momentum = Math.max(0, (ELO_CEILING - R) / (ELO_CEILING - START_RATING));
                 gain = Math.round(Math.min(MAX_GAIN, raw * momentum));
-                // Plancher participation : +2, éteint si momentum trop faible
                 if (gain < 2 && momentum >= FLOOR_MOMENTUM) gain = 2;
             } else {
                 gain = 2;
@@ -309,12 +316,11 @@ function computeElo() {
             ratings[tag] += gain;
         });
 
-        // ---- JOUEURS ABSENTS (déjà vus) : bouclier 12 mois glissants ----
+        // ---- JOUEURS ABSENTS : bouclier 12 mois glissants ----
         for (var tag in ratings) {
             if (present[tag]) continue;
             if (debutIdx[tag] === undefined || debutIdx[tag] >= idx) continue;
 
-            // Absences dans la fenêtre glissante de 12 mois
             var misses = 0;
             var from = Math.max(0, idx - (SHIELD_WINDOW - 1));
             for (var w = from; w <= idx; w++) {
@@ -324,13 +330,10 @@ function computeElo() {
 
             var delta = 0;
             if (misses >= 2) {
-                // 2e absence (ou plus) dans la fenêtre : perte proportionnelle
-                // à l'écart au-dessus de la médiane du field
                 var above = Math.max(0, ratings[tag] - medianR);
                 var loss = LOSS_BASE + Math.round(above * LOSS_SCALE);
                 delta = -Math.min(MAX_GAIN, loss);
             }
-            // misses === 1 → bouclier actif, 0 de perte
 
             if (!history[tag]) history[tag] = {};
             history[tag][season.key] = (history[tag][season.key] || 0) + delta;
@@ -402,7 +405,12 @@ Promise.all([
     });
 
     eloMap = computeElo();
-    allPlayers.forEach(function(p) { p.elo = eloMap[p.tag] || 0; });
+    allPlayers.forEach(function(p) {
+        p.elo = eloMap[p.tag] || 0;
+        p.lastIdx = lastPlayedIdx(p.tag);                          // -1..17
+        p.monthsIdle = p.lastIdx < 0 ? 99 : LAST_SEASON_IDX - p.lastIdx; // saisons depuis dernier match
+        p.offline = p.monthsIdle > OFFLINE_MONTHS;                 // offline si > 12 mois
+    });
 
     buildCountryFilter();
     applyFromHash(true);
@@ -442,7 +450,7 @@ function applyFromHash(initial) {
     var cc = seg[1] && seg[1] !== 'all' ? seg[1].toUpperCase() : '';
     var mi = seg[2] !== undefined && seg[2] !== '' ? parseInt(seg[2], 10) : -1;
 
-    if (['points','elo','peak'].indexOf(sort) === -1) sort = 'points';
+    if (['points','elo','peak','activity'].indexOf(sort) === -1) sort = 'points';
     if (isNaN(mi) || mi < -1 || mi > 17) mi = -1;
 
     document.getElementById('filterSort').value = sort;
@@ -481,9 +489,16 @@ function applyFilters(skipHash) {
     if (mi >= 0) {
         filteredPlayers.sort(function(a, b) { return a._monthPlace - b._monthPlace; });
     } else if (sortMode === 'elo') {
-        filteredPlayers.sort(function(a, b) { return b.elo - a.elo || b.points - a.points; });
+        // Actifs d'abord, puis par Elo ; les offline restent visibles mais en bas
+        filteredPlayers.sort(function(a, b) {
+            if (!!a.offline !== !!b.offline) return a.offline ? 1 : -1;
+            return b.elo - a.elo || b.points - a.points;
+        });
     } else if (sortMode === 'peak') {
         filteredPlayers.sort(function(a, b) { return a.peakRank - b.peakRank || b.points - a.points; });
+    } else if (sortMode === 'activity') {
+        // Le plus actif (a joué le plus récemment) en premier
+        filteredPlayers.sort(function(a, b) { return b.lastIdx - a.lastIdx || b.points - a.points; });
     } else {
         filteredPlayers.sort(function(a, b) { return b.points - a.points || a.peakRank - b.peakRank; });
     }
@@ -516,7 +531,11 @@ function displayPage(pageData, startIndex, mi, sortMode) {
         if (mi >= 0) {
             stat = '#<span class="font-black text-emerald-400 font-mono">' + player._monthPlace + '</span>';
         } else if (sortMode === 'elo') {
-            stat = '<span class="font-black text-blue-400 font-mono text-sm">' + Math.round(player.elo) + '</span>';
+            if (player.offline) {
+                stat = '<span class="text-[10px] uppercase tracking-wider font-bold text-slate-600 font-mono">Offline</span>';
+            } else {
+                stat = '<span class="font-black text-blue-400 font-mono text-sm">' + Math.round(player.elo) + '</span>';
+            }
         } else {
             stat = '<span class="font-black text-emerald-400 font-mono text-sm">' + player.points + '</span>' +
                    '<span class="text-[8px] text-slate-500 ml-1">PTS</span>';
@@ -527,15 +546,17 @@ function displayPage(pageData, startIndex, mi, sortMode) {
             ? '<img src="' + flagUrl + '" class="flag-icon" alt="' + (countryName(player.country) || player.country) + '" title="' + (countryName(player.country) || player.country) + '" loading="lazy">'
             : '<span class="flag-icon bg-[#1e293b] inline-flex items-center justify-center text-[9px] text-slate-600">?</span>';
 
+        var nameCell = '<div class="col-span-4 min-w-0 ' + (player.offline ? 'opacity-40' : '') + '">' +
+            '<div class="font-bold text-white text-sm truncate" title="' + escapeHtml(player.pseudo) + '">' + escapeHtml(player.pseudo) + '</div>' +
+            '<div class="text-[10px] text-slate-500 font-mono truncate">' + escapeHtml(player.tag) + '</div></div>';
+
         var row = document.createElement('div');
-        // LIGNE : 1 + 1 + 4 + 2 + 4 = 12 colonnes (identique au header)
         row.className = 'player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer';
         row.onclick = function() { openDrawer(player); };
         row.innerHTML =
             '<div class="rank-badge ' + rankClass + '">' + (gi + 1) + '</div>' +
             '<div class="flex items-center">' + flagHtml + '</div>' +
-            '<div class="col-span-4 min-w-0"><div class="font-bold text-white text-sm truncate" title="' + escapeHtml(player.pseudo) + '">' + escapeHtml(player.pseudo) + '</div>' +
-            '<div class="text-[10px] text-slate-500 font-mono truncate">' + escapeHtml(player.tag) + '</div></div>' +
+            nameCell +
             '<div class="col-span-2 text-right text-xs font-bold text-amber-500/90 font-mono whitespace-nowrap">' + peakLabel + '</div>' +
             '<div class="col-span-4 text-right whitespace-nowrap">' + stat + '</div>';
         container.appendChild(row);
@@ -550,9 +571,21 @@ function openDrawer(p) {
     document.getElementById('dTag').textContent = p.tag;
     document.getElementById('dCountry').textContent = countryName(p.country) || 'Country unknown';
     document.getElementById('dPoints').textContent = p.points;
-    document.getElementById('dElo').textContent = p.elo ? Math.round(p.elo) : '-';
+    document.getElementById('dElo').textContent = p.offline ? 'Offline' : (p.elo ? Math.round(p.elo) : '-');
     document.getElementById('dPeak').textContent = p.peakRank >= 999 ? 'N/A' : 'Top ' + p.peakRank;
     document.getElementById('dLink').href = profileUrl(p.tag);
+    document.getElementById('dLinkBI').href = insightsUrl(p.tag);
+
+    var dStatus = document.getElementById('dStatus');
+    if (p.offline) {
+        dStatus.classList.remove('hidden');
+        dStatus.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-slate-800 text-slate-500';
+        dStatus.textContent = 'Offline · Last played ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
+    } else {
+        dStatus.classList.remove('hidden');
+        dStatus.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-500';
+        dStatus.textContent = 'Active · Last played ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
+    }
 
     var hist = '';
     var h = eloHistory[p.tag] || {};
