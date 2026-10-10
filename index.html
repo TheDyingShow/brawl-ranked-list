@@ -13,7 +13,7 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         .player-row { background-color: #0f141f; border-bottom: 1px solid #1e293b; transition: all 0.15s ease; }
         .player-row:hover { background-color: #131a26; border-color: #475569; }
-        .rank-badge { font-family: monospace; font-weight: 700; font-size: 0.875rem; min-width: 2.5rem; text-align: center; }
+        .rank-badge { font-family: monospace; font-weight: 700; font-size: 0.875rem; text-align: center; }
         .rank-1 { color: #fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.4); }
         .rank-2 { color: #94a3b8; }
         .rank-3 { color: #cd7f32; }
@@ -90,12 +90,13 @@
             <div id="seasonStatus" class="hidden mb-4 text-[10px] font-mono text-amber-500 bg-amber-950/20 border border-amber-800/30 rounded-lg px-3 py-2"></div>
 
             <div class="overflow-hidden bg-[#0f141f] border border-slate-900 rounded-xl">
-                <div class="grid grid-cols-12 gap-4 px-4 py-3 bg-[#090f1c] border-b border-slate-900 text-[9px] uppercase tracking-wider font-bold text-slate-500">
-                    <div class="col-span-1">#</div>
+                <!-- HEADER : 1 + 1 + 4 + 2 + 4 = 12 colonnes -->
+                <div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#090f1c] border-b border-slate-900 text-[9px] uppercase tracking-wider font-bold text-slate-500">
+                    <div class="col-span-1 text-center">#</div>
                     <div class="col-span-1">Country</div>
-                    <div class="col-span-3">Player</div>
+                    <div class="col-span-4">Player</div>
                     <div class="col-span-2 text-right">Peak</div>
-                    <div class="col-span-3 text-right" id="statHeader">Points</div>
+                    <div class="col-span-4 text-right" id="statHeader">Points</div>
                 </div>
                 <div id="leaderboard" class="divide-y divide-slate-900/50"></div>
             </div>
@@ -118,8 +119,8 @@
     <div class="p-5 space-y-4">
         <div class="flex items-center space-x-4">
             <img id="dFlag" class="flag-icon shadow-md" alt="">
-            <div>
-                <h2 id="dName" class="text-lg font-bold text-white"></h2>
+            <div class="min-w-0">
+                <h2 id="dName" class="text-lg font-bold text-white truncate"></h2>
                 <p id="dTag" class="text-xs font-mono text-slate-500 mt-0.5"></p>
             </div>
         </div>
@@ -149,22 +150,38 @@
 </div>
 
 <script>
+// ======================= ELO CONFIG (v4) =======================
+// gain = 500 × (1 − (rank−1)/field)^4 × min(1, (20/field)^0.42) × momentum
+// momentum = max(0, (3000 − elo) / 1500)
+//
+// Calibres :
+//   #1 / 20 joueurs    → +500        #1 / 225 joueurs → +181
+//   #1 / 500 joueurs   → +129        #10 / 100 joueurs → +175
+//   #400 / 450 joueurs  → +2 (plancher participation, éteint au-dessus de ~2700)
+//
+// Pertes : bouclier 12 mois glissants ; au-delà,
+//   perte = −(25 + 0.25 × (elo − médiane du field)), plafonnée à −500
 var START_RATING = 1500;
-var GRACE_PERIOD = 12;  // Number of seasons without penalty after first appearance
-var DECAY_PER_MISS = 15; // Elo lost per inactive month after grace period
-var MAX_LOSS_PER_SEASON = 500;
-var MIN_PLACEMENT_FOR_ELO = 100; // Below this placement, very little Elo change
+var ELO_CEILING = 3000;     // les gains tendent vers zéro en approchant
+var MAX_GAIN = 500;         // dur plafond
+var PLACE_EXP = 4;          // expo "winner takes all" — monte à 6-8 pour durcir
+var FIELD_MIN = 20;         // taille de field de référence (= +500 possible)
+var FIELD_EXP = 0.42;       // prime aux petits fields (calibrée sur les ancres)
+var FLOOR_MOMENTUM = 0.2;   // momentum mini pour toucher le plancher +2
+var LOSS_BASE = 25;
+var LOSS_SCALE = 0.25;
+var SHIELD_WINDOW = 12;
 
 var SEASONS = [
-    { key: 'mars25',      label: 'Mar 25' }, { key: 'avril25',     label: 'Apr 25' },
-    { key: 'mai25',       label: 'May 25' }, { key: 'juin25',       label: 'Jun 25' },
-    { key: 'juillet25',   label: 'Jul 25' }, { key: 'aout25',       label: 'Aug 25' },
-    { key: 'septembre25', label: 'Sep 25' }, { key: 'octobre25',    label: 'Oct 25' },
-    { key: 'novembre25',  label: 'Nov 25' }, { key: 'decembre25',   label: 'Dec 25' },
-    { key: 'janvier26',   label: 'Jan 26' }, { key: 'fevrier26',    label: 'Feb 26' },
-    { key: 'mars26',      label: 'Mar 26' }, { key: 'avril26',      label: 'Apr 26' },
-    { key: 'mai26',       label: 'May 26' }, { key: 'juin26',      label: 'Jun 26' },
-    { key: 'juillet26',   label: 'Jul 26' }, { key: 'aout26',       label: 'Aug 26' }
+    { key: 'mars25',      label: 'March 2025' }, { key: 'avril25',     label: 'April 2025' },
+    { key: 'mai25',       label: 'May 2025' },   { key: 'juin25',      label: 'June 2025' },
+    { key: 'juillet25',   label: 'July 2025' },  { key: 'aout25',      label: 'August 2025' },
+    { key: 'septembre25', label: 'September 2025' }, { key: 'octobre25',  label: 'October 2025' },
+    { key: 'novembre25',  label: 'November 2025' }, { key: 'decembre25', label: 'December 2025' },
+    { key: 'janvier26',   label: 'January 2026' }, { key: 'fevrier26',   label: 'February 2026' },
+    { key: 'mars26',      label: 'March 2026' }, { key: 'avril26',     label: 'April 2026' },
+    { key: 'mai26',       label: 'May 2026' },   { key: 'juin26',      label: 'June 2026' },
+    { key: 'juillet26',   label: 'July 2026' },  { key: 'aout26',      label: 'August 2026' }
 ];
 
 var COUNTRY_NAMES = {
@@ -232,148 +249,92 @@ function parseSeasonRow(row) {
     return null;
 }
 
-// ======================= CORRECTED ELO MODEL =======================
-// Rules:
-// 1. First appearance: Based on placement only, NEVER lose Elo
-//    - Top-1 in 100-player field: ~+400 to +500
-//    - Top-10 in 100-player field: ~+300
-//    - Top-100 in 500-player field: ~+50
-//    - Top-450 in 500-player field: +0 to +5 (barely moves)
-// 2. Subsequent appearances: Compare to LAST season placement
-//    - Improvement = Gain Elo
-//    - Worse placement = Lose small amount ONLY if you were doing well before
-//    - If you placed poorly (top-400+) before, staying poor = minimal loss
-// 3. Inactivity:
-//    - First miss after debut: 0 penalty
-//    - After GRACE_PERIOD seasons total, consecutive misses cost -15/month
-//    - Max loss per season = -500
+function tagPlayedIn(tag, seasonIdx) {
+    var list = seasonData[SEASONS[seasonIdx].key] || [];
+    for (var i = 0; i < list.length; i++) {
+        if (list[i].tag === tag) return true;
+    }
+    return false;
+}
+
+// ======================= ELO v4 =======================
 function computeElo() {
     var ratings = {};
     var history = {};
-    var firstSeenIndex = {};
-    var lastPlacement = {};
-    var lastActiveSeasonIndex = {};
+    var debutIdx = {};
 
-    SEASONS.forEach(function(season, seasonIdx) {
+    SEASONS.forEach(function(season, idx) {
         var players = seasonData[season.key] || [];
-        var fieldSize = Math.max(players.length, 1);
-        var presentTags = {};
+        var fieldSize = players.length;
+        var present = {};
 
-        // Process present players
+        // Médiane des Elo des participants (nouveau joueur compté à 1500)
+        var vals = [];
+        players.forEach(function(p) {
+            present[p.tag] = true;
+            vals.push(ratings[p.tag] !== undefined ? ratings[p.tag] : START_RATING);
+        });
+        vals.sort(function(a, b) { return a - b; });
+        var medianR = vals.length ? vals[Math.floor(vals.length / 2)] : START_RATING;
+
+        // ---- JOUEURS PRÉSENTS : gains uniquement, jamais de perte ----
         players.forEach(function(p) {
             var tag = p.tag;
-            presentTags[tag] = true;
-
-            if (ratings[tag] === undefined) ratings[tag] = START_RATING;
-
-            var delta = 0;
-
-            if (firstSeenIndex[tag] === undefined) {
-                // FIRST EVER APPEARANCE: gain based on placement & field size
-                // Better placement + smaller field = more Elo
-                var percentile = (p.placement - 1) / fieldSize; // 0 = best, 1 = worst
-                var baseReward = 500 * (1 - Math.pow(percentile, 1.2)); // Exponential curve
-                
-                // Field adjustment: smaller fields give more reward per placement
-                var fieldFactor = Math.sqrt(300 / fieldSize); // sqrt(300/100)=1.73, sqrt(300/500)=0.77
-                delta = Math.floor(baseReward * fieldFactor);
-                
-                // Clamp: minimum 5 for top-500, maximum 500
-                delta = Math.max(5, Math.min(500, delta));
-
-                history[tag] = {};
-                history[tag][season.key] = delta;
-                lastPlacement[tag] = p.placement;
-                lastActiveSeasonIndex[tag] = seasonIdx;
-                firstSeenIndex[tag] = seasonIdx;
-
-            } else {
-                // SUBSEQUENT APPEARANCE: compare to last season
-                var oldPlacement = lastPlacement[tag];
-                var newPlacement = p.placement;
-                var diff = oldPlacement - newPlacement; // positive = improved
-
-                if (diff > 0) {
-                    // Improved placement
-                    var improvementScale = Math.min(500, diff * 2);
-                    // Smaller fields give slightly more
-                    delta = Math.floor(improvementScale * Math.sqrt(300 / fieldSize));
-                } else if (diff < 0) {
-                    // Worse placement: only penalize if they had been performing well
-                    // If old placement was top-200+, they're expected to do better
-                    // If old placement was top-400+, small penalty only
-                    
-                    if (oldPlacement <= 50) {
-                        // Was elite, now dropped: bigger penalty
-                        var declineScale = Math.abs(diff) * 3;
-                        delta = -Math.floor(Math.min(500, declineScale));
-                    } else if (oldPlacement <= 200) {
-                        // Was good, now worse: moderate penalty
-                        var declineScale = Math.abs(diff) * 1.5;
-                        delta = -Math.floor(Math.min(300, declineScale));
-                    } else {
-                        // Was already mediocre (top-400+): tiny penalty or none
-                        if (newPlacement > 450) {
-                            // Now really bad: small penalty
-                            delta = -Math.floor(Math.min(50, Math.abs(diff)));
-                        } else {
-                            // Still mediocre: barely move
-                            delta = Math.max(-5, Math.floor(-Math.abs(diff) / 5));
-                        }
-                    }
-                } else {
-                    // Same placement: tiny stability bonus
-                    delta = Math.floor(1 + fieldSize / 500);
-                }
-
-                // Clamp losses for low performers
-                if (oldPlacement > 400 && delta < 0) {
-                    delta = Math.max(-10, delta);
-                }
-
-                if (!history[tag]) history[tag] = {};
-                history[tag][season.key] = delta;
-                lastPlacement[tag] = newPlacement;
-                lastActiveSeasonIndex[tag] = seasonIdx;
+            if (ratings[tag] === undefined) {
+                ratings[tag] = START_RATING;
+                debutIdx[tag] = idx;
             }
 
-            ratings[tag] += delta;
+            var R = ratings[tag];
+            var gain = 0;
+
+            if (fieldSize >= 2) {
+                // Winner-takes-all : décote rapide passé le top 10%
+                var pct = (p.placement - 1) / fieldSize;
+                var P = Math.pow(1 - pct, PLACE_EXP);
+                // Prime aux petits fields (power law calibrée)
+                var F = Math.min(1, Math.pow(FIELD_MIN / fieldSize, FIELD_EXP));
+                var raw = MAX_GAIN * P * F;
+                // Momentum : rendements décroissants proche du plafond
+                var momentum = Math.max(0, (ELO_CEILING - R) / (ELO_CEILING - START_RATING));
+                gain = Math.round(Math.min(MAX_GAIN, raw * momentum));
+                // Plancher participation : +2, éteint si momentum trop faible
+                if (gain < 2 && momentum >= FLOOR_MOMENTUM) gain = 2;
+            } else {
+                gain = 2;
+            }
+
+            if (!history[tag]) history[tag] = {};
+            history[tag][season.key] = (history[tag][season.key] || 0) + gain;
+            ratings[tag] += gain;
         });
 
-        // Handle INACTIVE players (who have appeared before)
+        // ---- JOUEURS ABSENTS (déjà vus) : bouclier 12 mois glissants ----
         for (var tag in ratings) {
-            if (!presentTags[tag]) {
-                var firstSeen = firstSeenIndex[tag];
-                var lastActive = lastActiveSeasonIndex[tag];
-                var seasonsSinceLastActive = seasonIdx - lastActive;
+            if (present[tag]) continue;
+            if (debutIdx[tag] === undefined || debutIdx[tag] >= idx) continue;
 
-                // Track consecutive inactivity
-                var consecutiveMisses = 0;
-                for (var checkIdx = lastActive + 1; checkIdx <= seasonIdx; checkIdx++) {
-                    var checkKey = SEASONS[checkIdx].key;
-                    var checkPlayers = seasonData[checkKey] || [];
-                    var wasInCheck = false;
-                    for (var cp = 0; cp < checkPlayers.length; cp++) {
-                        if (checkPlayers[cp].tag === tag) { wasInCheck = true; break; }
-                    }
-                    if (!wasInCheck) consecutiveMisses++;
-                }
-
-                // Apply penalty only AFTER grace period
-                if (seasonsSinceLastActive >= 1) {
-                    if (seasonIdx - firstSeen < GRACE_PERIOD) {
-                        // Within grace period: no penalty
-                        delta = 0;
-                    } else {
-                        // After grace: -15 per consecutive miss
-                        delta = -Math.min(MAX_LOSS_PER_SEASON, consecutiveMisses * DECAY_PER_MISS);
-                    }
-
-                    if (!history[tag]) history[tag] = {};
-                    history[tag][season.key] = delta;
-                    ratings[tag] += delta;
-                }
+            // Absences dans la fenêtre glissante de 12 mois
+            var misses = 0;
+            var from = Math.max(0, idx - (SHIELD_WINDOW - 1));
+            for (var w = from; w <= idx; w++) {
+                if (w < debutIdx[tag]) continue;
+                if (!tagPlayedIn(tag, w)) misses++;
             }
+
+            var delta = 0;
+            if (misses >= 2) {
+                // 2e absence (ou plus) dans la fenêtre : perte proportionnelle
+                // à l'écart au-dessus de la médiane du field
+                var above = Math.max(0, ratings[tag] - medianR);
+                var loss = LOSS_BASE + Math.round(above * LOSS_SCALE);
+                delta = -Math.min(MAX_GAIN, loss);
+            }
+            // misses === 1 → bouclier actif, 0 de perte
+
+            if (!history[tag]) history[tag] = {};
+            history[tag][season.key] = (history[tag][season.key] || 0) + delta;
+            ratings[tag] += delta;
         }
     });
 
@@ -553,11 +514,11 @@ function displayPage(pageData, startIndex, mi, sortMode) {
 
         var stat;
         if (mi >= 0) {
-            stat = '<span class="font-black text-emerald-400 font-mono">#' + player._monthPlace + '</span>';
+            stat = '#<span class="font-black text-emerald-400 font-mono">' + player._monthPlace + '</span>';
         } else if (sortMode === 'elo') {
-            stat = '<span class="font-black text-blue-400 font-mono">' + Math.round(player.elo) + '</span>';
+            stat = '<span class="font-black text-blue-400 font-mono text-sm">' + Math.round(player.elo) + '</span>';
         } else {
-            stat = '<span class="font-black text-emerald-400 font-mono">' + player.points + '</span>' +
+            stat = '<span class="font-black text-emerald-400 font-mono text-sm">' + player.points + '</span>' +
                    '<span class="text-[8px] text-slate-500 ml-1">PTS</span>';
         }
 
@@ -567,15 +528,16 @@ function displayPage(pageData, startIndex, mi, sortMode) {
             : '<span class="flag-icon bg-[#1e293b] inline-flex items-center justify-center text-[9px] text-slate-600">?</span>';
 
         var row = document.createElement('div');
-        row.className = 'player-row grid grid-cols-12 gap-4 px-4 py-3 items-center cursor-pointer';
+        // LIGNE : 1 + 1 + 4 + 2 + 4 = 12 colonnes (identique au header)
+        row.className = 'player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer';
         row.onclick = function() { openDrawer(player); };
         row.innerHTML =
             '<div class="rank-badge ' + rankClass + '">' + (gi + 1) + '</div>' +
             '<div class="flex items-center">' + flagHtml + '</div>' +
-            '<div class="min-w-0"><div class="font-bold text-white text-sm truncate">' + escapeHtml(player.pseudo) + '</div>' +
+            '<div class="col-span-4 min-w-0"><div class="font-bold text-white text-sm truncate" title="' + escapeHtml(player.pseudo) + '">' + escapeHtml(player.pseudo) + '</div>' +
             '<div class="text-[10px] text-slate-500 font-mono truncate">' + escapeHtml(player.tag) + '</div></div>' +
-            '<div class="col-span-2 text-right text-xs font-bold text-amber-500/90 font-mono">' + peakLabel + '</div>' +
-            '<div class="col-span-3 text-right">' + stat + '</div>';
+            '<div class="col-span-2 text-right text-xs font-bold text-amber-500/90 font-mono whitespace-nowrap">' + peakLabel + '</div>' +
+            '<div class="col-span-4 text-right whitespace-nowrap">' + stat + '</div>';
         container.appendChild(row);
     });
 }
