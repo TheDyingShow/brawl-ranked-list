@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brawl Stars Ranked Leaderboard</title>
+    <title>Ranked List — Brawl Stars</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
@@ -18,17 +18,23 @@
         .rank-2 { color: #94a3b8; }
         .rank-3 { color: #cd7f32; }
         .flag-icon { width: 32px; height: 22px; border-radius: 4px; object-fit: cover; }
-        .filter-select {
+        .flag-icon-sm { width: 22px; height: 15px; border-radius: 2px; object-fit: cover; }
+        .filter-select, .country-btn {
             background-color: #0f172a; border: 1px solid #020617; color: #e2e8f0;
             font-size: 0.7rem; border-radius: 0.5rem; padding: 0.5rem 0.6rem; width: 100%;
         }
         .filter-select:focus { outline: none; border-color: #3b82f6; }
+        .country-btn { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        .country-btn:hover, .country-btn.open { border-color: #3b82f6; }
+        .country-menu { max-height: 18rem; overflow-y-auto; }
+        .country-option { display: flex; align-items: center; gap: 0.55rem; width: 100%; text-align: left; padding: 0.45rem 0.6rem; font-size: 0.7rem; color: #e2e8f0; }
+        .country-option:hover { background-color: #16203a; }
+        .country-option.active { background-color: #1a2547; }
         #playerDrawer { transition: transform 0.3s ease; transform: translateX(100%); }
         #playerDrawer.open { transform: translateX(0); }
         .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
         .elo-plus { color: #34d399; }
         .elo-minus { color: #f87171; }
-        .row-offline .player-row-sub { opacity: 0.45; }
         @media (min-width: 768px) {
             .content-area { margin-right: 0; transition: margin-right 0.3s ease; }
             body.drawer-open .content-area { margin-right: 24rem; }
@@ -38,21 +44,21 @@
 <body class="font-sans antialiased min-h-screen">
 
 <div id="appWrapper" class="flex flex-col md:flex-row min-h-screen">
-    <aside class="sidebar w-full md:w-64 bg-[#090f1c] border-b md:border-b-0 md:border-r border-slate-900 p-5 flex flex-col shrink-0">
+    <!-- Barre latérale : 24rem = même largeur que le profil -->
+    <aside class="sidebar w-full md:w-96 bg-[#090f1c] border-b md:border-b-0 md:border-r border-slate-900 p-5 flex flex-col shrink-0">
         <div class="flex items-center space-x-3 mb-6">
             <div class="w-8 h-8 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-lg flex items-center justify-center font-black text-black text-sm shadow-lg">⚡</div>
             <div>
-                <h1 class="font-black tracking-wider text-sm uppercase text-white leading-none">BRAWL LIST</h1>
-                <span class="text-[9px] tracking-widest uppercase font-bold text-slate-500">Ranked</span>
+                <h1 class="font-black tracking-wider text-sm uppercase text-white leading-none">RANKED LIST</h1>
+                <span class="text-[9px] tracking-widest uppercase font-bold text-slate-500">Brawl Stars</span>
             </div>
         </div>
 
         <div class="bg-[#0f172a] border border-slate-900 rounded-lg p-3 mb-5">
             <span class="block text-[8px] uppercase tracking-widest font-black text-slate-500 mb-2">Parameters</span>
             <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wide">Min Pro Rank (11,250+)</span>
-            <div class="mt-2 pt-2 border-t border-slate-800/60 flex justify-between text-[10px]">
-                <span class="text-slate-500">Timeline:</span>
-                <span class="font-bold text-white font-mono">Mar 25 - Aug 26</span>
+            <div class="mt-2 pt-2 border-t border-slate-800/60 text-[10px] text-slate-500">
+                Timeline: <span class="font-bold text-white font-mono">March 2025 (Ranked 2.0) — August 2026 (Now)</span>
             </div>
         </div>
 
@@ -63,9 +69,17 @@
         </div>
 
         <div class="space-y-2 mb-3">
-            <select id="filterCountry" class="filter-select" onchange="applyFilters()">
-                <option value="">All countries</option>
-            </select>
+            <!-- Dropdown pays personnalisé avec drapeaux -->
+            <div class="relative" id="countryDropdown">
+                <button type="button" id="countryBtn" class="country-btn" onclick="toggleCountryMenu(event)">
+                    <span class="flex items-center gap-2 min-w-0">
+                        <span id="countryBtnFlag" class="text-base leading-none">🌐</span>
+                        <span id="countryBtnLabel" class="truncate">All countries</span>
+                    </span>
+                    <span class="text-[9px] text-slate-500">▼</span>
+                </button>
+                <div id="countryMenu" class="country-menu hidden absolute z-50 mt-1 w-full bg-[#0f172a] border border-slate-950 rounded-lg shadow-xl"></div>
+            </div>
             <select id="filterMonth" class="filter-select" onchange="applyFilters()">
                 <option value="-1">All-time</option>
             </select>
@@ -82,7 +96,8 @@
         </div>
     </aside>
 
-    <main class="content-area flex-1 p-5 md:p-8 max-w-5xl flex flex-col justify-between min-h-screen">
+    <!-- mx-auto : le tableau se centre dans l'espace restant -->
+    <main class="content-area flex-1 mx-auto p-5 md:p-8 max-w-5xl flex flex-col justify-between min-h-screen w-full">
         <div>
             <div class="mb-5 flex items-center justify-between">
                 <h2 id="viewTitle" class="text-[10px] uppercase tracking-widest font-black text-slate-400">Standings — All-time</h2>
@@ -118,7 +133,6 @@
         <button onclick="closeDrawer()" class="text-slate-400 hover:text-white transition-colors text-lg leading-none">✕</button>
     </div>
     <div class="p-5 space-y-4">
-        <!-- Identité centrée (style DemonList) -->
         <div class="flex flex-col items-center text-center space-y-2">
             <img id="dFlag" class="flag-icon shadow-md" alt="">
             <div class="min-w-0 w-full">
@@ -142,7 +156,6 @@
                 <span id="dPeak" class="text-lg font-black text-amber-500 font-mono">-</span>
             </div>
         </div>
-        <!-- Boutons profils, juste sous le Peak -->
         <div class="space-y-2">
             <a id="dLink" target="_blank" rel="noopener noreferrer"
                class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
@@ -170,7 +183,7 @@ var FLOOR_MOMENTUM = 0.2;
 var LOSS_BASE = 25;
 var LOSS_SCALE = 0.25;
 var SHIELD_WINDOW = 12;
-var OFFLINE_MONTHS = 12;   // > 12 mois sans pro = "offline"
+var OFFLINE_MONTHS = 12;
 
 var SEASONS = [
     { key: 'mars25',      label: 'March 2025' }, { key: 'avril25',     label: 'April 2025' },
@@ -186,7 +199,7 @@ var SEASONS = [
 var LAST_SEASON_IDX = SEASONS.length - 1;
 
 var COUNTRY_NAMES = {
-    'AR':'Argentina','AU':'Australia','AT':'Austria','BE':'Belgium','BO':'Bolivia',
+    'AR':'Argentina','AU':'Australia','AT':'Austria','BY':'Belarus','BE':'Belgium','BO':'Bolivia',
     'BA':'Bosnia and Herz.','BR':'Brazil','BG':'Bulgaria','CA':'Canada','CL':'Chile',
     'CN':'China','CO':'Colombia','CR':'Costa Rica','HR':'Croatia','CZ':'Czechia',
     'DK':'Denmark','EC':'Ecuador','EG':'Egypt','EE':'Estonia','FI':'Finland',
@@ -217,6 +230,7 @@ var eloMap = {};
 var eloHistory = {};
 var currentPage = 1;
 var updatingHash = false;
+var selectedCountry = '';    // pays sélectionné via le dropdown custom
 
 function escapeHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
@@ -229,6 +243,7 @@ function insightsUrl(tag) {
     return 'https://brawlinsights.com/en/player/profile/' + encodeURIComponent(tag.replace(/^#/, ''));
 }
 function getFlagUrl(cc) { return (cc && cc !== 'XX') ? FLAG_CDN + cc.toLowerCase() + '.png' : ''; }
+function getSmallFlagUrl(cc) { return 'https://flagcdn.com/w20/' + cc.toLowerCase() + '.png'; }
 function countryName(cc) { return (cc && cc !== 'XX' && COUNTRY_NAMES[cc]) ? COUNTRY_NAMES[cc] : ''; }
 
 function papaLoad(fileUrl) {
@@ -261,7 +276,6 @@ function tagPlayedIn(tag, seasonIdx) {
     return false;
 }
 
-// Dernière saison jouée (-1 si jamais joué)
 function lastPlayedIdx(tag) {
     for (var i = LAST_SEASON_IDX; i >= 0; i--) {
         if (tagPlayedIn(tag, i)) return i;
@@ -288,7 +302,6 @@ function computeElo() {
         vals.sort(function(a, b) { return a - b; });
         var medianR = vals.length ? vals[Math.floor(vals.length / 2)] : START_RATING;
 
-        // ---- JOUEURS PRÉSENTS : gains uniquement ----
         players.forEach(function(p) {
             var tag = p.tag;
             if (ratings[tag] === undefined) {
@@ -316,7 +329,6 @@ function computeElo() {
             ratings[tag] += gain;
         });
 
-        // ---- JOUEURS ABSENTS : bouclier 12 mois glissants ----
         for (var tag in ratings) {
             if (present[tag]) continue;
             if (debutIdx[tag] === undefined || debutIdx[tag] >= idx) continue;
@@ -407,9 +419,9 @@ Promise.all([
     eloMap = computeElo();
     allPlayers.forEach(function(p) {
         p.elo = eloMap[p.tag] || 0;
-        p.lastIdx = lastPlayedIdx(p.tag);                          // -1..17
-        p.monthsIdle = p.lastIdx < 0 ? 99 : LAST_SEASON_IDX - p.lastIdx; // saisons depuis dernier match
-        p.offline = p.monthsIdle > OFFLINE_MONTHS;                 // offline si > 12 mois
+        p.lastIdx = lastPlayedIdx(p.tag);
+        p.monthsIdle = p.lastIdx < 0 ? 99 : LAST_SEASON_IDX - p.lastIdx;
+        p.offline = p.monthsIdle > OFFLINE_MONTHS;
     });
 
     buildCountryFilter();
@@ -417,25 +429,95 @@ Promise.all([
     document.getElementById('playerCount').innerText = allPlayers.length + ' Records';
 });
 
+// ======================= DROPDOWN PAYS (avec drapeaux) =======================
 function buildCountryFilter() {
     var seen = {};
     allPlayers.forEach(function(p) { if (p.country !== 'XX') seen[p.country] = true; });
-    var sel = document.getElementById('filterCountry');
+    var menu = document.getElementById('countryMenu');
+    menu.innerHTML = '';
+
+    // Option "All countries"
+    menu.appendChild(makeCountryOption('', 'All countries'));
+
     Object.keys(seen).sort(function(a, b) {
         return (COUNTRY_NAMES[a] || a).localeCompare(COUNTRY_NAMES[b] || b);
     }).forEach(function(cc) {
-        var o = document.createElement('option');
-        o.value = cc; o.textContent = countryName(cc) || cc;
-        sel.appendChild(o);
+        menu.appendChild(makeCountryOption(cc, countryName(cc) || cc));
     });
-    var o2 = document.createElement('option');
-    o2.value = 'XX'; o2.textContent = 'Unknown (?)';
-    sel.appendChild(o2);
+
+    menu.appendChild(makeCountryOption('XX', 'Unknown (?)'));
+    updateCountryButton();
 }
 
+function makeCountryOption(code, label) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'country-option';
+    btn.setAttribute('data-code', code);
+    if (code === selectedCountry) btn.classList.add('active');
+
+    var flagPart;
+    if (code && code !== 'XX') {
+        flagPart = '<img src="' + getSmallFlagUrl(code) + '" class="flag-icon-sm" alt="" loading="lazy">';
+    } else if (code === 'XX') {
+        flagPart = '<span class="flag-icon-sm bg-[#1e293b] inline-flex items-center justify-center text-[8px] text-slate-600 rounded-[2px]">?</span>';
+    } else {
+        flagPart = '<span class="text-base leading-none">🌐</span>';
+    }
+
+    btn.innerHTML = flagPart + '<span class="truncate">' + escapeHtml(label) + '</span>';
+    btn.onclick = function() {
+        selectCountry(code);
+    };
+    return btn;
+}
+
+function updateCountryButton() {
+    var flagEl = document.getElementById('countryBtnFlag');
+    var labelEl = document.getElementById('countryBtnLabel');
+    if (!selectedCountry) {
+        flagEl.innerHTML = '🌐';
+        labelEl.textContent = 'All countries';
+    } else if (selectedCountry === 'XX') {
+        flagEl.innerHTML = '?';
+        labelEl.textContent = 'Unknown';
+    } else {
+        flagEl.innerHTML = '<img src="' + getSmallFlagUrl(selectedCountry) + '" class="flag-icon-sm" alt="">';
+        labelEl.textContent = countryName(selectedCountry) || selectedCountry;
+    }
+    // Marque l'option active
+    var opts = document.querySelectorAll('.country-option');
+    opts.forEach(function(o) {
+        o.classList.toggle('active', o.getAttribute('data-code') === selectedCountry);
+    });
+}
+
+function selectCountry(code) {
+    selectedCountry = code;
+    updateCountryButton();
+    closeCountryMenu();
+    applyFilters();
+}
+
+function toggleCountryMenu(e) {
+    if (e) e.stopPropagation();
+    var menu = document.getElementById('countryMenu');
+    var btn = document.getElementById('countryBtn');
+    menu.classList.toggle('hidden');
+    btn.classList.toggle('open', !menu.classList.contains('hidden'));
+}
+function closeCountryMenu() {
+    document.getElementById('countryMenu').classList.add('hidden');
+    document.getElementById('countryBtn').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+    if (!document.getElementById('countryDropdown').contains(e.target)) closeCountryMenu();
+});
+
+// ======================= ROUTAGE =======================
 function writeHash() {
     var sort = document.getElementById('filterSort').value;
-    var cc = document.getElementById('filterCountry').value || 'all';
+    var cc = selectedCountry || 'all';
     var mi = parseInt(document.getElementById('filterMonth').value, 10);
     var h = '#/' + sort + '/' + cc + '/' + mi;
     if (location.hash !== h) {
@@ -454,7 +536,8 @@ function applyFromHash(initial) {
     if (isNaN(mi) || mi < -1 || mi > 17) mi = -1;
 
     document.getElementById('filterSort').value = sort;
-    document.getElementById('filterCountry').value = cc;
+    selectedCountry = cc;
+    updateCountryButton();
     document.getElementById('filterMonth').value = String(mi);
     applyFilters(true);
 }
@@ -466,7 +549,7 @@ window.addEventListener('hashchange', function() {
 
 function applyFilters(skipHash) {
     var q = document.getElementById('searchBar').value.trim().toLowerCase();
-    var cc = document.getElementById('filterCountry').value;
+    var cc = selectedCountry;
     var mi = parseInt(document.getElementById('filterMonth').value, 10);
     var sortMode = document.getElementById('filterSort').value;
 
@@ -489,7 +572,6 @@ function applyFilters(skipHash) {
     if (mi >= 0) {
         filteredPlayers.sort(function(a, b) { return a._monthPlace - b._monthPlace; });
     } else if (sortMode === 'elo') {
-        // Actifs d'abord, puis par Elo ; les offline restent visibles mais en bas
         filteredPlayers.sort(function(a, b) {
             if (!!a.offline !== !!b.offline) return a.offline ? 1 : -1;
             return b.elo - a.elo || b.points - a.points;
@@ -497,7 +579,6 @@ function applyFilters(skipHash) {
     } else if (sortMode === 'peak') {
         filteredPlayers.sort(function(a, b) { return a.peakRank - b.peakRank || b.points - a.points; });
     } else if (sortMode === 'activity') {
-        // Le plus actif (a joué le plus récemment) en premier
         filteredPlayers.sort(function(a, b) { return b.lastIdx - a.lastIdx || b.points - a.points; });
     } else {
         filteredPlayers.sort(function(a, b) { return b.points - a.points || a.peakRank - b.peakRank; });
@@ -578,11 +659,9 @@ function openDrawer(p) {
 
     var dStatus = document.getElementById('dStatus');
     if (p.offline) {
-        dStatus.classList.remove('hidden');
         dStatus.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-slate-800 text-slate-500';
         dStatus.textContent = 'Offline · Last played ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
     } else {
-        dStatus.classList.remove('hidden');
         dStatus.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-500';
         dStatus.textContent = 'Active · Last played ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
     }
@@ -636,7 +715,9 @@ function updatePageData() {
 
 function changePage(dir) { currentPage += dir; updatePageData(); }
 
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDrawer(); });
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDrawer();
+});
 </script>
 </body>
 </html>
