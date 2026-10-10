@@ -149,10 +149,11 @@
 </div>
 
 <script>
-// ======================= ELO CONFIG =======================
 var START_RATING = 1500;
-var MAX_GAIN_PER_SEASON = 500;   // cap pour les grosses victoires
-var DECAY_AFTER_GRACE = 15;      // pénalité après la période de grâce (12 saisons)
+var GRACE_PERIOD = 12;  // Number of seasons without penalty after first appearance
+var DECAY_PER_MISS = 15; // Elo lost per inactive month after grace period
+var MAX_LOSS_PER_SEASON = 500;
+var MIN_PLACEMENT_FOR_ELO = 100; // Below this placement, very little Elo change
 
 var SEASONS = [
     { key: 'mars25',      label: 'Mar 25' }, { key: 'avril25',     label: 'Apr 25' },
@@ -231,121 +232,146 @@ function parseSeasonRow(row) {
     return null;
 }
 
-// ======================= NEW ELO MODEL =======================
-// Règles :
-// - 1ère apparition : gain uniquement basé sur placement + taille du field, jamais de perte
-// - Saison suivante : comparer placement actuel à celui précédent
-// - Field plus petit = récompenses plus grandes
-// - Top-10 dans 100 joueurs ≈ +300, Top-10 dans 500 joueurs ≈ +100
-// - Max gain = +500 par saison
-// - Inactivité : 1ère absence = 0 pénalité, puis -15/saison après 12 mois consécutifs
-// - Perte max = -500 (si beaucoup de monde réussit et toi tu ratas)
-// - Top-450 gagne +0 à +5, jamais ne perd -150
+// ======================= CORRECTED ELO MODEL =======================
+// Rules:
+// 1. First appearance: Based on placement only, NEVER lose Elo
+//    - Top-1 in 100-player field: ~+400 to +500
+//    - Top-10 in 100-player field: ~+300
+//    - Top-100 in 500-player field: ~+50
+//    - Top-450 in 500-player field: +0 to +5 (barely moves)
+// 2. Subsequent appearances: Compare to LAST season placement
+//    - Improvement = Gain Elo
+//    - Worse placement = Lose small amount ONLY if you were doing well before
+//    - If you placed poorly (top-400+) before, staying poor = minimal loss
+// 3. Inactivity:
+//    - First miss after debut: 0 penalty
+//    - After GRACE_PERIOD seasons total, consecutive misses cost -15/month
+//    - Max loss per season = -500
 function computeElo() {
     var ratings = {};
     var history = {};
-    var firstSeen = {};
-    var prevPlacement = {};
+    var firstSeenIndex = {};
+    var lastPlacement = {};
+    var lastActiveSeasonIndex = {};
 
-    SEASONS.forEach(function(season, idx) {
+    SEASONS.forEach(function(season, seasonIdx) {
         var players = seasonData[season.key] || [];
-        var fieldSize = players.length;
+        var fieldSize = Math.max(players.length, 1);
         var presentTags = {};
 
+        // Process present players
         players.forEach(function(p) {
-            presentTags[p.tag] = true;
             var tag = p.tag;
+            presentTags[tag] = true;
 
-            if (!ratings[tag]) ratings[tag] = START_RATING;
+            if (ratings[tag] === undefined) ratings[tag] = START_RATING;
 
-            // Suivi de la première apparition
-            if (!firstSeen[tag]) firstSeen[tag] = idx;
-
-            // Calcul du delta Elo
             var delta = 0;
 
-            if (idx === firstSeen[tag]) {
-                // PREMIÈRE APPARITION : gain uniquement
-                // Formulaire : base * (référence_field / field_actuel)^0.7
-                // où base = 500 * (1 - placement/total_field)^1.5
-                var baseGain = 500 * Math.pow(1 - (p.placement - 1) / Math.max(fieldSize, 1), 1.5);
-                // Ajustement taille field : référence = 300 joueurs
-                var fieldAdjustment = Math.pow(300 / Math.max(fieldSize, 1), 0.5);
-                delta = Math.floor(baseGain * fieldAdjustment);
-                delta = Math.min(MAX_GAIN_PER_SEASON, Math.max(0, delta));
+            if (firstSeenIndex[tag] === undefined) {
+                // FIRST EVER APPEARANCE: gain based on placement & field size
+                // Better placement + smaller field = more Elo
+                var percentile = (p.placement - 1) / fieldSize; // 0 = best, 1 = worst
+                var baseReward = 500 * (1 - Math.pow(percentile, 1.2)); // Exponential curve
+                
+                // Field adjustment: smaller fields give more reward per placement
+                var fieldFactor = Math.sqrt(300 / fieldSize); // sqrt(300/100)=1.73, sqrt(300/500)=0.77
+                delta = Math.floor(baseReward * fieldFactor);
+                
+                // Clamp: minimum 5 for top-500, maximum 500
+                delta = Math.max(5, Math.min(500, delta));
 
                 history[tag] = {};
                 history[tag][season.key] = delta;
-                prevPlacement[tag] = p.placement;
+                lastPlacement[tag] = p.placement;
+                lastActiveSeasonIndex[tag] = seasonIdx;
+                firstSeenIndex[tag] = seasonIdx;
+
             } else {
-                // APPARITION DÉJÀ VUE : gain ou perte selon comparaison
-                // Si joueur présent cette saison
-                if (prevPlacement[tag]) {
-                    var oldPlace = prevPlacement[tag];
-                    var newPlace = p.placement;
+                // SUBSEQUENT APPEARANCE: compare to last season
+                var oldPlacement = lastPlacement[tag];
+                var newPlacement = p.placement;
+                var diff = oldPlacement - newPlacement; // positive = improved
 
-                    // Gain basé sur amélioration ou dégradation
-                    // Amélioration = gain, Dégradation = petite perte seulement
-                    var diff = oldPlace - newPlace; // positif = meilleure place
-
-                    if (diff > 0) {
-                        // Meilleur classement que saison précédente
-                        var improvementBase = Math.min(500, diff * (fieldSize / 30));
-                        delta = Math.floor(improvementBase * Math.pow(300 / fieldSize, 0.5));
-                    } else if (diff < 0) {
-                        // Pire classement : petite perte proportionnelle à la chute
-                        var declineBase = Math.abs(diff) * (fieldSize / 100);
-                        delta = -Math.floor(Math.min(500, declineBase));
+                if (diff > 0) {
+                    // Improved placement
+                    var improvementScale = Math.min(500, diff * 2);
+                    // Smaller fields give slightly more
+                    delta = Math.floor(improvementScale * Math.sqrt(300 / fieldSize));
+                } else if (diff < 0) {
+                    // Worse placement: only penalize if they had been performing well
+                    // If old placement was top-200+, they're expected to do better
+                    // If old placement was top-400+, small penalty only
+                    
+                    if (oldPlacement <= 50) {
+                        // Was elite, now dropped: bigger penalty
+                        var declineScale = Math.abs(diff) * 3;
+                        delta = -Math.floor(Math.min(500, declineScale));
+                    } else if (oldPlacement <= 200) {
+                        // Was good, now worse: moderate penalty
+                        var declineScale = Math.abs(diff) * 1.5;
+                        delta = -Math.floor(Math.min(300, declineScale));
                     } else {
-                        // Même placement : léger gain (stabilité = points)
-                        delta = Math.floor(Math.max(1, fieldSize / 200));
+                        // Was already mediocre (top-400+): tiny penalty or none
+                        if (newPlacement > 450) {
+                            // Now really bad: small penalty
+                            delta = -Math.floor(Math.min(50, Math.abs(diff)));
+                        } else {
+                            // Still mediocre: barely move
+                            delta = Math.max(-5, Math.floor(-Math.abs(diff) / 5));
+                        }
                     }
-
-                    // Plafons et planchers
-                    delta = Math.min(MAX_GAIN_PER_SEASON, delta);
-
-                    history[tag] = history[tag] || {};
-                    history[tag][season.key] = delta;
+                } else {
+                    // Same placement: tiny stability bonus
+                    delta = Math.floor(1 + fieldSize / 500);
                 }
 
-                prevPlacement[tag] = p.placement;
+                // Clamp losses for low performers
+                if (oldPlacement > 400 && delta < 0) {
+                    delta = Math.max(-10, delta);
+                }
+
+                if (!history[tag]) history[tag] = {};
+                history[tag][season.key] = delta;
+                lastPlacement[tag] = newPlacement;
+                lastActiveSeasonIndex[tag] = seasonIdx;
             }
 
             ratings[tag] += delta;
         });
 
-        // GESTION DES ABSENTS (déjà vus avant)
-        for (var t in ratings) {
-            if (!presentTags[t]) {
-                // Joueur absent cette saison mais déjà vu
-                var missedSince = firstSeen[t];
-                var lastActive = idx - 1;
-                // Trouver dernière saison active
-                for (var j = idx - 1; j >= firstSeen[t]; j--) {
-                    var checkKey = SEASONS[j].key;
-                    var checkList = seasonData[checkKey] || [];
-                    var wasPresent = false;
-                    for (var k = 0; k < checkList.length; k++) {
-                        if (checkList[k].tag === t) { wasPresent = true; break; }
+        // Handle INACTIVE players (who have appeared before)
+        for (var tag in ratings) {
+            if (!presentTags[tag]) {
+                var firstSeen = firstSeenIndex[tag];
+                var lastActive = lastActiveSeasonIndex[tag];
+                var seasonsSinceLastActive = seasonIdx - lastActive;
+
+                // Track consecutive inactivity
+                var consecutiveMisses = 0;
+                for (var checkIdx = lastActive + 1; checkIdx <= seasonIdx; checkIdx++) {
+                    var checkKey = SEASONS[checkIdx].key;
+                    var checkPlayers = seasonData[checkKey] || [];
+                    var wasInCheck = false;
+                    for (var cp = 0; cp < checkPlayers.length; cp++) {
+                        if (checkPlayers[cp].tag === tag) { wasInCheck = true; break; }
                     }
-                    if (wasPresent) { lastActive = j; break; }
+                    if (!wasInCheck) consecutiveMisses++;
                 }
 
-                var consecutiveMisses = idx - lastActive - 1;
-
-                // Période de grâce : 12 saisons sans punition après première apparition
-                if (consecutiveMisses > 0) {
-                    // Première absence = 0 punition, puis -15/saison après 12 mois
-                    if (consecutiveMisses <= 1 || idx - firstSeen[t] < 12) {
-                        delta = 0; // Pas de punition
+                // Apply penalty only AFTER grace period
+                if (seasonsSinceLastActive >= 1) {
+                    if (seasonIdx - firstSeen < GRACE_PERIOD) {
+                        // Within grace period: no penalty
+                        delta = 0;
                     } else {
-                        delta = -(consecutiveMisses - 1) * DECAY_AFTER_GRACE;
-                        delta = Math.max(-MAX_GAIN_PER_SEASON, delta);
+                        // After grace: -15 per consecutive miss
+                        delta = -Math.min(MAX_LOSS_PER_SEASON, consecutiveMisses * DECAY_PER_MISS);
                     }
 
-                    history[t] = history[t] || {};
-                    history[t][season.key] = delta;
-                    ratings[t] += delta;
+                    if (!history[tag]) history[tag] = {};
+                    history[tag][season.key] = delta;
+                    ratings[tag] += delta;
                 }
             }
         }
@@ -355,7 +381,6 @@ function computeElo() {
     return ratings;
 }
 
-// ======================= INIT =======================
 (function initMonths() {
     var sel = document.getElementById('filterMonth');
     SEASONS.forEach(function(s, i) {
