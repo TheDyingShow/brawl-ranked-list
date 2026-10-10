@@ -26,7 +26,12 @@
         .filter-select:focus { outline: none; border-color: #3b82f6; }
         .country-btn { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .country-btn:hover, .country-btn.open { border-color: #3b82f6; }
-        .country-menu { max-height: 18rem; overflow-y-auto; }
+        .country-menu {
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+            margin-top: 0.25rem; max-height: 16rem; overflow-y: auto; overflow-x: hidden;
+            background-color: #0f172a; border: 1px solid #020617; border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
         .country-option { display: flex; align-items: center; gap: 0.55rem; width: 100%; text-align: left; padding: 0.45rem 0.6rem; font-size: 0.7rem; color: #e2e8f0; }
         .country-option:hover { background-color: #16203a; }
         .country-option.active { background-color: #1a2547; }
@@ -35,16 +40,17 @@
         .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
         .elo-plus { color: #34d399; }
         .elo-minus { color: #f87171; }
+        /* Le décalage tiroir vit sur le WRAPPER ; le mx-auto vit sur <main>.
+           Séparer les deux évite que margin-right écrase le centrage. */
         @media (min-width: 768px) {
-            .content-area { margin-right: 0; transition: margin-right 0.3s ease; }
+            .content-area { transition: margin-right 0.3s ease; }
             body.drawer-open .content-area { margin-right: 24rem; }
         }
     </style>
 </head>
 <body class="font-sans antialiased min-h-screen">
 
-<div id="appWrapper" class="flex flex-col md:flex-row min-h-screen">
-    <!-- Barre latérale : 24rem = même largeur que le profil -->
+<div class="flex flex-col md:flex-row min-h-screen">
     <aside class="sidebar w-full md:w-96 bg-[#090f1c] border-b md:border-b-0 md:border-r border-slate-900 p-5 flex flex-col shrink-0">
         <div class="flex items-center space-x-3 mb-6">
             <div class="w-8 h-8 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-lg flex items-center justify-center font-black text-black text-sm shadow-lg">⚡</div>
@@ -69,16 +75,15 @@
         </div>
 
         <div class="space-y-2 mb-3">
-            <!-- Dropdown pays personnalisé avec drapeaux -->
             <div class="relative" id="countryDropdown">
                 <button type="button" id="countryBtn" class="country-btn" onclick="toggleCountryMenu(event)">
                     <span class="flex items-center gap-2 min-w-0">
-                        <span id="countryBtnFlag" class="text-base leading-none">🌐</span>
+                        <span id="countryBtnFlag" class="leading-none shrink-0">🌐</span>
                         <span id="countryBtnLabel" class="truncate">All countries</span>
                     </span>
                     <span class="text-[9px] text-slate-500">▼</span>
                 </button>
-                <div id="countryMenu" class="country-menu hidden absolute z-50 mt-1 w-full bg-[#0f172a] border border-slate-950 rounded-lg shadow-xl"></div>
+                <div id="countryMenu" class="country-menu hidden"></div>
             </div>
             <select id="filterMonth" class="filter-select" onchange="applyFilters()">
                 <option value="-1">All-time</option>
@@ -96,34 +101,36 @@
         </div>
     </aside>
 
-    <!-- mx-auto : le tableau se centre dans l'espace restant -->
-    <main class="content-area flex-1 mx-auto p-5 md:p-8 max-w-5xl flex flex-col justify-between min-h-screen w-full">
-        <div>
-            <div class="mb-5 flex items-center justify-between">
-                <h2 id="viewTitle" class="text-[10px] uppercase tracking-widest font-black text-slate-400">Standings — All-time</h2>
-                <span id="playerCount" class="text-[10px] font-mono font-bold bg-[#090f1c] border border-slate-900 text-slate-400 px-2 py-1 rounded">0 Records</span>
-            </div>
-
-            <div id="seasonStatus" class="hidden mb-4 text-[10px] font-mono text-amber-500 bg-amber-950/20 border border-amber-800/30 rounded-lg px-3 py-2"></div>
-
-            <div class="overflow-hidden bg-[#0f141f] border border-slate-900 rounded-xl">
-                <div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#090f1c] border-b border-slate-900 text-[9px] uppercase tracking-wider font-bold text-slate-500">
-                    <div class="col-span-1 text-center">#</div>
-                    <div class="col-span-1">Country</div>
-                    <div class="col-span-4">Player</div>
-                    <div class="col-span-2 text-right">Peak</div>
-                    <div class="col-span-4 text-right" id="statHeader">Points</div>
+    <!-- Wrapper qui reçoit le décalage du tiroir ; le <main> se centre à l'intérieur -->
+    <div class="content-area flex-1 min-w-0 w-full">
+        <main class="mx-auto w-full max-w-5xl p-5 md:p-8 flex flex-col justify-between min-h-screen">
+            <div>
+                <div class="mb-5 flex items-center justify-between">
+                    <h2 id="viewTitle" class="text-[10px] uppercase tracking-widest font-black text-slate-400">Standings — All-time</h2>
+                    <span id="playerCount" class="text-[10px] font-mono font-bold bg-[#090f1c] border border-slate-900 text-slate-400 px-2 py-1 rounded">0 Records</span>
                 </div>
-                <div id="leaderboard" class="divide-y divide-slate-900/50"></div>
-            </div>
-        </div>
 
-        <div class="mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono pb-6">
-            <button id="btnPrev" onclick="changePage(-1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
-            <span id="pageIndicator" class="text-slate-500 font-bold">Page 1/1</span>
-            <button id="btnNext" onclick="changePage(1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
-        </div>
-    </main>
+                <div id="seasonStatus" class="hidden mb-4 text-[10px] font-mono text-amber-500 bg-amber-950/20 border border-amber-800/30 rounded-lg px-3 py-2"></div>
+
+                <div class="overflow-hidden bg-[#0f141f] border border-slate-900 rounded-xl">
+                    <div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#090f1c] border-b border-slate-900 text-[9px] uppercase tracking-wider font-bold text-slate-500">
+                        <div class="col-span-1 text-center">#</div>
+                        <div class="col-span-1">Country</div>
+                        <div class="col-span-4">Player</div>
+                        <div class="col-span-2 text-right">Peak</div>
+                        <div class="col-span-4 text-right" id="statHeader">Points</div>
+                    </div>
+                    <div id="leaderboard" class="divide-y divide-slate-900/50"></div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono pb-6">
+                <button id="btnPrev" onclick="changePage(-1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
+                <span id="pageIndicator" class="text-slate-500 font-bold">Page 1/1</span>
+                <button id="btnNext" onclick="changePage(1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
+            </div>
+        </main>
+    </div>
 </div>
 
 <!-- SIDE DRAWER -->
@@ -230,7 +237,7 @@ var eloMap = {};
 var eloHistory = {};
 var currentPage = 1;
 var updatingHash = false;
-var selectedCountry = '';    // pays sélectionné via le dropdown custom
+var selectedCountry = '';
 
 function escapeHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
@@ -429,14 +436,13 @@ Promise.all([
     document.getElementById('playerCount').innerText = allPlayers.length + ' Records';
 });
 
-// ======================= DROPDOWN PAYS (avec drapeaux) =======================
+// ======================= DROPDOWN PAYS =======================
 function buildCountryFilter() {
     var seen = {};
     allPlayers.forEach(function(p) { if (p.country !== 'XX') seen[p.country] = true; });
     var menu = document.getElementById('countryMenu');
     menu.innerHTML = '';
 
-    // Option "All countries"
     menu.appendChild(makeCountryOption('', 'All countries'));
 
     Object.keys(seen).sort(function(a, b) {
@@ -458,11 +464,11 @@ function makeCountryOption(code, label) {
 
     var flagPart;
     if (code && code !== 'XX') {
-        flagPart = '<img src="' + getSmallFlagUrl(code) + '" class="flag-icon-sm" alt="" loading="lazy">';
+        flagPart = '<img src="' + getSmallFlagUrl(code) + '" class="flag-icon-sm shrink-0" alt="" loading="lazy">';
     } else if (code === 'XX') {
-        flagPart = '<span class="flag-icon-sm bg-[#1e293b] inline-flex items-center justify-center text-[8px] text-slate-600 rounded-[2px]">?</span>';
+        flagPart = '<span class="flag-icon-sm bg-[#1e293b] inline-flex items-center justify-center text-[8px] text-slate-600 rounded-[2px] shrink-0">?</span>';
     } else {
-        flagPart = '<span class="text-base leading-none">🌐</span>';
+        flagPart = '<span class="text-base leading-none shrink-0">🌐</span>';
     }
 
     btn.innerHTML = flagPart + '<span class="truncate">' + escapeHtml(label) + '</span>';
@@ -485,7 +491,6 @@ function updateCountryButton() {
         flagEl.innerHTML = '<img src="' + getSmallFlagUrl(selectedCountry) + '" class="flag-icon-sm" alt="">';
         labelEl.textContent = countryName(selectedCountry) || selectedCountry;
     }
-    // Marque l'option active
     var opts = document.querySelectorAll('.country-option');
     opts.forEach(function(o) {
         o.classList.toggle('active', o.getAttribute('data-code') === selectedCountry);
