@@ -25,20 +25,19 @@
         .filter-select:focus { outline: none; border-color: #3b82f6; }
         #playerDrawer { transition: transform 0.3s ease; transform: translateX(100%); }
         #playerDrawer.open { transform: translateX(0); }
-        /* Le tiroir POUSSE le contenu au lieu de le recouvrir (style DemonList) */
-        .shrinkable { transition: margin-right 0.3s ease; }
-        @media (min-width: 768px) {
-            body.drawer-open .shrinkable { margin-right: 24rem; }
-        }
         .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
         .elo-plus { color: #34d399; }
         .elo-minus { color: #f87171; }
+        @media (min-width: 768px) {
+            .content-area { margin-right: 0; transition: margin-right 0.3s ease; }
+            body.drawer-open .content-area { margin-right: 24rem; }
+        }
     </style>
 </head>
 <body class="font-sans antialiased min-h-screen">
 
-    <div class="flex flex-col md:flex-row min-h-screen">
-    <aside class="shrinkable w-full md:w-64 bg-[#090f1c] border-b md:border-b-0 md:border-r border-slate-900 p-5 flex flex-col shrink-0">
+<div id="appWrapper" class="flex flex-col md:flex-row min-h-screen">
+    <aside class="sidebar w-full md:w-64 bg-[#090f1c] border-b md:border-b-0 md:border-r border-slate-900 p-5 flex flex-col shrink-0">
         <div class="flex items-center space-x-3 mb-6">
             <div class="w-8 h-8 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-lg flex items-center justify-center font-black text-black text-sm shadow-lg">⚡</div>
             <div>
@@ -81,7 +80,7 @@
         </div>
     </aside>
 
-    <main class="shrinkable flex-1 p-5 md:p-8 max-w-5xl flex-col justify-between min-h-screen">
+    <main class="content-area flex-1 p-5 md:p-8 max-w-5xl flex flex-col justify-between min-h-screen">
         <div>
             <div class="mb-5 flex items-center justify-between">
                 <h2 id="viewTitle" class="text-[10px] uppercase tracking-widest font-black text-slate-400">Standings — All-time</h2>
@@ -108,431 +107,516 @@
             <button id="btnNext" onclick="changePage(1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
         </div>
     </main>
-    </div>
+</div>
 
-    <!-- SIDE DRAWER (pousse le contenu) -->
-    <div id="playerDrawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-[#0f141f] border-l border-slate-800 shadow-2xl z-40 overflow-y-auto">
-        <div class="sticky top-0 bg-[#090f1c] border-b border-slate-800 px-5 py-4 flex items-center justify-between">
-            <h3 class="font-bold text-white text-sm">Player Profile</h3>
-            <button onclick="closeDrawer()" class="text-slate-400 hover:text-white transition-colors text-lg leading-none">✕</button>
-        </div>
-        <div class="p-5 space-y-4">
-            <div class="flex items-center space-x-4">
-                <img id="dFlag" class="flag-icon shadow-md" alt="">
-                <div>
-                    <h2 id="dName" class="text-lg font-bold text-white"></h2>
-                    <p id="dTag" class="text-xs font-mono text-slate-500 mt-0.5"></p>
-                </div>
-            </div>
-            <div id="dCountry" class="text-xs text-slate-400"></div>
-            <div class="space-y-2">
-                <div class="stat-line bg-[#090f1c] border border-slate-800 rounded-lg px-4 py-3">
-                    <span class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Points</span>
-                    <span id="dPoints" class="text-lg font-black text-emerald-400 font-mono">0</span>
-                </div>
-                <div class="stat-line bg-[#090f1c] border border-slate-800 rounded-lg px-4 py-3">
-                    <span class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Elo</span>
-                    <span id="dElo" class="text-lg font-black text-blue-400 font-mono">-</span>
-                </div>
-                <div class="stat-line bg-[#090f1c] border border-slate-800 rounded-lg px-4 py-3">
-                    <span class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Peak</span>
-                    <span id="dPeak" class="text-lg font-black text-amber-500 font-mono">-</span>
-                </div>
-            </div>
+<!-- SIDE DRAWER -->
+<div id="playerDrawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-[#0f141f] border-l border-slate-800 shadow-2xl z-40 overflow-y-auto">
+    <div class="sticky top-0 bg-[#090f1c] border-b border-slate-800 px-5 py-4 flex items-center justify-between">
+        <h3 class="font-bold text-white text-sm">Player Profile</h3>
+        <button onclick="closeDrawer()" class="text-slate-400 hover:text-white transition-colors text-lg leading-none">✕</button>
+    </div>
+    <div class="p-5 space-y-4">
+        <div class="flex items-center space-x-4">
+            <img id="dFlag" class="flag-icon shadow-md" alt="">
             <div>
-                <span class="block text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-2">Season history</span>
-                <div id="dHistory" class="space-y-1 text-xs font-mono"></div>
+                <h2 id="dName" class="text-lg font-bold text-white"></h2>
+                <p id="dTag" class="text-xs font-mono text-slate-500 mt-0.5"></p>
             </div>
-            <a id="dLink" target="_blank" rel="noopener noreferrer"
-               class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
-                View BrawlAce Profile ↗</a>
         </div>
+        <div id="dCountry" class="text-xs text-slate-400"></div>
+        <div class="space-y-2">
+            <div class="stat-line bg-[#090f1c] border border-slate-800 rounded-lg px-4 py-3">
+                <span class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Points</span>
+                <span id="dPoints" class="text-lg font-black text-emerald-400 font-mono">0</span>
+            </div>
+            <div class="stat-line bg-[#090f1c] border border-slate-800 rounded-lg px-4 py-3">
+                <span class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Elo</span>
+                <span id="dElo" class="text-lg font-black text-blue-400 font-mono">-</span>
+            </div>
+            <div class="stat-line bg-[#090f1c] border border-slate-800 rounded-lg px-4 py-3">
+                <span class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Peak</span>
+                <span id="dPeak" class="text-lg font-black text-amber-500 font-mono">-</span>
+            </div>
+        </div>
+        <div>
+            <span class="block text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-2">Season history</span>
+            <div id="dHistory" class="space-y-1 text-xs font-mono"></div>
+        </div>
+        <a id="dLink" target="_blank" rel="noopener noreferrer"
+           class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
+            View BrawlAce Profile ↗</a>
     </div>
+</div>
 
-    <script>
-        // ======================= CONFIG ELO =======================
-        var START_RATING = 1500;
-        var K_SEASON = 250;       // volatilité forte : gros écarts entre joueurs
-        var INACTIVITY_DECAY = 15; // perte par saison manquée (après la 1re participation)
+<script>
+// ======================= ELO CONFIG =======================
+var START_RATING = 1500;
+var MAX_GAIN_PER_SEASON = 500;   // cap pour les grosses victoires
+var DECAY_AFTER_GRACE = 15;      // pénalité après la période de grâce (12 saisons)
 
-        var SEASONS = [
-            { key: 'mars25',      label: 'Mar 25' }, { key: 'avril25',     label: 'Apr 25' },
-            { key: 'mai25',       label: 'May 25' }, { key: 'juin25',       label: 'Jun 25' },
-            { key: 'juillet25',   label: 'Jul 25' }, { key: 'aout25',       label: 'Aug 25' },
-            { key: 'septembre25', label: 'Sep 25' }, { key: 'octobre25',    label: 'Oct 25' },
-            { key: 'novembre25',  label: 'Nov 25' }, { key: 'decembre25',   label: 'Dec 25' },
-            { key: 'janvier26',   label: 'Jan 26' }, { key: 'fevrier26',    label: 'Feb 26' },
-            { key: 'mars26',      label: 'Mar 26' }, { key: 'avril26',      label: 'Apr 26' },
-            { key: 'mai26',       label: 'May 26' }, { key: 'juin26',      label: 'Jun 26' },
-            { key: 'juillet26',   label: 'Jul 26' }, { key: 'aout26',       label: 'Aug 26' }
-        ];
+var SEASONS = [
+    { key: 'mars25',      label: 'Mar 25' }, { key: 'avril25',     label: 'Apr 25' },
+    { key: 'mai25',       label: 'May 25' }, { key: 'juin25',       label: 'Jun 25' },
+    { key: 'juillet25',   label: 'Jul 25' }, { key: 'aout25',       label: 'Aug 25' },
+    { key: 'septembre25', label: 'Sep 25' }, { key: 'octobre25',    label: 'Oct 25' },
+    { key: 'novembre25',  label: 'Nov 25' }, { key: 'decembre25',   label: 'Dec 25' },
+    { key: 'janvier26',   label: 'Jan 26' }, { key: 'fevrier26',    label: 'Feb 26' },
+    { key: 'mars26',      label: 'Mar 26' }, { key: 'avril26',      label: 'Apr 26' },
+    { key: 'mai26',       label: 'May 26' }, { key: 'juin26',      label: 'Jun 26' },
+    { key: 'juillet26',   label: 'Jul 26' }, { key: 'aout26',       label: 'Aug 26' }
+];
 
-        var COUNTRY_NAMES = {
-            'AR':'Argentina','AU':'Australia','AT':'Austria','BE':'Belgium','BO':'Bolivia',
-            'BA':'Bosnia and Herz.','BR':'Brazil','BG':'Bulgaria','CA':'Canada','CL':'Chile',
-            'CN':'China','CO':'Colombia','CR':'Costa Rica','HR':'Croatia','CZ':'Czechia',
-            'DK':'Denmark','EC':'Ecuador','EG':'Egypt','EE':'Estonia','FI':'Finland',
-            'FR':'France','DE':'Germany','GR':'Greece','GT':'Guatemala','HK':'Hong Kong',
-            'HU':'Hungary','IN':'India','ID':'Indonesia','IR':'Iran','IQ':'Iraq','IE':'Ireland',
-            'IL':'Israel','IT':'Italy','JP':'Japan','JO':'Jordan','KZ':'Kazakhstan','KW':'Kuwait',
-            'LV':'Latvia','LB':'Lebanon','LT':'Lithuania','LU':'Luxembourg','MY':'Malaysia',
-            'MT':'Malta','MX':'Mexico','MD':'Moldova','MA':'Morocco','NP':'Nepal',
-            'NL':'Netherlands','NZ':'New Zealand','MK':'North Macedonia','NO':'Norway',
-            'PK':'Pakistan','PA':'Panama','PY':'Paraguay','PE':'Peru','PH':'Philippines',
-            'PL':'Poland','PT':'Portugal','PR':'Puerto Rico','RO':'Romania','RU':'Russia',
-            'SA':'Saudi Arabia','RS':'Serbia','SG':'Singapore','SK':'Slovakia','SI':'Slovenia',
-            'ZA':'South Africa','KR':'South Korea','ES':'Spain','SE':'Sweden','CH':'Switzerland',
-            'TW':'Taiwan','TH':'Thailand','TN':'Tunisia','TR':'Türkiye','UA':'Ukraine',
-            'AE':'United Arab Emirates','GB':'United Kingdom','US':'United States',
-            'UY':'Uruguay','UZ':'Uzbekistan','VE':'Venezuela','VN':'Vietnam',
-            'HN':'Honduras','MO':'Macao','BH':'Bahrain','BD':'Bangladesh','AM':'Armenia'
-        };
+var COUNTRY_NAMES = {
+    'AR':'Argentina','AU':'Australia','AT':'Austria','BE':'Belgium','BO':'Bolivia',
+    'BA':'Bosnia and Herz.','BR':'Brazil','BG':'Bulgaria','CA':'Canada','CL':'Chile',
+    'CN':'China','CO':'Colombia','CR':'Costa Rica','HR':'Croatia','CZ':'Czechia',
+    'DK':'Denmark','EC':'Ecuador','EG':'Egypt','EE':'Estonia','FI':'Finland',
+    'FR':'France','DE':'Germany','GR':'Greece','GT':'Guatemala','HK':'Hong Kong',
+    'HU':'Hungary','IN':'India','ID':'Indonesia','IR':'Iran','IQ':'Iraq','IE':'Ireland',
+    'IL':'Israel','IT':'Italy','JP':'Japan','JO':'Jordan','KZ':'Kazakhstan','KW':'Kuwait',
+    'LV':'Latvia','LB':'Lebanon','LT':'Lithuania','LU':'Luxembourg','MY':'Malaysia',
+    'MT':'Malta','MX':'Mexico','MD':'Moldova','MA':'Morocco','NP':'Nepal',
+    'NL':'Netherlands','NZ':'New Zealand','MK':'North Macedonia','NO':'Norway',
+    'PK':'Pakistan','PA':'Panama','PY':'Paraguay','PE':'Peru','PH':'Philippines',
+    'PL':'Poland','PT':'Portugal','PR':'Puerto Rico','RO':'Romania','RU':'Russia',
+    'SA':'Saudi Arabia','RS':'Serbia','SG':'Singapore','SK':'Slovakia','SI':'Slovenia',
+    'ZA':'South Africa','KR':'South Korea','ES':'Spain','SE':'Sweden','CH':'Switzerland',
+    'TW':'Taiwan','TH':'Thailand','TN':'Tunisia','TR':'Türkiye','UA':'Ukraine',
+    'AE':'United Arab Emirates','GB':'United Kingdom','US':'United States',
+    'UY':'Uruguay','UZ':'Uzbekistan','VE':'Venezuela','VN':'Vietnam',
+    'HN':'Honduras','MO':'Macao','BH':'Bahrain','BD':'Bangladesh','AM':'Armenia'
+};
 
-        var FLAG_CDN = 'https://flagcdn.com/w40/';
-        var recordsPerPage = 50;
+var FLAG_CDN = 'https://flagcdn.com/w40/';
+var recordsPerPage = 50;
 
-        var allPlayers = [];
-        var filteredPlayers = [];
-        var countryMap = {};
-        var seasonData = {};    // key -> [{tag, placement}]
-        var eloMap = {};        // tag -> rating
-        var eloHistory = {};    // tag -> { seasonKey: delta }
-        var currentPage = 1;
-        var updatingHash = false;
+var allPlayers = [];
+var filteredPlayers = [];
+var countryMap = {};
+var seasonData = {};
+var eloMap = {};
+var eloHistory = {};
+var currentPage = 1;
+var updatingHash = false;
 
-        function escapeHtml(s) {
-            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
-                .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-        }
-        function profileUrl(tag) {
-            return 'https://brawlace.com/players/%23' + encodeURIComponent(tag.replace(/^#/, ''));
-        }
-        function getFlagUrl(cc) { return (cc && cc !== 'XX') ? FLAG_CDN + cc.toLowerCase() + '.png' : ''; }
-        function countryName(cc) { return (cc && cc !== 'XX' && COUNTRY_NAMES[cc]) ? COUNTRY_NAMES[cc] : ''; }
+function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function profileUrl(tag) {
+    return 'https://brawlace.com/players/%23' + encodeURIComponent(tag.replace(/^#/, ''));
+}
+function getFlagUrl(cc) { return (cc && cc !== 'XX') ? FLAG_CDN + cc.toLowerCase() + '.png' : ''; }
+function countryName(cc) { return (cc && cc !== 'XX' && COUNTRY_NAMES[cc]) ? COUNTRY_NAMES[cc] : ''; }
 
-        function papaLoad(fileUrl) {
-            return new Promise(function(resolve) {
-                Papa.parse(fileUrl, {
-                    download: true, header: false, skipEmptyLines: true,
-                    complete: function(res) { resolve(res.data || []); },
-                    error: function() { resolve(null); }
-                });
-            });
-        }
-
-        function parseSeasonRow(row) {
-            var tag = null, placement = null;
-            for (var i = 0; i < row.length; i++) {
-                var f = String(row[i] == null ? '' : row[i]).trim();
-                if (f === '') continue;
-                if (tag === null && f.charAt(0) === '#') { tag = f.toUpperCase(); continue; }
-                if (placement === null && /^\d+$/.test(f)) { placement = parseInt(f, 10); continue; }
-            }
-            if (tag && placement !== null) return { tag: tag, placement: placement };
-            return null;
-        }
-
-        // Simulation Elo : deltas par saison enregistrés + décroissance d'inactivité
-        function computeElo() {
-            var ratings = {};
-            var history = {};
-            SEASONS.forEach(function(season) {
-                var players = seasonData[season.key] || [];
-                var presents = {};
-                players.forEach(function(p) { presents[p.tag] = true; });
-
-                if (players.length >= 2) {
-                    players.forEach(function(p) {
-                        if (ratings[p.tag] === undefined) ratings[p.tag] = START_RATING;
-                    });
-                    var sum = 0;
-                    players.forEach(function(p) { sum += ratings[p.tag]; });
-                    players.forEach(function(p) {
-                        var othersAvg = (sum - ratings[p.tag]) / (players.length - 1);
-                        var expected = 1 / (1 + Math.pow(10, (othersAvg - ratings[p.tag]) / 400));
-                        var actual = (players.length - p.placement) / (players.length - 1);
-                        var delta = K_SEASON * (actual - expected);
-                        ratings[p.tag] += delta;
-                        if (!history[p.tag]) history[p.tag] = {};
-                        history[p.tag][season.key] = (history[p.tag][season.key] || 0) + delta;
-                    });
-                }
-
-                // Décroissance : joueurs connus absents ce mois-ci
-                for (var t in ratings) {
-                    if (!presents[t]) {
-                        ratings[t] -= INACTIVITY_DECAY;
-                        if (!history[t]) history[t] = {};
-                        history[t][season.key] = (history[t][season.key] || 0) - INACTIVITY_DECAY;
-                    }
-                }
-            });
-            eloHistory = history;
-            return ratings;
-        }
-
-        (function initMonths() {
-            var sel = document.getElementById('filterMonth');
-            SEASONS.forEach(function(s, i) {
-                var o = document.createElement('option');
-                o.value = i; o.textContent = s.label;
-                sel.appendChild(o);
-            });
-        })();
-
-        Promise.all([
-            papaLoad('countries.csv'),
-            papaLoad('leaderboard.csv')
-        ].concat(SEASONS.map(function(s) { return papaLoad('seasons/' + s.key + '.csv'); }))
-        ).then(function(all) {
-            (all[0] || []).forEach(function(r) {
-                if (r && r.length >= 2 && String(r[0]).indexOf('#') !== -1 &&
-                    /^[A-Z]{2}$/.test(String(r[1] || '').trim().toUpperCase())) {
-                    countryMap[String(r[0]).trim().toUpperCase()] = String(r[1]).trim().toUpperCase();
-                }
-            });
-
-            var si = 2;
-            var manquantes = [];
-            SEASONS.forEach(function(s) {
-                var list = [];
-                var raw = all[si++];
-                if (raw) {
-                    raw.forEach(function(row) {
-                        var p = parseSeasonRow(row);
-                        if (p) list.push(p);
-                    });
-                } else {
-                    manquantes.push('seasons/' + s.key + '.csv');
-                }
-                seasonData[s.key] = list;
-            });
-
-            if (manquantes.length) {
-                var st = document.getElementById('seasonStatus');
-                st.classList.remove('hidden');
-                st.textContent = '⚠ Fichiers de saison introuvables : ' + manquantes.join(', ');
-            }
-
-            (all[1] || []).forEach(function(row) {
-                if (!row || !row[0]) return;
-                var tag = String(row[0]).trim().toUpperCase();
-                if (tag.indexOf('#') === -1) return;
-                var months = [];
-                for (var m = 0; m < 18; m++) months.push(parseInt(row[4 + m], 10) || 0);
-                allPlayers.push({
-                    tag: tag,
-                    pseudo: row[1] ? String(row[1]).trim() : 'Unknown',
-                    points: parseInt(row[2], 10) || 0,
-                    peakRank: parseInt(row[3], 10) || 999,
-                    months: months,
-                    country: countryMap[tag] || 'XX'
-                });
-            });
-
-            eloMap = computeElo();
-            allPlayers.forEach(function(p) { p.elo = eloMap[p.tag] || 0; });
-
-            buildCountryFilter();
-            applyFromHash(true);
-            document.getElementById('playerCount').innerText = allPlayers.length + ' Records';
+function papaLoad(fileUrl) {
+    return new Promise(function(resolve) {
+        Papa.parse(fileUrl, {
+            download: true, header: false, skipEmptyLines: true,
+            complete: function(res) { resolve(res.data || []); },
+            error: function() { resolve(null); }
         });
+    });
+}
 
-        function buildCountryFilter() {
-            var seen = {};
-            allPlayers.forEach(function(p) { if (p.country !== 'XX') seen[p.country] = true; });
-            var sel = document.getElementById('filterCountry');
-            Object.keys(seen).sort(function(a, b) {
-                return (COUNTRY_NAMES[a] || a).localeCompare(COUNTRY_NAMES[b] || b);
-            }).forEach(function(cc) {
-                var o = document.createElement('option');
-                o.value = cc; o.textContent = countryName(cc) || cc;
-                sel.appendChild(o);
-            });
-            var o2 = document.createElement('option');
-            o2.value = 'XX'; o2.textContent = 'Unknown (?)';
-            sel.appendChild(o2);
-        }
+function parseSeasonRow(row) {
+    var tag = null, placement = null;
+    for (var i = 0; i < row.length; i++) {
+        var f = String(row[i] == null ? '' : row[i]).trim();
+        if (f === '') continue;
+        if (tag === null && f.charAt(0) === '#') { tag = f.toUpperCase(); continue; }
+        if (placement === null && /^\d+$/.test(f)) { placement = parseInt(f, 10); continue; }
+    }
+    if (tag && placement !== null) return { tag: tag, placement: placement };
+    return null;
+}
 
-        // ======================= ROUTAGE (#/tri/pays/mois) =======================
-        function writeHash() {
-            var sort = document.getElementById('filterSort').value;
-            var cc = document.getElementById('filterCountry').value || 'all';
-            var mi = parseInt(document.getElementById('filterMonth').value, 10);
-            var h = '#/' + sort + '/' + cc + '/' + mi;
-            if (location.hash !== h) {
-                updatingHash = true;
-                location.hash = h;
-            }
-        }
+// ======================= NEW ELO MODEL =======================
+// Règles :
+// - 1ère apparition : gain uniquement basé sur placement + taille du field, jamais de perte
+// - Saison suivante : comparer placement actuel à celui précédent
+// - Field plus petit = récompenses plus grandes
+// - Top-10 dans 100 joueurs ≈ +300, Top-10 dans 500 joueurs ≈ +100
+// - Max gain = +500 par saison
+// - Inactivité : 1ère absence = 0 pénalité, puis -15/saison après 12 mois consécutifs
+// - Perte max = -500 (si beaucoup de monde réussit et toi tu ratas)
+// - Top-450 gagne +0 à +5, jamais ne perd -150
+function computeElo() {
+    var ratings = {};
+    var history = {};
+    var firstSeen = {};
+    var prevPlacement = {};
 
-        function applyFromHash(initial) {
-            var seg = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-            var sort = seg[0] || 'points';
-            var cc = seg[1] && seg[1] !== 'all' ? seg[1].toUpperCase() : '';
-            var mi = seg[2] !== undefined && seg[2] !== '' ? parseInt(seg[2], 10) : -1;
+    SEASONS.forEach(function(season, idx) {
+        var players = seasonData[season.key] || [];
+        var fieldSize = players.length;
+        var presentTags = {};
 
-            if (['points','elo','peak'].indexOf(sort) === -1) sort = 'points';
-            if (isNaN(mi) || mi < -1 || mi > 17) mi = -1;
+        players.forEach(function(p) {
+            presentTags[p.tag] = true;
+            var tag = p.tag;
 
-            document.getElementById('filterSort').value = sort;
-            document.getElementById('filterCountry').value = cc;
-            document.getElementById('filterMonth').value = String(mi);
-            applyFilters(true);
-        }
+            if (!ratings[tag]) ratings[tag] = START_RATING;
 
-        window.addEventListener('hashchange', function() {
-            if (updatingHash) { updatingHash = false; return; }
-            applyFromHash();
-        });
+            // Suivi de la première apparition
+            if (!firstSeen[tag]) firstSeen[tag] = idx;
 
-        function applyFilters(skipHash) {
-            var q = document.getElementById('searchBar').value.trim().toLowerCase();
-            var cc = document.getElementById('filterCountry').value;
-            var mi = parseInt(document.getElementById('filterMonth').value, 10);
-            var sortMode = document.getElementById('filterSort').value;
+            // Calcul du delta Elo
+            var delta = 0;
 
-            filteredPlayers = allPlayers.filter(function(p) {
-                if (cc && p.country !== cc) return false;
-                if (mi >= 0) {
-                    var s = SEASONS[mi];
-                    var found = null;
-                    var lst = seasonData[s.key] || [];
-                    for (var i = 0; i < lst.length; i++) {
-                        if (lst[i].tag === p.tag) { found = lst[i]; break; }
-                    }
-                    if (!found) return false;
-                    p._monthPlace = found.placement;
-                }
-                if (q && p.pseudo.toLowerCase().indexOf(q) === -1 && p.tag.toLowerCase().indexOf(q) === -1) return false;
-                return true;
-            });
+            if (idx === firstSeen[tag]) {
+                // PREMIÈRE APPARITION : gain uniquement
+                // Formulaire : base * (référence_field / field_actuel)^0.7
+                // où base = 500 * (1 - placement/total_field)^1.5
+                var baseGain = 500 * Math.pow(1 - (p.placement - 1) / Math.max(fieldSize, 1), 1.5);
+                // Ajustement taille field : référence = 300 joueurs
+                var fieldAdjustment = Math.pow(300 / Math.max(fieldSize, 1), 0.5);
+                delta = Math.floor(baseGain * fieldAdjustment);
+                delta = Math.min(MAX_GAIN_PER_SEASON, Math.max(0, delta));
 
-            if (mi >= 0) {
-                filteredPlayers.sort(function(a, b) { return a._monthPlace - b._monthPlace; });
-            } else if (sortMode === 'elo') {
-                filteredPlayers.sort(function(a, b) { return b.elo - a.elo || b.points - a.points; });
-            } else if (sortMode === 'peak') {
-                filteredPlayers.sort(function(a, b) { return a.peakRank - b.peakRank || b.points - a.points; });
+                history[tag] = {};
+                history[tag][season.key] = delta;
+                prevPlacement[tag] = p.placement;
             } else {
-                filteredPlayers.sort(function(a, b) { return b.points - a.points || a.peakRank - b.peakRank; });
-            }
-            document.getElementById('filterSort').disabled = (mi >= 0);
+                // APPARITION DÉJÀ VUE : gain ou perte selon comparaison
+                // Si joueur présent cette saison
+                if (prevPlacement[tag]) {
+                    var oldPlace = prevPlacement[tag];
+                    var newPlace = p.placement;
 
-            document.getElementById('viewTitle').textContent =
-                'Standings — ' + (mi >= 0 ? SEASONS[mi].label : 'All-time') +
-                (cc ? ' (' + (countryName(cc) || cc) + ')' : '');
-            document.getElementById('statHeader').textContent =
-                mi >= 0 ? 'Placement' : (sortMode === 'elo' ? 'Elo' : 'Points');
+                    // Gain basé sur amélioration ou dégradation
+                    // Amélioration = gain, Dégradation = petite perte seulement
+                    var diff = oldPlace - newPlace; // positif = meilleure place
 
-            currentPage = 1;
-            updatePageData();
-            if (!skipHash) writeHash();
-        }
-
-        function displayPage(pageData, startIndex, mi, sortMode) {
-            var container = document.getElementById('leaderboard');
-            container.innerHTML = '';
-            if (!pageData.length) {
-                container.innerHTML = '<div class="px-4 py-8 text-center text-xs font-mono uppercase text-slate-600">No records found</div>';
-                return;
-            }
-            pageData.forEach(function(player, index) {
-                var gi = startIndex + index;
-                var rankClass = gi === 0 ? 'rank-1' : gi === 1 ? 'rank-2' : gi === 2 ? 'rank-3' : '';
-                var peakLabel = player.peakRank >= 999 ? '-' : 'Top ' + player.peakRank;
-
-                var stat;
-                if (mi >= 0) {
-                    stat = '<span class="font-black text-emerald-400 font-mono">#' + player._monthPlace + '</span>';
-                } else if (sortMode === 'elo') {
-                    stat = '<span class="font-black text-blue-400 font-mono">' + Math.round(player.elo) + '</span>';
-                } else {
-                    stat = '<span class="font-black text-emerald-400 font-mono">' + player.points + '</span>' +
-                           '<span class="text-[8px] text-slate-500 ml-1">PTS</span>';
-                }
-
-                var flagUrl = getFlagUrl(player.country);
-                var flagHtml = flagUrl
-                    ? '<img src="' + flagUrl + '" class="flag-icon" alt="' + (countryName(player.country) || player.country) + '" title="' + (countryName(player.country) || player.country) + '" loading="lazy">'
-                    : '<span class="flag-icon bg-[#1e293b] inline-flex items-center justify-center text-[9px] text-slate-600">?</span>';
-
-                var row = document.createElement('div');
-                row.className = 'player-row grid grid-cols-12 gap-4 px-4 py-3 items-center cursor-pointer';
-                row.onclick = function() { openDrawer(player); };
-                row.innerHTML =
-                    '<div class="rank-badge ' + rankClass + '">' + (gi + 1) + '</div>' +
-                    '<div class="flex items-center">' + flagHtml + '</div>' +
-                    '<div class="min-w-0"><div class="font-bold text-white text-sm truncate">' + escapeHtml(player.pseudo) + '</div>' +
-                    '<div class="text-[10px] text-slate-500 font-mono truncate">' + escapeHtml(player.tag) + '</div></div>' +
-                    '<div class="col-span-2 text-right text-xs font-bold text-amber-500/90 font-mono">' + peakLabel + '</div>' +
-                    '<div class="col-span-3 text-right">' + stat + '</div>';
-                container.appendChild(row);
-            });
-        }
-
-        function openDrawer(p) {
-            var flagUrl = getFlagUrl(p.country);
-            var dFlag = document.getElementById('dFlag');
-            if (flagUrl) { dFlag.src = flagUrl; dFlag.style.display = ''; } else { dFlag.style.display = 'none'; }
-            document.getElementById('dName').textContent = p.pseudo;
-            document.getElementById('dTag').textContent = p.tag;
-            document.getElementById('dCountry').textContent = countryName(p.country) || 'Country unknown';
-            document.getElementById('dPoints').textContent = p.points;
-            document.getElementById('dElo').textContent = p.elo ? Math.round(p.elo) : '-';
-            document.getElementById('dPeak').textContent = p.peakRank >= 999 ? 'N/A' : 'Top ' + p.peakRank;
-            document.getElementById('dLink').href = profileUrl(p.tag);
-
-            var hist = '';
-            var h = eloHistory[p.tag] || {};
-            for (var m = 0; m < 18; m++) {
-                var s = SEASONS[m];
-                var lst = seasonData[s.key] || [];
-                var found = null;
-                for (var i = 0; i < lst.length; i++) {
-                    if (lst[i].tag === p.tag) { found = lst[i]; break; }
-                }
-                var delta = h[s.key];
-                if (found || delta !== undefined) {
-                    var placeStr = found ? '<span class="text-amber-500">#' + found.placement + '</span>' : '<span class="text-slate-600">inactive</span>';
-                    var eloStr = '';
-                    if (delta !== undefined) {
-                        var arr = Math.round(delta);
-                        eloStr = arr >= 0
-                            ? '<span class="elo-plus">+' + arr + '</span>'
-                            : '<span class="elo-minus">' + arr + '</span>';
+                    if (diff > 0) {
+                        // Meilleur classement que saison précédente
+                        var improvementBase = Math.min(500, diff * (fieldSize / 30));
+                        delta = Math.floor(improvementBase * Math.pow(300 / fieldSize, 0.5));
+                    } else if (diff < 0) {
+                        // Pire classement : petite perte proportionnelle à la chute
+                        var declineBase = Math.abs(diff) * (fieldSize / 100);
+                        delta = -Math.floor(Math.min(500, declineBase));
+                    } else {
+                        // Même placement : léger gain (stabilité = points)
+                        delta = Math.floor(Math.max(1, fieldSize / 200));
                     }
-                    hist += '<div class="flex justify-between bg-[#090f1c] border border-slate-800 rounded px-3 py-1.5">' +
-                            '<span class="text-slate-400">' + s.label + '</span>' +
-                            '<span>' + placeStr + ' ' + eloStr + '</span></div>';
+
+                    // Plafons et planchers
+                    delta = Math.min(MAX_GAIN_PER_SEASON, delta);
+
+                    history[tag] = history[tag] || {};
+                    history[tag][season.key] = delta;
+                }
+
+                prevPlacement[tag] = p.placement;
+            }
+
+            ratings[tag] += delta;
+        });
+
+        // GESTION DES ABSENTS (déjà vus avant)
+        for (var t in ratings) {
+            if (!presentTags[t]) {
+                // Joueur absent cette saison mais déjà vu
+                var missedSince = firstSeen[t];
+                var lastActive = idx - 1;
+                // Trouver dernière saison active
+                for (var j = idx - 1; j >= firstSeen[t]; j--) {
+                    var checkKey = SEASONS[j].key;
+                    var checkList = seasonData[checkKey] || [];
+                    var wasPresent = false;
+                    for (var k = 0; k < checkList.length; k++) {
+                        if (checkList[k].tag === t) { wasPresent = true; break; }
+                    }
+                    if (wasPresent) { lastActive = j; break; }
+                }
+
+                var consecutiveMisses = idx - lastActive - 1;
+
+                // Période de grâce : 12 saisons sans punition après première apparition
+                if (consecutiveMisses > 0) {
+                    // Première absence = 0 punition, puis -15/saison après 12 mois
+                    if (consecutiveMisses <= 1 || idx - firstSeen[t] < 12) {
+                        delta = 0; // Pas de punition
+                    } else {
+                        delta = -(consecutiveMisses - 1) * DECAY_AFTER_GRACE;
+                        delta = Math.max(-MAX_GAIN_PER_SEASON, delta);
+                    }
+
+                    history[t] = history[t] || {};
+                    history[t][season.key] = delta;
+                    ratings[t] += delta;
                 }
             }
-            document.getElementById('dHistory').innerHTML = hist || '<div class="text-slate-600 text-xs">No ranked seasons recorded.</div>';
-            document.getElementById('playerDrawer').classList.add('open');
-            document.body.classList.add('drawer-open');
+        }
+    });
+
+    eloHistory = history;
+    return ratings;
+}
+
+// ======================= INIT =======================
+(function initMonths() {
+    var sel = document.getElementById('filterMonth');
+    SEASONS.forEach(function(s, i) {
+        var o = document.createElement('option');
+        o.value = i; o.textContent = s.label;
+        sel.appendChild(o);
+    });
+})();
+
+Promise.all([
+    papaLoad('countries.csv'),
+    papaLoad('leaderboard.csv')
+].concat(SEASONS.map(function(s) { return papaLoad('seasons/' + s.key + '.csv'); }))
+).then(function(all) {
+    (all[0] || []).forEach(function(r) {
+        if (r && r.length >= 2 && String(r[0]).indexOf('#') !== -1 &&
+            /^[A-Z]{2}$/.test(String(r[1] || '').trim().toUpperCase())) {
+            countryMap[String(r[0]).trim().toUpperCase()] = String(r[1]).trim().toUpperCase();
+        }
+    });
+
+    var si = 2;
+    var manquantes = [];
+    SEASONS.forEach(function(s) {
+        var list = [];
+        var raw = all[si++];
+        if (raw) {
+            raw.forEach(function(row) {
+                var p = parseSeasonRow(row);
+                if (p) list.push(p);
+            });
+        } else {
+            manquantes.push('seasons/' + s.key + '.csv');
+        }
+        seasonData[s.key] = list;
+    });
+
+    if (manquantes.length) {
+        var st = document.getElementById('seasonStatus');
+        st.classList.remove('hidden');
+        st.textContent = '⚠ Fichiers de saison introuvables : ' + manquantes.join(', ');
+    }
+
+    (all[1] || []).forEach(function(row) {
+        if (!row || !row[0]) return;
+        var tag = String(row[0]).trim().toUpperCase();
+        if (tag.indexOf('#') === -1) return;
+        var months = [];
+        for (var m = 0; m < 18; m++) months.push(parseInt(row[4 + m], 10) || 0);
+        allPlayers.push({
+            tag: tag,
+            pseudo: row[1] ? String(row[1]).trim() : 'Unknown',
+            points: parseInt(row[2], 10) || 0,
+            peakRank: parseInt(row[3], 10) || 999,
+            months: months,
+            country: countryMap[tag] || 'XX'
+        });
+    });
+
+    eloMap = computeElo();
+    allPlayers.forEach(function(p) { p.elo = eloMap[p.tag] || 0; });
+
+    buildCountryFilter();
+    applyFromHash(true);
+    document.getElementById('playerCount').innerText = allPlayers.length + ' Records';
+});
+
+function buildCountryFilter() {
+    var seen = {};
+    allPlayers.forEach(function(p) { if (p.country !== 'XX') seen[p.country] = true; });
+    var sel = document.getElementById('filterCountry');
+    Object.keys(seen).sort(function(a, b) {
+        return (COUNTRY_NAMES[a] || a).localeCompare(COUNTRY_NAMES[b] || b);
+    }).forEach(function(cc) {
+        var o = document.createElement('option');
+        o.value = cc; o.textContent = countryName(cc) || cc;
+        sel.appendChild(o);
+    });
+    var o2 = document.createElement('option');
+    o2.value = 'XX'; o2.textContent = 'Unknown (?)';
+    sel.appendChild(o2);
+}
+
+function writeHash() {
+    var sort = document.getElementById('filterSort').value;
+    var cc = document.getElementById('filterCountry').value || 'all';
+    var mi = parseInt(document.getElementById('filterMonth').value, 10);
+    var h = '#/' + sort + '/' + cc + '/' + mi;
+    if (location.hash !== h) {
+        updatingHash = true;
+        location.hash = h;
+    }
+}
+
+function applyFromHash(initial) {
+    var seg = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+    var sort = seg[0] || 'points';
+    var cc = seg[1] && seg[1] !== 'all' ? seg[1].toUpperCase() : '';
+    var mi = seg[2] !== undefined && seg[2] !== '' ? parseInt(seg[2], 10) : -1;
+
+    if (['points','elo','peak'].indexOf(sort) === -1) sort = 'points';
+    if (isNaN(mi) || mi < -1 || mi > 17) mi = -1;
+
+    document.getElementById('filterSort').value = sort;
+    document.getElementById('filterCountry').value = cc;
+    document.getElementById('filterMonth').value = String(mi);
+    applyFilters(true);
+}
+
+window.addEventListener('hashchange', function() {
+    if (updatingHash) { updatingHash = false; return; }
+    applyFromHash();
+});
+
+function applyFilters(skipHash) {
+    var q = document.getElementById('searchBar').value.trim().toLowerCase();
+    var cc = document.getElementById('filterCountry').value;
+    var mi = parseInt(document.getElementById('filterMonth').value, 10);
+    var sortMode = document.getElementById('filterSort').value;
+
+    filteredPlayers = allPlayers.filter(function(p) {
+        if (cc && p.country !== cc) return false;
+        if (mi >= 0) {
+            var s = SEASONS[mi];
+            var found = null;
+            var lst = seasonData[s.key] || [];
+            for (var i = 0; i < lst.length; i++) {
+                if (lst[i].tag === p.tag) { found = lst[i]; break; }
+            }
+            if (!found) return false;
+            p._monthPlace = found.placement;
+        }
+        if (q && p.pseudo.toLowerCase().indexOf(q) === -1 && p.tag.toLowerCase().indexOf(q) === -1) return false;
+        return true;
+    });
+
+    if (mi >= 0) {
+        filteredPlayers.sort(function(a, b) { return a._monthPlace - b._monthPlace; });
+    } else if (sortMode === 'elo') {
+        filteredPlayers.sort(function(a, b) { return b.elo - a.elo || b.points - a.points; });
+    } else if (sortMode === 'peak') {
+        filteredPlayers.sort(function(a, b) { return a.peakRank - b.peakRank || b.points - a.points; });
+    } else {
+        filteredPlayers.sort(function(a, b) { return b.points - a.points || a.peakRank - b.peakRank; });
+    }
+    document.getElementById('filterSort').disabled = (mi >= 0);
+
+    document.getElementById('viewTitle').textContent =
+        'Standings — ' + (mi >= 0 ? SEASONS[mi].label : 'All-time') +
+        (cc ? ' (' + (countryName(cc) || cc) + ')' : '');
+    document.getElementById('statHeader').textContent =
+        mi >= 0 ? 'Placement' : (sortMode === 'elo' ? 'Elo' : 'Points');
+
+    currentPage = 1;
+    updatePageData();
+    if (!skipHash) writeHash();
+}
+
+function displayPage(pageData, startIndex, mi, sortMode) {
+    var container = document.getElementById('leaderboard');
+    container.innerHTML = '';
+    if (!pageData.length) {
+        container.innerHTML = '<div class="px-4 py-8 text-center text-xs font-mono uppercase text-slate-600">No records found</div>';
+        return;
+    }
+    pageData.forEach(function(player, index) {
+        var gi = startIndex + index;
+        var rankClass = gi === 0 ? 'rank-1' : gi === 1 ? 'rank-2' : gi === 2 ? 'rank-3' : '';
+        var peakLabel = player.peakRank >= 999 ? '-' : 'Top ' + player.peakRank;
+
+        var stat;
+        if (mi >= 0) {
+            stat = '<span class="font-black text-emerald-400 font-mono">#' + player._monthPlace + '</span>';
+        } else if (sortMode === 'elo') {
+            stat = '<span class="font-black text-blue-400 font-mono">' + Math.round(player.elo) + '</span>';
+        } else {
+            stat = '<span class="font-black text-emerald-400 font-mono">' + player.points + '</span>' +
+                   '<span class="text-[8px] text-slate-500 ml-1">PTS</span>';
         }
 
-        function closeDrawer() {
-            document.getElementById('playerDrawer').classList.remove('open');
-            document.body.classList.remove('drawer-open');
+        var flagUrl = getFlagUrl(player.country);
+        var flagHtml = flagUrl
+            ? '<img src="' + flagUrl + '" class="flag-icon" alt="' + (countryName(player.country) || player.country) + '" title="' + (countryName(player.country) || player.country) + '" loading="lazy">'
+            : '<span class="flag-icon bg-[#1e293b] inline-flex items-center justify-center text-[9px] text-slate-600">?</span>';
+
+        var row = document.createElement('div');
+        row.className = 'player-row grid grid-cols-12 gap-4 px-4 py-3 items-center cursor-pointer';
+        row.onclick = function() { openDrawer(player); };
+        row.innerHTML =
+            '<div class="rank-badge ' + rankClass + '">' + (gi + 1) + '</div>' +
+            '<div class="flex items-center">' + flagHtml + '</div>' +
+            '<div class="min-w-0"><div class="font-bold text-white text-sm truncate">' + escapeHtml(player.pseudo) + '</div>' +
+            '<div class="text-[10px] text-slate-500 font-mono truncate">' + escapeHtml(player.tag) + '</div></div>' +
+            '<div class="col-span-2 text-right text-xs font-bold text-amber-500/90 font-mono">' + peakLabel + '</div>' +
+            '<div class="col-span-3 text-right">' + stat + '</div>';
+        container.appendChild(row);
+    });
+}
+
+function openDrawer(p) {
+    var flagUrl = getFlagUrl(p.country);
+    var dFlag = document.getElementById('dFlag');
+    if (flagUrl) { dFlag.src = flagUrl; dFlag.style.display = ''; } else { dFlag.style.display = 'none'; }
+    document.getElementById('dName').textContent = p.pseudo;
+    document.getElementById('dTag').textContent = p.tag;
+    document.getElementById('dCountry').textContent = countryName(p.country) || 'Country unknown';
+    document.getElementById('dPoints').textContent = p.points;
+    document.getElementById('dElo').textContent = p.elo ? Math.round(p.elo) : '-';
+    document.getElementById('dPeak').textContent = p.peakRank >= 999 ? 'N/A' : 'Top ' + p.peakRank;
+    document.getElementById('dLink').href = profileUrl(p.tag);
+
+    var hist = '';
+    var h = eloHistory[p.tag] || {};
+    for (var m = 0; m < 18; m++) {
+        var s = SEASONS[m];
+        var lst = seasonData[s.key] || [];
+        var found = null;
+        for (var i = 0; i < lst.length; i++) {
+            if (lst[i].tag === p.tag) { found = lst[i]; break; }
         }
-
-        function updatePageData() {
-            var mi = parseInt(document.getElementById('filterMonth').value, 10);
-            var sortMode = document.getElementById('filterSort').value;
-            var totalPages = Math.ceil(filteredPlayers.length / recordsPerPage) || 1;
-            if (currentPage > totalPages) currentPage = totalPages;
-            if (currentPage < 1) currentPage = 1;
-            var start = (currentPage - 1) * recordsPerPage;
-            displayPage(filteredPlayers.slice(start, start + recordsPerPage), start, mi, sortMode);
-            document.getElementById('pageIndicator').innerText = 'Page ' + currentPage + '/' + totalPages;
-            document.getElementById('btnPrev').disabled = (currentPage === 1);
-            document.getElementById('btnNext').disabled = (currentPage === totalPages);
+        var delta = h[s.key];
+        if (found || delta !== undefined) {
+            var placeStr = found ? '<span class="text-amber-500">#' + found.placement + '</span>' : '<span class="text-slate-600">inactive</span>';
+            var eloStr = '';
+            if (delta !== undefined) {
+                var arr = Math.round(delta);
+                eloStr = arr > 0
+                    ? '<span class="elo-plus">+' + arr + '</span>'
+                    : arr < 0 ? '<span class="elo-minus">' + arr + '</span>' : '';
+            }
+            hist += '<div class="flex justify-between bg-[#090f1c] border border-slate-800 rounded px-3 py-1.5">' +
+                    '<span class="text-slate-400">' + s.label + '</span>' +
+                    '<span>' + placeStr + ' ' + eloStr + '</span></div>';
         }
+    }
+    document.getElementById('dHistory').innerHTML = hist || '<div class="text-slate-600 text-xs">No ranked seasons recorded.</div>';
+    document.getElementById('playerDrawer').classList.add('open');
+    document.body.classList.add('drawer-open');
+}
 
-        function changePage(dir) { currentPage += dir; updatePageData(); }
+function closeDrawer() {
+    document.getElementById('playerDrawer').classList.remove('open');
+    document.body.classList.remove('drawer-open');
+}
 
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDrawer(); });
-    </script>
+function updatePageData() {
+    var mi = parseInt(document.getElementById('filterMonth').value, 10);
+    var sortMode = document.getElementById('filterSort').value;
+    var totalPages = Math.ceil(filteredPlayers.length / recordsPerPage) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    var start = (currentPage - 1) * recordsPerPage;
+    displayPage(filteredPlayers.slice(start, start + recordsPerPage), start, mi, sortMode);
+    document.getElementById('pageIndicator').innerText = 'Page ' + currentPage + '/' + totalPages;
+    document.getElementById('btnPrev').disabled = (currentPage === 1);
+    document.getElementById('btnNext').disabled = (currentPage === totalPages);
+}
+
+function changePage(dir) { currentPage += dir; updatePageData(); }
+
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDrawer(); });
+</script>
 </body>
 </html>
