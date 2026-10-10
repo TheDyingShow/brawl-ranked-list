@@ -17,7 +17,6 @@
 </head>
 <body class="font-sans antialiased min-h-screen flex flex-col md:flex-row">
 
-    <!-- FIXED LEFT SIDEBAR -->
     <aside class="w-full md:w-80 bg-[#090f1c] border-b md:border-b-0 md:border-r border-slate-900 p-6 flex flex-col justify-between shrink-0">
         <div>
             <div class="flex items-center space-x-3 mb-8">
@@ -37,9 +36,8 @@
                 </div>
             </div>
 
-            <!-- Live Search Bar -->
             <div class="relative mb-6">
-                <input type="text" id="searchBar" onkeyup="searchTrigger()" placeholder="Search player or tag..." 
+                <input type="text" id="searchBar" onkeyup="searchTrigger()" placeholder="Search player or tag..."
                        class="w-full bg-[#0f172a] border border-slate-950 text-xs rounded-xl px-4 py-3.5 pl-10 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-inner">
                 <span class="absolute left-3.5 top-3.5 text-xs opacity-30">🔍</span>
             </div>
@@ -50,21 +48,15 @@
         </div>
     </aside>
 
-    <!-- RIGHT CONTAINER FEED -->
     <main class="flex-1 p-6 md:p-10 max-w-4xl flex flex-col justify-between min-h-screen">
         <div>
             <div class="mb-6 flex items-center justify-between">
                 <h2 class="text-xs uppercase tracking-widest font-black text-slate-400">Standings Database Matrix</h2>
-                <span id="playerCount" class="text-[11px] font-mono font-bold bg-[#090f1c] border border-slate-900 text-slate-400 px-3 py-1 rounded-md">0 Matrix Units</span>
+                <span id="playerCount" class="text-[11px] font-mono font-bold bg-[#090f1c] border border-slate-900 text-slate-400 px-3 py-1 rounded-md">0 Records Loaded</span>
             </div>
-
-            <!-- Grid Container -->
-            <div id="leaderboard" class="space-y-2">
-                <!-- Javascript maps rows here dynamically -->
-            </div>
+            <div id="leaderboard" class="space-y-2"></div>
         </div>
 
-        <!-- PAGINATION BUTTONS MODULE -->
         <div class="mt-8 pt-6 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono">
             <button id="btnPrev" onclick="changePage(-1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-4 py-2.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">
                 ← Previous 50
@@ -79,48 +71,106 @@
     <script>
         let allPlayers = [];
         let filteredPlayers = [];
+        let avatarMap = {};          // tag -> asset_id, filled from avatars.csv (optional)
+        let avatarsLoaded = false;
         let currentPage = 1;
         const recordsPerPage = 50;
 
-        // Fetch CSV Dataset with automated casing fallback security
+        const DEFAULT_AVATAR = "https://brawlace.com/assets/images/brawlstars/icons-players/28000000.png";
+        const TIER_ICONS = {
+            top1:   "28001311", // guesti's icon - replace via avatars.csv when mapping grows
+            top2:   "28000109",
+            top3:   "28000110",
+            top10:  "28000045", // Legend league
+            top50:  "28000044"  // Mythic league
+        };
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function profileUrl(tag) {
+            // confirmed pattern: https://brawlace.com/players/%23 + tag minus the leading #
+            return 'https://brawlace.com/players/%23' + encodeURIComponent(tag.replace(/^#/, ''));
+        }
+
+        function getAvatarUrl(player, globalIndex) {
+            // Per-player mapping wins over tier-based fallbacks
+            if (avatarMap[player.tag]) {
+                return 'https://brawlace.com/assets/images/brawlstars/icons-players/' + avatarMap[player.tag] + '.png';
+            }
+            var id;
+            if (globalIndex === 0) id = TIER_ICONS.top1;
+            else if (globalIndex === 1) id = TIER_ICONS.top2;
+            else if (globalIndex === 2) id = TIER_ICONS.top3;
+            else if (globalIndex < 10) id = TIER_ICONS.top10;
+            else if (globalIndex < 50) id = TIER_ICONS.top50;
+            else id = '28000000';
+            return 'https://brawlace.com/assets/images/brawlstars/icons-players/' + id + '.png';
+        }
+
+        // Optional avatars.csv: tag,asset_id  (one headerless line per player)
+        Papa.parse('avatars.csv', {
+            download: true,
+            header: false,
+            skipEmptyLines: true,
+            complete: function(results) {
+                var rows = results.data || [];
+                for (var i = 0; i < rows.length; i++) {
+                    var r = rows[i];
+                    if (r && r.length >= 2 && r[0] && r[0].indexOf('#') !== -1 && /^\d{8}$/.test(r[1])) {
+                        avatarMap[r[0].trim()] = r[1].trim();
+                    }
+                }
+                avatarsLoaded = true;
+                updatePageData(); // re-render with real avatars once loaded
+            },
+            error: function() {
+                avatarsLoaded = true; // avatars.csv is optional; silent fallback to tier icons
+            }
+        });
+
         Papa.parse('leaderboard.csv', {
             download: true,
             header: false,
             skipEmptyLines: true,
             complete: function(results) {
                 var rawRows = results.data;
-                
                 for (var i = 0; i < rawRows.length; i++) {
                     var row = rawRows[i];
                     if (row && row.length >= 4) {
-                        var tag = row[0] ? row[0].trim() : '#000000';         // Colonne 1 : Tag
-                        var pseudo = row[1] ? row[1].trim() : 'Unknown Player'; // Colonne 2 : Username
-                        var points = row[2] ? row[2].trim() : '0';              // Colonne 3 : Points
-                        var peakRank = row[3] ? row[3].trim() : '-';            // Colonne 4 : Best Placement
-
-                        if (tag.indexOf('#') !== -1) {
-                            allPlayers.push({
-                                pseudo: pseudo,
-                                tag: tag,
-                                points: points,
-                                peakRank: peakRank
-                            });
-                        }
+                        var tag = row[0] ? row[0].trim() : '';
+                        if (tag.indexOf('#') === -1) continue; // skips sheet header junk rows
+                        allPlayers.push({
+                            tag: tag,
+                            pseudo: row[1] ? row[1].trim() : 'Unknown Player',
+                            points: parseInt(row[2], 10) || 0,
+                            peakRank: parseInt(row[3], 10) || 999
+                        });
                     }
                 }
-                
+                // Authoritative sort: points desc, then best placement asc on ties
+                allPlayers.sort(function(a, b) {
+                    if (b.points !== a.points) return b.points - a.points;
+                    return a.peakRank - b.peakRank;
+                });
                 filteredPlayers = allPlayers.slice(0);
-                document.getElementById('playerCount').innerText = allPlayers.length + " Records Loaded";
+                document.getElementById('playerCount').innerText = allPlayers.length + ' Records Loaded';
                 updatePageData();
             },
             error: function() {
-                document.getElementById('leaderboard').innerHTML = 
+                document.getElementById('leaderboard').innerHTML =
                     "<div class='text-center text-xs font-mono uppercase text-red-400 bg-red-950/10 border border-red-900/30 rounded-xl p-6'>System Link Failure: 'leaderboard.csv' asset not found.</div>";
             }
         });
 
         function displayPage(pageData, startIndex) {
-            const container = document.getElementById('leaderboard');
+            var container = document.getElementById('leaderboard');
             container.innerHTML = '';
 
             if (pageData.length === 0) {
@@ -128,53 +178,39 @@
                 return;
             }
 
-            pageData.forEach((player, index) => {
-                const globalIndex = startIndex + index;
-                
-                // Flexible mapping structure supports structural sheet variations
-                var pseudo = player.pseudo;
-                var tag = player.tag;
-                var points = player.points;
-                var peakRank = player.peakRank;
+            pageData.forEach(function(player, index) {
+                var globalIndex = startIndex + index;
 
-                var badgeStyle = "text-slate-400 bg-slate-950/40 border-slate-900";
-                var textStyle = "text-slate-200";
-                
-                // 1. On définit une icône Masters par défaut pour tout le classement
-                var imageId = "28000000"; 
-
-                // 2. On attribue chirurgicalement les VRAIS ID trouvés sur Brawlace pour votre Top 3 !
+                var badgeStyle = 'text-slate-400 bg-slate-950/40 border-slate-900';
+                var textStyle = 'text-slate-200';
                 if (globalIndex === 0) {
-                    badgeStyle = "text-yellow-400 bg-yellow-950/20 border-yellow-700/30 font-black shadow-md shadow-yellow-500/5";
-                    textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-400 to-yellow-100 font-black";
-                    imageId = "28001311"; // La Couronne Or de Guasti tirée de votre lien parfait !
+                    badgeStyle = 'text-yellow-400 bg-yellow-950/20 border-yellow-700/30 font-black shadow-md shadow-yellow-500/5';
+                    textStyle = 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-400 to-yellow-100 font-black';
                 } else if (globalIndex === 1) {
-                    badgeStyle = "text-slate-300 bg-slate-900/60 border-slate-600/50 font-black shadow-md shadow-slate-500/5";
-                    textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-slate-100 via-slate-300 to-slate-400 font-bold";
-                    imageId = "28000109"; // L'icône Masters Bleue/Argent pour Dompe
+                    badgeStyle = 'text-slate-300 bg-slate-900/60 border-slate-600/50 font-black shadow-md shadow-slate-500/5';
+                    textStyle = 'text-transparent bg-clip-text bg-gradient-to-r from-slate-100 via-slate-300 to-slate-400 font-bold';
                 } else if (globalIndex === 2) {
-                    badgeStyle = "text-orange-500 bg-orange-950/20 border-orange-900/40 font-bold shadow-md shadow-orange-900/5";
-                    textStyle = "text-transparent bg-clip-text bg-gradient-to-r from-orange-200 via-orange-400 to-amber-700 font-bold";
-                    imageId = "28000110"; // L'icône Masters Rouge/Bronze pour sans
-                } else if (globalIndex < 10) {
-                    imageId = "28000045"; // Ligue Légende pour le reste du Top 10
-                } else if (globalIndex < 50) {
-                    imageId = "28000044"; // Ligue Mythique pour le reste du Top 50
+                    badgeStyle = 'text-orange-500 bg-orange-950/20 border-orange-900/40 font-bold shadow-md shadow-orange-900/5';
+                    textStyle = 'text-transparent bg-clip-text bg-gradient-to-r from-orange-200 via-orange-400 to-amber-700 font-bold';
                 }
 
-                // 3. VOTRE LIEN DE RÊVE : Connexion directe au serveur d'images de Brawlace !
-                var avatarUrl = "https://brawlace.com/assets/images/brawlstars/icons-players/" + imageId + ".png";
-                var profileUrl = "https://brawlinsights.com" + tag.replace('#', '');
+                var peakLabel = player.peakRank >= 999 ? 'Unranked' : 'Top ' + player.peakRank;
+                var avatarUrl = getAvatarUrl(player, globalIndex);
+                var url = escapeHtml(profileUrl(player.tag));
+                var pseudo = escapeHtml(player.pseudo);
+                var tag = escapeHtml(player.tag);
 
+                var card = document.createElement('a');
+                card.href = url;
+                card.target = '_blank';
+                card.rel = 'noopener noreferrer';
+                card.className = 'demon-card rounded-xl p-5 min-h-[84px] flex flex-col sm:flex-row items-center justify-between gap-5 transition-all duration-150 group shadow-lg block';
 
-                var card = document.createElement('div');
-                card.className = "demon-card rounded-xl p-5 min-h-[84px] flex flex-col sm:flex-row items-center justify-between gap-5 transition-all duration-150 group shadow-lg";
-                
-                card.innerHTML = 
+                card.innerHTML =
                     "<div class='flex items-center space-x-5 w-full sm:w-auto'>" +
                         "<div class='w-10 h-10 rounded-lg border flex items-center justify-center text-xs font-mono " + badgeStyle + " shrink-0'>" + (globalIndex + 1) + "</div>" +
                         "<div class='w-12 h-12 rounded-xl bg-[#070b13] border border-slate-800/80 flex items-center justify-center shrink-0 overflow-hidden relative group-hover:border-slate-700 transition-colors shadow-inner'>" +
-                            "<img src='" + avatarUrl + "' alt='Player Avatar' class='w-full h-full object-cover' onerror='this.src=\"https://brawlinsights.com\"'>" +
+                            "<img src='" + avatarUrl + "' alt='Player Avatar' class='w-full h-full object-cover' loading='lazy' onerror='this.onerror=null;this.src=\"" + DEFAULT_AVATAR + "\"'>" +
                         "</div>" +
                         "<div>" +
                             "<h2 class='text-sm md:text-base font-bold tracking-wide transition-colors " + textStyle + " group-hover:text-blue-400'>" + pseudo + "</h2>" +
@@ -184,30 +220,27 @@
                     "<div class='flex items-center space-x-8 text-right w-full sm:w-auto justify-between sm:justify-end border-t border-slate-950 pt-3 sm:pt-0 sm:border-t-0'>" +
                         "<div class='text-left sm:text-right'>" +
                             "<span class='block text-[8px] uppercase tracking-widest font-bold text-gray-600'>Peak Standing</span>" +
-                            "<span class='text-xs md:text-sm font-bold text-amber-500/90 font-mono'>Top " + peakRank + "</span>" +
+                            "<span class='text-xs md:text-sm font-bold text-amber-500/90 font-mono'>" + peakLabel + "</span>" +
                         "</div>" +
                         "<div>" +
                             "<span class='block text-[8px] uppercase tracking-widest font-bold text-gray-600'>Score Weight</span>" +
-                            "<span class='text-sm md:text-base font-black text-emerald-400 font-mono'>" + points + " <span class='text-[9px] text-emerald-600'>PTS</span></span>" +
+                            "<span class='text-sm md:text-base font-black text-emerald-400 font-mono'>" + player.points + " <span class='text-[9px] text-emerald-600'>PTS</span></span>" +
                         "</div>" +
                     "</div>";
-                
+
                 container.appendChild(card);
             });
         }
 
         function updatePageData() {
-            const totalPages = Math.ceil(filteredPlayers.length / recordsPerPage) || 1;
+            var totalPages = Math.ceil(filteredPlayers.length / recordsPerPage) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
 
-            const startIndex = (currentPage - 1) * recordsPerPage;
-            const endIndex = startIndex + recordsPerPage;
-            const sliceData = filteredPlayers.slice(startIndex, endIndex);
+            var startIndex = (currentPage - 1) * recordsPerPage;
+            displayPage(filteredPlayers.slice(startIndex, startIndex + recordsPerPage), startIndex);
 
-            displayPage(sliceData, startIndex);
-
-            document.getElementById('pageIndicator').innerText = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('pageIndicator').innerText = 'Page ' + currentPage + ' of ' + totalPages;
             document.getElementById('btnPrev').disabled = (currentPage === 1);
             document.getElementById('btnNext').disabled = (currentPage === totalPages);
         }
@@ -218,13 +251,16 @@
         }
 
         function searchTrigger() {
-            const query = document.getElementById('searchBar').value.toLowerCase();
-            filteredPlayers = allPlayers.filter(player => {
-                const pseudo = (player['Pseudo'] || player['pseudo'] || player['Player'] || '').toLowerCase();
-                const tag = (player['Tag Joueur'] || player['tag joueur'] || player['Tag'] || '').toLowerCase();
-                return pseudo.includes(query) || tag.includes(query);
-            });
-            currentPage = 1; 
+            var query = document.getElementById('searchBar').value.trim().toLowerCase();
+            if (!query) {
+                filteredPlayers = allPlayers.slice(0);
+            } else {
+                filteredPlayers = allPlayers.filter(function(p) {
+                    return p.pseudo.toLowerCase().indexOf(query) !== -1 ||
+                           p.tag.toLowerCase().indexOf(query) !== -1;
+                });
+            }
+            currentPage = 1;
             updatePageData();
         }
     </script>
