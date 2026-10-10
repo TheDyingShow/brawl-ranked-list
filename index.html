@@ -25,12 +25,20 @@
         .filter-select:focus { outline: none; border-color: #3b82f6; }
         #playerDrawer { transition: transform 0.3s ease; transform: translateX(100%); }
         #playerDrawer.open { transform: translateX(0); }
+        /* Le tiroir POUSSE le contenu au lieu de le recouvrir (style DemonList) */
+        .shrinkable { transition: margin-right 0.3s ease; }
+        @media (min-width: 768px) {
+            body.drawer-open .shrinkable { margin-right: 24rem; }
+        }
         .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
+        .elo-plus { color: #34d399; }
+        .elo-minus { color: #f87171; }
     </style>
 </head>
-<body class="font-sans antialiased min-h-screen flex flex-col md:flex-row">
+<body class="font-sans antialiased min-h-screen">
 
-    <aside class="w-full md:w-64 bg-[#090f1c] border-b md:border-b-0 md:border-r border-slate-900 p-5 flex flex-col shrink-0">
+    <div class="flex flex-col md:flex-row min-h-screen">
+    <aside class="shrinkable w-full md:w-64 bg-[#090f1c] border-b md:border-b-0 md:border-r border-slate-900 p-5 flex flex-col shrink-0">
         <div class="flex items-center space-x-3 mb-6">
             <div class="w-8 h-8 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-lg flex items-center justify-center font-black text-black text-sm shadow-lg">⚡</div>
             <div>
@@ -73,14 +81,13 @@
         </div>
     </aside>
 
-    <main class="flex-1 p-5 md:p-8 max-w-5xl flex flex-col justify-between min-h-screen">
+    <main class="shrinkable flex-1 p-5 md:p-8 max-w-5xl flex-col justify-between min-h-screen">
         <div>
             <div class="mb-5 flex items-center justify-between">
                 <h2 id="viewTitle" class="text-[10px] uppercase tracking-widest font-black text-slate-400">Standings — All-time</h2>
                 <span id="playerCount" class="text-[10px] font-mono font-bold bg-[#090f1c] border border-slate-900 text-slate-400 px-2 py-1 rounded">0 Records</span>
             </div>
 
-            <!-- Diagnostic : saisons introuvables -->
             <div id="seasonStatus" class="hidden mb-4 text-[10px] font-mono text-amber-500 bg-amber-950/20 border border-amber-800/30 rounded-lg px-3 py-2"></div>
 
             <div class="overflow-hidden bg-[#0f141f] border border-slate-900 rounded-xl">
@@ -88,21 +95,22 @@
                     <div class="col-span-1">#</div>
                     <div class="col-span-1">Country</div>
                     <div class="col-span-3">Player</div>
-                    <div class="col-span-2 text-right" id="statHeader2">Peak</div>
+                    <div class="col-span-2 text-right">Peak</div>
                     <div class="col-span-3 text-right" id="statHeader">Points</div>
                 </div>
                 <div id="leaderboard" class="divide-y divide-slate-900/50"></div>
             </div>
         </div>
 
-        <div class="mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono">
+        <div class="mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono pb-6">
             <button id="btnPrev" onclick="changePage(-1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
             <span id="pageIndicator" class="text-slate-500 font-bold">Page 1/1</span>
             <button id="btnNext" onclick="changePage(1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
         </div>
     </main>
+    </div>
 
-    <!-- SIDE DRAWER -->
+    <!-- SIDE DRAWER (pousse le contenu) -->
     <div id="playerDrawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-[#0f141f] border-l border-slate-800 shadow-2xl z-40 overflow-y-auto">
         <div class="sticky top-0 bg-[#090f1c] border-b border-slate-800 px-5 py-4 flex items-center justify-between">
             <h3 class="font-bold text-white text-sm">Player Profile</h3>
@@ -142,8 +150,10 @@
     </div>
 
     <script>
+        // ======================= CONFIG ELO =======================
         var START_RATING = 1500;
-        var K_SEASON = 80;
+        var K_SEASON = 250;       // volatilité forte : gros écarts entre joueurs
+        var INACTIVITY_DECAY = 15; // perte par saison manquée (après la 1re participation)
 
         var SEASONS = [
             { key: 'mars25',      label: 'Mar 25' }, { key: 'avril25',     label: 'Apr 25' },
@@ -184,9 +194,11 @@
         var allPlayers = [];
         var filteredPlayers = [];
         var countryMap = {};
-        var seasonData = {};
-        var eloMap = {};
+        var seasonData = {};    // key -> [{tag, placement}]
+        var eloMap = {};        // tag -> rating
+        var eloHistory = {};    // tag -> { seasonKey: delta }
         var currentPage = 1;
+        var updatingHash = false;
 
         function escapeHtml(s) {
             return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
@@ -203,7 +215,7 @@
                 Papa.parse(fileUrl, {
                     download: true, header: false, skipEmptyLines: true,
                     complete: function(res) { resolve(res.data || []); },
-                    error: function() { resolve(null); }   // null = fichier introuvable
+                    error: function() { resolve(null); }
                 });
             });
         }
@@ -220,23 +232,42 @@
             return null;
         }
 
+        // Simulation Elo : deltas par saison enregistrés + décroissance d'inactivité
         function computeElo() {
             var ratings = {};
+            var history = {};
             SEASONS.forEach(function(season) {
                 var players = seasonData[season.key] || [];
-                if (players.length < 2) return;
-                players.forEach(function(p) {
-                    if (!ratings[p.tag]) ratings[p.tag] = START_RATING;
-                });
-                var sum = 0;
-                players.forEach(function(p) { sum += ratings[p.tag]; });
-                players.forEach(function(p) {
-                    var othersAvg = (sum - ratings[p.tag]) / (players.length - 1);
-                    var expected = 1 / (1 + Math.pow(10, (othersAvg - ratings[p.tag]) / 400));
-                    var actual = (players.length - p.placement) / (players.length - 1);
-                    ratings[p.tag] += K_SEASON * (actual - expected);
-                });
+                var presents = {};
+                players.forEach(function(p) { presents[p.tag] = true; });
+
+                if (players.length >= 2) {
+                    players.forEach(function(p) {
+                        if (ratings[p.tag] === undefined) ratings[p.tag] = START_RATING;
+                    });
+                    var sum = 0;
+                    players.forEach(function(p) { sum += ratings[p.tag]; });
+                    players.forEach(function(p) {
+                        var othersAvg = (sum - ratings[p.tag]) / (players.length - 1);
+                        var expected = 1 / (1 + Math.pow(10, (othersAvg - ratings[p.tag]) / 400));
+                        var actual = (players.length - p.placement) / (players.length - 1);
+                        var delta = K_SEASON * (actual - expected);
+                        ratings[p.tag] += delta;
+                        if (!history[p.tag]) history[p.tag] = {};
+                        history[p.tag][season.key] = (history[p.tag][season.key] || 0) + delta;
+                    });
+                }
+
+                // Décroissance : joueurs connus absents ce mois-ci
+                for (var t in ratings) {
+                    if (!presents[t]) {
+                        ratings[t] -= INACTIVITY_DECAY;
+                        if (!history[t]) history[t] = {};
+                        history[t][season.key] = (history[t][season.key] || 0) - INACTIVITY_DECAY;
+                    }
+                }
             });
+            eloHistory = history;
             return ratings;
         }
 
@@ -277,12 +308,10 @@
                 seasonData[s.key] = list;
             });
 
-            // Bandeau de diagnostic si des fichiers de saison manquent
             if (manquantes.length) {
                 var st = document.getElementById('seasonStatus');
                 st.classList.remove('hidden');
-                st.textContent = '⚠ Fichiers de saison introuvables : ' + manquantes.join(', ') +
-                                 ' — vérifiez les noms de fichiers dans le dépôt.';
+                st.textContent = '⚠ Fichiers de saison introuvables : ' + manquantes.join(', ');
             }
 
             (all[1] || []).forEach(function(row) {
@@ -305,7 +334,7 @@
             allPlayers.forEach(function(p) { p.elo = eloMap[p.tag] || 0; });
 
             buildCountryFilter();
-            applyFilters();
+            applyFromHash(true);
             document.getElementById('playerCount').innerText = allPlayers.length + ' Records';
         });
 
@@ -325,7 +354,39 @@
             sel.appendChild(o2);
         }
 
-        function applyFilters() {
+        // ======================= ROUTAGE (#/tri/pays/mois) =======================
+        function writeHash() {
+            var sort = document.getElementById('filterSort').value;
+            var cc = document.getElementById('filterCountry').value || 'all';
+            var mi = parseInt(document.getElementById('filterMonth').value, 10);
+            var h = '#/' + sort + '/' + cc + '/' + mi;
+            if (location.hash !== h) {
+                updatingHash = true;
+                location.hash = h;
+            }
+        }
+
+        function applyFromHash(initial) {
+            var seg = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+            var sort = seg[0] || 'points';
+            var cc = seg[1] && seg[1] !== 'all' ? seg[1].toUpperCase() : '';
+            var mi = seg[2] !== undefined && seg[2] !== '' ? parseInt(seg[2], 10) : -1;
+
+            if (['points','elo','peak'].indexOf(sort) === -1) sort = 'points';
+            if (isNaN(mi) || mi < -1 || mi > 17) mi = -1;
+
+            document.getElementById('filterSort').value = sort;
+            document.getElementById('filterCountry').value = cc;
+            document.getElementById('filterMonth').value = String(mi);
+            applyFilters(true);
+        }
+
+        window.addEventListener('hashchange', function() {
+            if (updatingHash) { updatingHash = false; return; }
+            applyFromHash();
+        });
+
+        function applyFilters(skipHash) {
             var q = document.getElementById('searchBar').value.trim().toLowerCase();
             var cc = document.getElementById('filterCountry').value;
             var mi = parseInt(document.getElementById('filterMonth').value, 10);
@@ -366,6 +427,7 @@
 
             currentPage = 1;
             updatePageData();
+            if (!skipHash) writeHash();
         }
 
         function displayPage(pageData, startIndex, mi, sortMode) {
@@ -422,6 +484,7 @@
             document.getElementById('dLink').href = profileUrl(p.tag);
 
             var hist = '';
+            var h = eloHistory[p.tag] || {};
             for (var m = 0; m < 18; m++) {
                 var s = SEASONS[m];
                 var lst = seasonData[s.key] || [];
@@ -429,19 +492,30 @@
                 for (var i = 0; i < lst.length; i++) {
                     if (lst[i].tag === p.tag) { found = lst[i]; break; }
                 }
-                if (found) {
+                var delta = h[s.key];
+                if (found || delta !== undefined) {
+                    var placeStr = found ? '<span class="text-amber-500">#' + found.placement + '</span>' : '<span class="text-slate-600">inactive</span>';
+                    var eloStr = '';
+                    if (delta !== undefined) {
+                        var arr = Math.round(delta);
+                        eloStr = arr >= 0
+                            ? '<span class="elo-plus">+' + arr + '</span>'
+                            : '<span class="elo-minus">' + arr + '</span>';
+                    }
                     hist += '<div class="flex justify-between bg-[#090f1c] border border-slate-800 rounded px-3 py-1.5">' +
                             '<span class="text-slate-400">' + s.label + '</span>' +
-                            '<span><span class="text-amber-500">#' + found.placement + '</span>' +
-                            (p.months[m] > 0 ? ' <span class="text-emerald-500">+' + p.months[m] + 'pts</span>' : '') +
-                            '</span></div>';
+                            '<span>' + placeStr + ' ' + eloStr + '</span></div>';
                 }
             }
             document.getElementById('dHistory').innerHTML = hist || '<div class="text-slate-600 text-xs">No ranked seasons recorded.</div>';
             document.getElementById('playerDrawer').classList.add('open');
+            document.body.classList.add('drawer-open');
         }
 
-        function closeDrawer() { document.getElementById('playerDrawer').classList.remove('open'); }
+        function closeDrawer() {
+            document.getElementById('playerDrawer').classList.remove('open');
+            document.body.classList.remove('drawer-open');
+        }
 
         function updatePageData() {
             var mi = parseInt(document.getElementById('filterMonth').value, 10);
