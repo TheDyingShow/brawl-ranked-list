@@ -319,12 +319,13 @@ var SORTS = { points:'Points', elo:'Elo', peak:'Best placement', activity:'Activ
 
 // ============================= STATE =============================
 var allPlayers = [], playerByTag = {}, countryMap = {};
-var seasonData = {}, seasonTagSets = [], missingSeasons = [];
+var seasonData = {}, seasonTagSets = [], seasonPlacementMap = {}, missingSeasons = [];
 var eloMap = {}, eloHist = {}, pointsRankMap = {}, eloRankMap = {};
 var currentView = 'player';   // 'player' | 'country-list' | 'country-detail'
 var currentSort = 'points', currentCountryFilter = 'all', currentMonth = -1;
 var currentDetailCC = '', currentPage = 1;
 var dataReady = false;
+var selectedCountryCode = '';
 
 // ============================= HELPERS =============================
 function $(id) { return document.getElementById(id); }
@@ -436,8 +437,6 @@ function computeElo() {
 }
 
 // ============================= ROUTING =============================
-// #/player/{sort}/{country|all}/{month}?page=N
-// #/country/{sort}/{cc|all}/{month}?page=N   (cc = 'all' -> list, else detail)
 function buildHash(view, sort, cc, month, page) {
     return '#/' + view + '/' + sort + '/' + (cc || 'all') + '/' +
         (month === undefined ? -1 : month) + '?page=' + (page || 1);
@@ -479,69 +478,38 @@ function currentHash() {
 }
 function route() {
     if (!dataReady) return;
-    parseHash();
-    
-    // Reset selectedCountryCode from URL state, not previous value
-    if (currentView === 'player') {
-        selectedCountryCode = (currentCountryFilter !== 'all') ? currentCountryFilter : '';
-    } else if (currentView === 'country-detail') {
-        selectedCountryCode = currentDetailCC;
-    } else {
-        // country-list view: no country selection
-        selectedCountryCode = '';
+    try {
+        parseHash();
+        if (currentView === 'player') {
+            selectedCountryCode = (currentCountryFilter !== 'all') ? currentCountryFilter : '';
+        } else if (currentView === 'country-detail') {
+            selectedCountryCode = currentDetailCC;
+        } else {
+            selectedCountryCode = '';
+        }
+        if (currentView === 'country-list' && (currentSort === 'peak' || currentSort === 'activity')) currentSort = 'points';
+        $('filterSort').value = currentSort;
+        $('filterMonth').value = currentMonth;
+        $('searchBar').value = '';
+        syncSortOptions();
+        updateCountryBtn();
+        updateSearchPlaceholder();
+        render();
+    } catch (err) {
+        console.error('Route error:', err);
     }
-    
-    // Country LIST view only supports points / elo
-    if (currentView === 'country-list' && (currentSort === 'peak' || currentSort === 'activity')) currentSort = 'points';
-    
-    $('filterSort').value = currentSort;
-    $('filterMonth').value = currentMonth;
-    $('searchBar').value = '';
-    syncSortOptions();
-    updateCountryBtn();
-    updateSearchPlaceholder();
-    render();
 }
 function syncSortOptions() {
     var opts = $('filterSort').options, list = currentView === 'country-list';
     for (var i = 0; i < opts.length; i++) {
         opts[i].disabled = list && (opts[i].value === 'peak' || opts[i].value === 'activity');
     }
-    // Disable country selector in Country Ranking list view
     var countrySelectDisabled = (currentView === 'country-list');
     $('countryDropdown').style.pointerEvents = countrySelectDisabled ? 'none' : 'auto';
     $('countryDropdown').style.opacity = countrySelectDisabled ? '0.4' : '1';
 }
-
 function updateSearchPlaceholder() {
     $('searchBar').placeholder = (currentView === 'country-list') ? 'Search...' : 'Search player/tag...';
-}
-
-function updateCountryBtn() {
-    var isDetail = currentView === 'country-detail';
-    // In country-list view, always show "All countries" and make unclickable
-    if (currentView === 'country-list') {
-        selectedCountryCode = '';
-        $('countryBtnLabel').textContent = 'All countries';
-        $('countryBtnFlag').textContent = '🌐';
-        return;
-    }
-    // Player ranking: use the current filter
-    if (currentView === 'player' && currentCountryFilter !== 'all') {
-        selectedCountryCode = currentCountryFilter;
-    } else if (currentView === 'country-detail') {
-        selectedCountryCode = currentDetailCC;
-    } else {
-        selectedCountryCode = '';
-    }
-    
-    if (selectedCountryCode) {
-        $('countryBtnLabel').textContent = countryName(selectedCountryCode);
-        $('countryBtnFlag').innerHTML = '<img class="flag-icon-sm" src="' + getFlagUrl(selectedCountryCode) + '">';
-    } else {
-        $('countryBtnLabel').textContent = 'All countries';
-        $('countryBtnFlag').textContent = '🌐';
-    }
 }
 function switchView(view) {
     closeMenus();
@@ -564,19 +532,14 @@ function onControlChange() {
     var sort = $('filterSort').value;
     var month = parseInt($('filterMonth').value, 10);
     var target;
-    
     if (currentView === 'player') {
-        // Carry forward player-country filter if set
         var cc = (currentCountryFilter !== 'all') ? currentCountryFilter : 'all';
         target = buildHash('player', sort, cc, month, 1);
     } else if (currentView === 'country-detail') {
-        // Carry forward the current country
         target = buildHash('country', sort, currentDetailCC, month, 1);
     } else {
-        // country-list view: NEVER carry a country, always reset to 'all'
         target = buildHash('country', sort, 'all', month, 1);
     }
-    
     if (location.hash === target) route();
     else location.hash = target;
 }
@@ -601,7 +564,7 @@ function sortPlayerList(arr) {
     var mk = (currentMonth !== -1 && SEASONS[currentMonth]) ? SEASONS[currentMonth].key : null;
     if (currentSort === 'points') {
         if (mk) arr.sort(function (a, b) {
-            var pa = seasonPlacementMap[mk][a.tag], pb = seasonPlacementMap[mk][b.tag];
+            var pa = (seasonPlacementMap[mk] || {})[a.tag], pb = (seasonPlacementMap[mk] || {})[b.tag];
             if (pa === undefined) return 1;
             if (pb === undefined) return -1;
             return pa - pb;
@@ -623,16 +586,20 @@ function sortPlayerList(arr) {
 
 // ============================= RENDER =============================
 function render() {
-    var pv = $('playerView'), cv = $('countryView');
-    if (currentView === 'player') {
-        pv.classList.remove('hidden'); cv.classList.add('hidden');
-        renderPlayerView();
-    } else {
-        pv.classList.add('hidden'); cv.classList.remove('hidden');
-        if (currentView === 'country-list') renderCountryList();
-        else renderCountryDetail();
+    try {
+        var pv = $('playerView'), cv = $('countryView');
+        if (currentView === 'player') {
+            pv.classList.remove('hidden'); cv.classList.add('hidden');
+            renderPlayerView();
+        } else {
+            pv.classList.add('hidden'); cv.classList.remove('hidden');
+            if (currentView === 'country-list') renderCountryList();
+            else renderCountryDetail();
+        }
+        window.scrollTo(0, 0);
+    } catch (err) {
+        console.error('Render error:', err);
     }
-    window.scrollTo(0, 0);
 }
 function paginate(list) {
     var pages = Math.max(1, Math.ceil(list.length / RECORDS_PER_PAGE));
@@ -641,16 +608,19 @@ function paginate(list) {
     return { slice: list.slice(start, start + RECORDS_PER_PAGE), pages: pages };
 }
 function setPager(btnPrevId, indId, btnNextId, pages) {
-    $(btnPrevId).disabled = currentPage <= 1;
-    $(btnNextId).disabled = currentPage >= pages;
-    $(indId).textContent = 'Page ' + currentPage + '/' + pages;
+    var bp = $(btnPrevId), bi = $(indId), bn = $(btnNextId);
+    if (bp && bi && bn) {
+        bp.disabled = currentPage <= 1;
+        bn.disabled = currentPage >= pages;
+        bi.textContent = 'Page ' + currentPage + '/' + pages;
+    }
 }
 function statValue(p) {
     if (currentSort === 'elo') return fmt(p.elo || 0) + (isActive(p) ? '' : '<span class="offline-pill">Offline</span>');
     if (currentSort === 'activity') return p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : '-';
     if (currentSort === 'peak') return (p.peak != null && p.peak > 0) ? '#' + p.peak : '-';
     var mk = (currentMonth !== -1 && SEASONS[currentMonth]) ? SEASONS[currentMonth].key : null;
-    return fmt(mk ? (p.seasonPts[mk] || 0) : p.points);
+    return fmt(mk ? (p.seasonPts && p.seasonPts[mk] !== undefined ? p.seasonPts[mk] : 0) : p.points);
 }
 function playerRowHtml(p, rank) {
     var rc = rank <= 3 ? 'rank-' + rank : '';
@@ -658,7 +628,7 @@ function playerRowHtml(p, rank) {
     return '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer" onclick="showPlayer(\'' + tagParam(p.tag) + '\')">' +
         '<div class="col-span-1 rank-badge ' + rc + '">' + rank + '</div>' +
         '<div class="col-span-1 flex justify-start">' +
-            (getFlagUrl(p.country) ? '<img class="flag-icon flag-click" src="' + getFlagUrl(p.country) + '" alt="' + esc(p.country) + '" title="' + esc(countryName(p.country)) + '" onclick="flagClick(\'' + p.country + '\', event)">' : '') +
+            (p.country && p.country !== 'XX' ? '<img class="flag-icon flag-click" src="' + getFlagUrl(p.country) + '" alt="' + esc(p.country) + '" title="' + esc(countryName(p.country)) + '" onclick="flagClick(\'' + p.country + '\', event)">' : '') +
         '</div>' +
         '<div class="col-span-4 min-w-0"><span class="font-bold text-white text-sm truncate block">' + esc(p.name) + '</span>' +
         '<span class="text-[10px] font-mono text-slate-600">' + esc(p.tag) + '</span></div>' +
@@ -671,116 +641,119 @@ function emptyRow(msg) {
 }
 
 function renderPlayerView() {
-    var list = allPlayers;
-    if (currentCountryFilter !== 'all') list = list.filter(function (p) { return p.country === currentCountryFilter; });
-    list = applyMonthAndSearch(list);
-    if (currentSort === 'elo') {
-        // active players first, then offline, each group by elo
-        list = list.slice().sort(function (a, b) {
-            var A = isActive(a) ? 0 : 1, B = isActive(b) ? 0 : 1;
-            if (A !== B) return A - B;
-            return (b.elo || 0) - (a.elo || 0);
-        });
-    } else {
-        list = sortPlayerList(list);
+    try {
+        var list = allPlayers.slice();
+        if (currentCountryFilter !== 'all') list = list.filter(function (p) { return p.country === currentCountryFilter; });
+        list = applyMonthAndSearch(list);
+        if (currentSort === 'elo') {
+            list = list.sort(function (a, b) {
+                var A = isActive(a) ? 0 : 1, B = isActive(b) ? 0 : 1;
+                if (A !== B) return A - B;
+                return (b.elo || 0) - (a.elo || 0);
+            });
+        } else {
+            list = sortPlayerList(list);
+        }
+        var pg = paginate(list);
+        $('viewTitle').textContent = 'Standings — ' + monthLabel(currentMonth) +
+            (currentCountryFilter !== 'all' ? ' — ' + countryName(currentCountryFilter) : '');
+        $('playerCount').textContent = list.length.toLocaleString() + ' Records';
+        $('statHeader').textContent = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last activity' : SORTS[currentSort]);
+        var html = '';
+        pg.slice.forEach(function (p, i) { html += playerRowHtml(p, (currentPage - 1) * RECORDS_PER_PAGE + i + 1); });
+        $('leaderboard').innerHTML = html || emptyRow('No players found');
+        setPager('btnPrev', 'pageIndicator', 'btnNext', pg.pages);
+    } catch (err) {
+        console.error('renderPlayerView error:', err);
     }
-    var pg = paginate(list);
-    $('viewTitle').textContent = 'Standings — ' + monthLabel(currentMonth) +
-        (currentCountryFilter !== 'all' ? ' — ' + countryName(currentCountryFilter) : '');
-    $('playerCount').textContent = list.length.toLocaleString() + ' Records';
-    $('statHeader').textContent = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last activity' : SORTS[currentSort]);
-    var html = '';
-    pg.slice.forEach(function (p, i) { html += playerRowHtml(p, (currentPage - 1) * RECORDS_PER_PAGE + i + 1); });
-    $('leaderboard').innerHTML = html || emptyRow('No players found');
-    setPager('btnPrev', 'pageIndicator', 'btnNext', pg.pages);
 }
 
 function renderCountryList() {
-    // Aggregate ACTIVE players only per country
-    var actives = allPlayers.filter(isActive);
-    actives = applyMonthAndSearch(actives);
-    var agg = {}, seen = {};
-    actives.forEach(function (p) {
-        if (!p.country || p.country === 'XX') return;
-        if (!agg[p.country]) agg[p.country] = { cc: p.country, n: 0, pts: 0, elo: 0 };
-        agg[p.country].n++; agg[p.country].pts += p.points; agg[p.country].elo += (p.elo || 0);
-        seen[p.country] = true;
-    });
-    var list = Object.keys(agg).map(function (k) { return agg[k]; });
-    // Countries with zero active players -> pushed to bottom
-    var zeros = [];
-    allPlayers.forEach(function (p) {
-        if (!p.country || p.country === 'XX' || seen[p.country]) return;
-        seen[p.country] = true;
-        zeros.push({ cc: p.country, n: 0, pts: 0, elo: 0 });
-    });
-    zeros.sort(function (a, b) { return countryName(a.cc).localeCompare(countryName(b.cc)); });
-    list.sort(function (a, b) { return currentSort === 'elo' ? (b.elo - a.elo) : (b.pts - a.pts); });
-    var shown = list.concat(zeros);
-    // Search: country names only
-    var q = $('searchBar').value.trim().toLowerCase();
-    if (q) shown = shown.filter(function (c) { return countryName(c.cc).toLowerCase().indexOf(q) !== -1 || c.cc.toLowerCase().indexOf(q) !== -1; });
-
-    var pg = paginate(shown);
-    $('countryViewTitle').textContent = 'Country Ranking — ' + monthLabel(currentMonth);
-    $('countryTotalPlayers').textContent = shown.length + ' Countries';
-    $('countryDetailHeader').classList.add('hidden');
-    $('countryRankingWrap').classList.remove('hidden');
-    $('countryPagination').classList.remove('hidden');
-    var html = '';
-    pg.slice.forEach(function (c, i) {
-        var rank = (currentPage - 1) * RECORDS_PER_PAGE + i + 1;
-        var rc = rank <= 3 ? 'rank-' + rank : '';
-        html += '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer" onclick="location.hash=buildHash(\'country\',\'' + currentSort + '\',\'' + c.cc + '\',' + currentMonth + ',1)">' +
-            '<div class="col-span-1 rank-badge ' + rc + '">' + rank + '</div>' +
-            '<div class="col-span-5 flex items-center gap-3 min-w-0">' +
-                '<img class="flag-icon" src="' + getFlagUrl(c.cc) + '" alt="' + esc(c.cc) + '">' +
-                '<span class="font-bold text-white text-sm truncate">' + esc(countryName(c.cc)) + '</span>' +
-            '</div>' +
-            '<div class="col-span-2 text-right font-mono text-xs text-slate-400">' + c.n + '</div>' +
-            '<div class="col-span-2 text-right font-mono text-sm font-bold text-emerald-400">' + fmt(c.pts) + '</div>' +
-            '<div class="col-span-2 text-right font-mono text-sm font-bold text-mastersGreen">' + fmt(c.elo) + '</div>' +
-        '</div>';
-    });
-    $('countryRankingList').innerHTML = html || emptyRow('No countries found');
-    setPager('btnPrevC', 'pageIndicatorC', 'btnNextC', pg.pages);
+    try {
+        var actives = allPlayers.filter(isActive);
+        actives = applyMonthAndSearch(actives);
+        var agg = {}, seen = {};
+        actives.forEach(function (p) {
+            if (!p.country || p.country === 'XX') return;
+            if (!agg[p.country]) agg[p.country] = { cc: p.country, n: 0, pts: 0, elo: 0 };
+            agg[p.country].n++; agg[p.country].pts += p.points; agg[p.country].elo += (p.elo || 0);
+            seen[p.country] = true;
+        });
+        var list = Object.keys(agg).map(function (k) { return agg[k]; });
+        var zeros = [];
+        allPlayers.forEach(function (p) {
+            if (!p.country || p.country === 'XX' || seen[p.country]) return;
+            seen[p.country] = true;
+            zeros.push({ cc: p.country, n: 0, pts: 0, elo: 0 });
+        });
+        zeros.sort(function (a, b) { return countryName(a.cc).localeCompare(countryName(b.cc)); });
+        list.sort(function (a, b) { return currentSort === 'elo' ? (b.elo - a.elo) : (b.pts - a.pts); });
+        var shown = list.concat(zeros);
+        var q = $('searchBar').value.trim().toLowerCase();
+        if (q) shown = shown.filter(function (c) { return countryName(c.cc).toLowerCase().indexOf(q) !== -1 || c.cc.toLowerCase().indexOf(q) !== -1; });
+        var pg = paginate(shown);
+        $('countryViewTitle').textContent = 'Country Ranking — ' + monthLabel(currentMonth);
+        $('countryTotalPlayers').textContent = shown.length + ' Countries';
+        $('countryDetailHeader').classList.add('hidden');
+        $('countryRankingWrap').classList.remove('hidden');
+        $('countryPagination').classList.remove('hidden');
+        var html = '';
+        pg.slice.forEach(function (c, i) {
+            var rank = (currentPage - 1) * RECORDS_PER_PAGE + i + 1;
+            var rc = rank <= 3 ? 'rank-' + rank : '';
+            html += '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer" onclick="location.hash=buildHash(\'country\',\'' + currentSort + '\',\'' + c.cc + '\',' + currentMonth + ',1)">' +
+                '<div class="col-span-1 rank-badge ' + rc + '">' + rank + '</div>' +
+                '<div class="col-span-5 flex items-center gap-3 min-w-0">' +
+                    '<img class="flag-icon" src="' + getFlagUrl(c.cc) + '" alt="' + esc(c.cc) + '">' +
+                    '<span class="font-bold text-white text-sm truncate">' + esc(countryName(c.cc)) + '</span>' +
+                '</div>' +
+                '<div class="col-span-2 text-right font-mono text-xs text-slate-400">' + c.n + '</div>' +
+                '<div class="col-span-2 text-right font-mono text-sm font-bold text-emerald-400">' + fmt(c.pts) + '</div>' +
+                '<div class="col-span-2 text-right font-mono text-sm font-bold text-mastersGreen">' + fmt(c.elo) + '</div>' +
+            '</div>';
+        });
+        $('countryRankingList').innerHTML = html || emptyRow('No countries found');
+        setPager('btnPrevC', 'pageIndicatorC', 'btnNextC', pg.pages);
+    } catch (err) {
+        console.error('renderCountryList error:', err);
+    }
 }
 
 function renderCountryDetail() {
-    var cc = currentDetailCC;
-    // ACTIVE players of this country only
-    var list = allPlayers.filter(function (p) { return p.country === cc; }).filter(isActive);
-    list = applyMonthAndSearch(list);
-    list = sortPlayerList(list);
-
-    var totalPts = 0, totalElo = 0;
-    list.forEach(function (p) { totalPts += p.points; totalElo += (p.elo || 0); });
-    var allOfCc = allPlayers.filter(function (p) { return p.country === cc; });
-
-    $('countryViewTitle').textContent = countryName(cc) + ' — ' + monthLabel(currentMonth);
-    $('countryTotalPlayers').textContent = list.length + ' Players';
-    $('countryDetailHeader').classList.remove('hidden');
-    $('countryRankingWrap').classList.remove('hidden');
-    $('countryDetailHeader').innerHTML =
-        '<div class="bg-[#101d14] border border-slate-950 rounded-xl px-4 py-3 mb-5 flex items-center gap-4">' +
-            '<span class="back-btn" onclick="goBack()">&larr; Click to go back</span>' +
-            '<img class="flag-icon ml-4" src="' + getFlagUrl(cc) + '" alt="' + esc(cc) + '">' +
-            '<div class="flex-1 min-w-0">' +
-                '<span class="block font-black text-white text-base truncate">' + esc(countryName(cc)) + '</span>' +
-                '<span class="text-[10px] font-mono text-slate-500">' + list.length + ' active / ' + allOfCc.length + ' total players</span>' +
-            '</div>' +
-            '<div class="text-right">' +
-                '<div class="font-mono text-sm font-bold text-emerald-400">' + fmt(totalPts) + ' pts</div>' +
-                '<div class="font-mono text-sm font-bold text-mastersGreen">' + fmt(totalElo) + ' elo</div>' +
-            '</div>' +
-        '</div>';
-
-    var pg = paginate(list);
-    var html = '';
-    pg.slice.forEach(function (p, i) { html += playerRowHtml(p, (currentPage - 1) * RECORDS_PER_PAGE + i + 1); });
-    $('countryRankingList').innerHTML = html || emptyRow('No active players found');
-    $('countryPagination').classList.remove('hidden');
-    setPager('btnPrevC', 'pageIndicatorC', 'btnNextC', pg.pages);
+    try {
+        var cc = currentDetailCC;
+        var list = allPlayers.filter(function (p) { return p.country === cc; }).filter(isActive);
+        list = applyMonthAndSearch(list);
+        list = sortPlayerList(list);
+        var totalPts = 0, totalElo = 0;
+        list.forEach(function (p) { totalPts += p.points; totalElo += (p.elo || 0); });
+        var allOfCc = allPlayers.filter(function (p) { return p.country === cc; });
+        $('countryViewTitle').textContent = countryName(cc) + ' — ' + monthLabel(currentMonth);
+        $('countryTotalPlayers').textContent = list.length + ' Players';
+        $('countryDetailHeader').classList.remove('hidden');
+        $('countryRankingWrap').classList.remove('hidden');
+        $('countryDetailHeader').innerHTML =
+            '<div class="bg-[#101d14] border border-slate-950 rounded-xl px-4 py-3 mb-5 flex items-center gap-4">' +
+                '<span class="back-btn" onclick="goBack()">&larr; Click to go back</span>' +
+                '<img class="flag-icon ml-4" src="' + getFlagUrl(cc) + '" alt="' + esc(cc) + '">' +
+                '<div class="flex-1 min-w-0">' +
+                    '<span class="block font-black text-white text-base truncate">' + esc(countryName(cc)) + '</span>' +
+                    '<span class="text-[10px] font-mono text-slate-500">' + list.length + ' active / ' + allOfCc.length + ' total players</span>' +
+                '</div>' +
+                '<div class="text-right">' +
+                    '<div class="font-mono text-sm font-bold text-emerald-400">' + fmt(totalPts) + ' pts</div>' +
+                    '<div class="font-mono text-sm font-bold text-mastersGreen">' + fmt(totalElo) + ' elo</div>' +
+                '</div>' +
+            '</div>';
+        var pg = paginate(list);
+        var html = '';
+        pg.slice.forEach(function (p, i) { html += playerRowHtml(p, (currentPage - 1) * RECORDS_PER_PAGE + i + 1); });
+        $('countryRankingList').innerHTML = html || emptyRow('No active players found');
+        $('countryPagination').classList.remove('hidden');
+        setPager('btnPrevC', 'pageIndicatorC', 'btnNextC', pg.pages);
+    } catch (err) {
+        console.error('renderCountryDetail error:', err);
+    }
 }
 
 // ============================= MENUS =============================
@@ -802,7 +775,6 @@ document.addEventListener('click', function (e) {
     if (!$('moreDropdown').contains(e.target) && !$('countryDropdown').contains(e.target)) closeMenus();
 });
 
-var selectedCountryCode = '';
 function buildCountryMenu() {
     var seen = {}, codes = [];
     allPlayers.forEach(function (p) {
@@ -826,30 +798,25 @@ function selectCountry(cc) {
     onControlChange();
 }
 function updateCountryBtn() {
-    var isDetail = currentView === 'country-detail';
-    if (isDetail) {
-        selectedCountryCode = currentDetailCC;
-        $('countryBtnLabel').textContent = countryName(currentDetailCC);
-        $('countryBtnFlag').innerHTML = '<img class="flag-icon-sm" src="' + getFlagUrl(currentDetailCC) + '">';
-    } else if (currentView === 'player' && currentCountryFilter !== 'all') {
-        selectedCountryCode = currentCountryFilter;
-        $('countryBtnLabel').textContent = countryName(currentCountryFilter);
-        $('countryBtnFlag').innerHTML = '<img class="flag-icon-sm" src="' + getFlagUrl(currentCountryFilter) + '">';
-    } else if (currentView === 'country-list' && selectedCountryCode) {
-        // list view ignores country filter
+    if (currentView === 'country-list') {
+        selectedCountryCode = '';
         $('countryBtnLabel').textContent = 'All countries';
         $('countryBtnFlag').textContent = '🌐';
-    } else if (!isDetail) {
-        if (currentView !== 'player') selectedCountryCode = '';
-        else selectedCountryCode = currentCountryFilter !== 'all' ? currentCountryFilter : '';
-        if (!selectedCountryCode) {
-            $('countryBtnLabel').textContent = 'All countries';
-            $('countryBtnFlag').textContent = '🌐';
-        }
+        return;
+    }
+    if (currentView === 'player' && currentCountryFilter !== 'all') {
+        selectedCountryCode = currentCountryFilter;
+    } else if (currentView === 'country-detail') {
+        selectedCountryCode = currentDetailCC;
+    } else {
+        selectedCountryCode = '';
     }
     if (selectedCountryCode) {
         $('countryBtnLabel').textContent = countryName(selectedCountryCode);
         $('countryBtnFlag').innerHTML = '<img class="flag-icon-sm" src="' + getFlagUrl(selectedCountryCode) + '">';
+    } else {
+        $('countryBtnLabel').textContent = 'All countries';
+        $('countryBtnFlag').textContent = '🌐';
     }
 }
 
@@ -858,7 +825,6 @@ function showPlayer(encodedTag) {
     var tag = decodeURIComponent(encodedTag);
     var p = playerByTag[tag];
     if (!p) return;
-    
     $('dFlag').src = getFlagUrl(p.country);
     $('dName').textContent = p.name;
     $('dTag').textContent = p.tag;
@@ -879,36 +845,21 @@ function showPlayer(encodedTag) {
     $('dPeak').textContent = (p.peak != null && p.peak > 0) ? '#' + p.peak : '-';
     $('dLink').href = profileUrl(p.tag);
     $('dLinkBI').href = insightsUrl(p.tag);
-
-    // Build season history — only show from first active season onwards
     var hist = '';
     var firstActiveSeason = null;
-    var hasChanges = false;
-    
-    // Find first season where player had any Elo change
     SEASONS.forEach(function (s, idx) {
         var d = eloHist[p.tag] ? eloHist[p.tag][s.key] : null;
-        if ((d !== null && d !== undefined) && (firstActiveSeason === null)) {
-            firstActiveSeason = idx;
-        }
+        if ((d !== null && d !== undefined) && (firstActiveSeason === null)) firstActiveSeason = idx;
     });
-    
-    // Only render from first active season
     SEASONS.forEach(function (s, idx) {
         if (firstActiveSeason !== null && idx < firstActiveSeason) return;
-        
         var d = eloHist[p.tag] ? eloHist[p.tag][s.key] : null;
         var val = (d !== null && d !== undefined) ? ((d >= 0 ? '+' : '') + d) : '—';
         var cls = (d !== null && d !== undefined && d > 0) ? 'elo-plus' : ((d < 0) ? 'elo-minus' : 'text-slate-600');
-        
         hist += '<div class="flex justify-between px-2 py-1 rounded ' + (val !== '—' ? 'bg-[#09120b]' : '') + '">' +
             '<span class="text-slate-500">' + s.label + '</span><span class="' + cls + ' font-bold">' + val + '</span></div>';
     });
-    
-    if (hist === '') {
-        hist = '<div class="text-center text-slate-600 text-xs py-4">No season history available</div>';
-    }
-    
+    if (hist === '') hist = '<div class="text-center text-slate-600 text-xs py-4">No season history available</div>';
     $('dHistory').innerHTML = hist;
     $('playerDrawer').classList.add('open');
 }
@@ -925,84 +876,72 @@ document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { cl
     });
 })();
 
-Promise.all(
-    [papaLoad('countries.csv'), papaLoad('leaderboard.csv')]
-        .concat(SEASONS.map(function (s) { return papaLoad('seasons/' + s.key + '.csv'); }))
-).then(function (all) {
-    // countries.csv: #TAG, CC
-    (all[0] || []).forEach(function (r) {
-        if (r && r.length >= 2 && String(r[0]).indexOf('#') !== -1 &&
-            /^[A-Za-z]{2}$/.test(String(r[1] || '').trim())) {
-            countryMap[String(r[0]).trim().toUpperCase()] = String(r[1]).trim().toUpperCase();
-        }
-    });
-    // seasons
-    SEASONS.forEach(function (s, i) {
-        var raw = all[2 + i], list = [];
-        if (!raw) missingSeasons.push(s.label);
-        else raw.forEach(function (row) {
-            var p = parseSeasonRow(row);
-            if (p) list.push(p);
+try {
+    Promise.all(
+        [papaLoad('countries.csv'), papaLoad('leaderboard.csv')]
+            .concat(SEASONS.map(function (s) { return papaLoad('seasons/' + s.key + '.csv'); }))
+    ).then(function (all) {
+        (all[0] || []).forEach(function (r) {
+            if (r && r.length >= 2 && String(r[0]).indexOf('#') !== -1 &&
+                /^[A-Za-z]{2}$/.test(String(r[1] || '').trim())) {
+                countryMap[String(r[0]).trim().toUpperCase()] = String(r[1]).trim().toUpperCase();
+            }
         });
-        seasonData[s.key] = list;
-        seasonTagSets[i] = new Set(list.map(function (p) { return p.tag; }));
-    });
-    // leaderboard
-    var lb = [];
-    (all[1] || []).forEach(function (row) {
-        var p = parseLeaderboardRow(row);
-        if (p) lb.push(p);
-    });
-    // Add players seen in seasons but missing from leaderboard
-    var seen = {};
-    lb.forEach(function (p) { seen[p.tag] = true; });
-    SEASONS.forEach(function (s) {
-        seasonData[s.key].forEach(function (sp) {
-            if (!seen[sp.tag]) { seen[sp.tag] = true; lb.push({ tag: sp.tag, name: sp.tag, points: 0 }); }
+        SEASONS.forEach(function (s, i) {
+            var raw = all[2 + i], list = [];
+            if (!raw) missingSeasons.push(s.label);
+            else raw.forEach(function (row) {
+                var p = parseSeasonRow(row);
+                if (p) list.push(p);
+            });
+            seasonData[s.key] = list;
+            seasonTagSets[i] = new Set(list.map(function (p) { return p.tag; }));
         });
-    });
-    computeElo();
-
-    // Placement lookup per season (for month view ordering)
-    seasonPlacementMap = {};
-    SEASONS.forEach(function (s) {
-        var m = {};
-        (seasonData[s.key] || []).forEach(function (sp) { m[sp.tag] = sp.placement; });
-        seasonPlacementMap[s.key] = m;
-    });
-
-    allPlayers = lb.map(function (p) {
-        var lastIdx = -1;
-        for (var i = LAST_SEASON_IDX; i >= 0; i--) {
-            if (seasonTagSets[i] && seasonTagSets[i].has(p.tag)) { lastIdx = i; break; }
+        var lb = [];
+        (all[1] || []).forEach(function (row) {
+            var p = parseLeaderboardRow(row);
+            if (p) lb.push(p);
+        });
+        computeElo();
+        seasonPlacementMap = {};
+        SEASONS.forEach(function (s) {
+            var m = {};
+            (seasonData[s.key] || []).forEach(function (sp) { m[sp.tag] = sp.placement; });
+            seasonPlacementMap[s.key] = m;
+        });
+        allPlayers = lb.map(function (p) {
+            var lastIdx = -1;
+            for (var i = LAST_SEASON_IDX; i >= 0; i--) {
+                if (seasonTagSets[i] && seasonTagSets[i].has(p.tag)) { lastIdx = i; break; }
+            }
+            var rec = {
+                tag: p.tag, name: p.name, points: p.points, peak: p.peak,
+                seasonPts: p.seasonPts,
+                elo: eloMap[p.tag] || 0, lastIdx: lastIdx,
+                country: countryMap[p.tag] || 'XX'
+            };
+            playerByTag[p.tag] = rec;
+            return rec;
+        });
+        allPlayers.slice().sort(function (a, b) { return b.points - a.points; })
+            .forEach(function (p, i) { pointsRankMap[p.tag] = i + 1; });
+        allPlayers.slice().sort(function (a, b) { return (b.elo || 0) - (a.elo || 0); })
+            .forEach(function (p, i) { eloRankMap[p.tag] = i + 1; });
+        if (missingSeasons.length) {
+            var ss = $('seasonStatus');
+            ss.classList.remove('hidden');
+            ss.textContent = '⚠ Missing season data: ' + missingSeasons.join(', ');
         }
-        var rec = {
-            tag: p.tag, name: p.name, points: p.points, peak: p.peak,
-            seasonPts: p.seasonPts,
-            elo: eloMap[p.tag] || 0, lastIdx: lastIdx,
-            country: countryMap[p.tag] || 'XX'
-        };
-        playerByTag[p.tag] = rec;
-        return rec;
+        buildCountryMenu();
+        dataReady = true;
+        route();
+    }).catch(function (err) {
+        console.error('Init load error:', err);
+        alert('Failed to load data files. Check console for details.');
     });
-
-    // Rank maps for the drawer
-    allPlayers.slice().sort(function (a, b) { return b.points - a.points; })
-        .forEach(function (p, i) { pointsRankMap[p.tag] = i + 1; });
-    allPlayers.slice().sort(function (a, b) { return (b.elo || 0) - (a.elo || 0); })
-        .forEach(function (p, i) { eloRankMap[p.tag] = i + 1; });
-
-    // Missing seasons warning
-    if (missingSeasons.length) {
-        var ss = $('seasonStatus');
-        ss.classList.remove('hidden');
-        ss.textContent = '⚠ Missing season data: ' + missingSeasons.join(', ');
-    }
-
-    buildCountryMenu();
-    dataReady = true;
-    route();
-});
+} catch (err) {
+    console.error('Init error:', err);
+}
 
 window.addEventListener('hashchange', route);
 </script>
