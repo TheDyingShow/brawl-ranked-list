@@ -48,3 +48,37 @@ body { background-color: #0a120c; color: #e0ece3; }
 @media (min-width: 768px) {
     .content-area { margin-right: 24rem; }
 }
+/* ===== Polishing batch ===== */
+
+/* Request 2: Geist everywhere, including native dropdowns */
+select, option {
+    font-family: 'Geist', 'ui-sans-serif', 'system-ui', sans-serif;
+}
+
+/* Request 3: sidebar follows scroll (sticky like the drawer) */
+@media (min-width: 768px) {
+    .sidebar {
+        position: sticky;
+        top: 4rem;
+        align-self: flex-start;
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+    }
+}
+
+/* Request 4: drawer gets a distinct green scrollbar */
+#playerDrawer::-webkit-scrollbar { width: 10px; }
+#playerDrawer::-webkit-scrollbar-track { background: #09120b; }
+#playerDrawer::-webkit-scrollbar-thumb {
+    background: #88cc00;
+    border-radius: 5px;
+    border: 2px solid #09120b;
+}
+
+/* Request 6: More button aligned above the sidebar dropdown arrows */
+#moreDropdown {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 2.6rem;
+}
