@@ -81,6 +81,15 @@ select, option {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        left: 21.2rem;   /* aligns with the ▼ of All-time / Sort: */
+        left: 20.8rem;   /* aligns with the ▼ of All-time / Sort: */
+    }
+}
+.sidebar {
+    border-right: 1px solid #11211a;
+}
+@media (max-width: 768px) {
+    .sidebar {
+        border-right: none;
+        border-bottom: 1px solid #11211a;
     }
 }
