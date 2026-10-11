@@ -362,15 +362,37 @@ function parseSeasonRow(row) {
     return (tag && placement !== null) ? { tag: tag, placement: placement } : null;
 }
 function parseLeaderboardRow(row) {
+    if (!row || row.length < 2) return null;
     var tag = null, name = '', points = 0;
+    
+    // Positional parsing: try to identify by order and content
+    // Assumption: tag (starting with #), name (anything), points (last numeric field)
+    var numericFieldFound = false;
+    var tagIndex = -1, nameIndex = -1, pointsIndex = -1;
+    
     for (var i = 0; i < row.length; i++) {
         var f = String(row[i] == null ? '' : row[i]).trim();
         if (f === '') continue;
-        if (tag === null && f.charAt(0) === '#') { tag = f.toUpperCase(); continue; }
-        if (/^\d+$/.test(f) && tag !== null && points === 0) { points = parseInt(f, 10); continue; }
-        if (!name) name = f;
+        
+        if (f.charAt(0) === '#') {
+            tag = f.toUpperCase();
+            tagIndex = i;
+            continue;
+        }
+        
+        // Find the last numeric field (assumed to be points)
+        if (/^\d+$/.test(f)) {
+            points = parseInt(f, 10);
+            pointsIndex = i;
+            numericFieldFound = true;
+        } else if (nameIndex === -1 && tagIndex >= 0) {
+            // First non-numeric, non-tag field after tag is name
+            name = f;
+            nameIndex = i;
+        }
     }
-    return tag ? { tag: tag, name: name, points: points } : null;
+    
+    return (tag && (name || numericFieldFound)) ? { tag: tag, name: name, points: points } : null;
 }
 
 // ============================= ELO =============================
@@ -477,8 +499,20 @@ function currentHash() {
 function route() {
     if (!dataReady) return;
     parseHash();
+    
+    // Reset selectedCountryCode from URL state, not previous value
+    if (currentView === 'player') {
+        selectedCountryCode = (currentCountryFilter !== 'all') ? currentCountryFilter : '';
+    } else if (currentView === 'country-detail') {
+        selectedCountryCode = currentDetailCC;
+    } else {
+        // country-list view: no country selection
+        selectedCountryCode = '';
+    }
+    
     // Country LIST view only supports points / elo
     if (currentView === 'country-list' && (currentSort === 'peak' || currentSort === 'activity')) currentSort = 'points';
+    
     $('filterSort').value = currentSort;
     $('filterMonth').value = currentMonth;
     $('searchBar').value = '';
@@ -548,11 +582,20 @@ function changePage(delta) {
 function onControlChange() {
     var sort = $('filterSort').value;
     var month = parseInt($('filterMonth').value, 10);
-    var cc = (typeof selectedCountryCode !== 'undefined' && selectedCountryCode) ? selectedCountryCode : 'all';
     var target;
-    if (currentView === 'player') target = buildHash('player', sort, cc, month, 1);
-    else if (currentView === 'country-detail') target = buildHash('country', sort, currentDetailCC, month, 1);
-    else target = buildHash('country', sort, cc !== 'all' ? cc : 'all', month, 1);
+    
+    if (currentView === 'player') {
+        // Carry forward player-country filter if set
+        var cc = (currentCountryFilter !== 'all') ? currentCountryFilter : 'all';
+        target = buildHash('player', sort, cc, month, 1);
+    } else if (currentView === 'country-detail') {
+        // Carry forward the current country
+        target = buildHash('country', sort, currentDetailCC, month, 1);
+    } else {
+        // country-list view: NEVER carry a country, always reset to 'all'
+        target = buildHash('country', sort, 'all', month, 1);
+    }
+    
     if (location.hash === target) route();
     else location.hash = target;
 }
