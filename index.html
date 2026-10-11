@@ -14,7 +14,14 @@
                 extend: {
                     fontFamily: {
                         sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-                        mono: ['Geist Mono', 'ui-monospace', 'monospace']
+                        mono: ['Geist Mono', 'ui-monospace', 'monospace'],
+                    },
+                    colors: {
+                        mastersGreen: {
+                            DEFAULT: '#aaff00', // exact Masters rework green
+                            dim: '#88cc00',
+                            glow: '#ccff66',
+                        }
                     }
                 }
             }
@@ -22,7 +29,7 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { background-color: #0a0e14; color: #e2e8f0; }
+        body { background-color: #0a0e14; color: #e2e8f0; padding-top: 72px; /* space for fixed header */ }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0a0e14; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -38,9 +45,9 @@
             background-color: #0f172a; border: 1px solid #020617; color: #e2e8f0;
             font-size: 0.7rem; border-radius: 0.5rem; padding: 0.5rem 0.6rem; width: 100%;
         }
-        .filter-select:focus { outline: none; border-color: #3b82f6; }
+        .filter-select:focus { outline: none; border-color: mastersGreen.dim; }
         .country-btn { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .country-btn:hover, .country-btn.open { border-color: #3b82f6; }
+        .country-btn:hover, .country-btn.open { border-color: mastersGreen.dim; }
         .country-menu {
             position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
             margin-top: 0.25rem; max-height: 16rem; overflow-y: auto; overflow-x: hidden;
@@ -55,9 +62,12 @@
         .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
         .elo-plus { color: #34d399; }
         .elo-minus { color: #f87171; }
-        /* La marge droite PERMANENTE (24rem = largeur du tiroir) équilibre
-           la sidebar : le tableau est centré écran, tiroir ouvert ou fermé.
-           Le tiroir glisse dans cet espace réservé sans rien recouvrir. */
+        /* Fixed top bar */
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0; height: 72px; z-index: 100;
+            background-color: #0a0e14; border-bottom: 1px solid #020617;
+            display: flex; align-items: center; padding: 0 1rem;
+        }
         @media (min-width: 768px) {
             .content-area { margin-right: 24rem; }
         }
@@ -65,27 +75,30 @@
 </head>
 <body class="font-sans antialiased min-h-screen">
 
+<!-- FIXED TOP BAR -->
+<header class="topbar">
+    <div class="flex items-center gap-3 shrink-0">
+        <div class="w-8 h-8 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-lg flex items-center justify-center font-black text-black text-sm shadow-lg">⚡</div>
+        <div>
+            <h1 class="font-black tracking-wider text-sm uppercase text-white leading-none">RANKED LIST</h1>
+            <span class="text-[9px] tracking-widest uppercase font-bold text-slate-500">Brawl Stars</span>
+        </div>
+    </div>
+</header>
+
 <div class="flex flex-col md:flex-row min-h-screen">
     <aside class="sidebar w-full md:w-96 bg-[#090f1c] border-b md:border-b-0 md:border-r border-slate-900 p-5 flex flex-col shrink-0">
-        <div class="flex items-center space-x-3 mb-6">
-            <div class="w-8 h-8 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-lg flex items-center justify-center font-black text-black text-sm shadow-lg">⚡</div>
-            <div>
-                <h1 class="font-black tracking-wider text-sm uppercase text-white leading-none">RANKED LIST</h1>
-                <span class="text-[9px] tracking-widest uppercase font-bold text-slate-500">Brawl Stars</span>
-            </div>
-        </div>
-
         <div class="bg-[#0f172a] border border-slate-900 rounded-lg p-3 mb-5">
             <span class="block text-[8px] uppercase tracking-widest font-black text-slate-500 mb-2">Parameters</span>
-            <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wide">Min Pro Rank (11,250+)</span>
+            <span class="text-[10px] font-bold text-mastersGreen-dim uppercase tracking-wide">MIN PRO RANK (11,250+)</span>
             <div class="mt-2 pt-2 border-t border-slate-800/60 text-[10px] text-slate-500">
-                Timeline: <span class="font-bold text-white font-mono">March 2025 (Ranked 2.0) — August 2026 (Now)</span>
+                Timeline: <span class="font-bold text-mastersGreen-glow font-mono">March 2025 (Ranked 2.0) — August 2026 (Now)</span>
             </div>
         </div>
 
         <div class="relative mb-3">
             <input type="text" id="searchBar" onkeyup="applyFilters()" placeholder="Search player/tag..."
-                   class="w-full bg-[#0f172a] border border-slate-950 text-xs rounded-lg px-3 py-2.5 pl-9 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all">
+                   class="w-full bg-[#0f172a] border border-slate-950 text-xs rounded-lg px-3 py-2.5 pl-9 text-white placeholder-slate-600 focus:outline-none focus:border-mastersGreen-dim transition-all">
             <span class="absolute left-3 top-2.5 text-[10px] opacity-40">🔍</span>
         </div>
 
@@ -112,7 +125,8 @@
         </div>
 
         <div class="mt-auto pt-4 border-t border-slate-900 text-[9px] text-slate-600 font-mono text-center md:text-left">
-            © 2026 @TheKitboxerShow
+            © 2026 rankedlist.org • Developed by <a href="https://x.com/TheKitboxerShow" target="_blank" rel="noopener noreferrer" class="hover:text-mastersGreen-dim transition-colors">@TheKitboxerShow</a><br>
+            This content is not affiliated with, endorsed, sponsored, or specifically approved by Supercell and Supercell is not responsible for it. <a href="https://supercell.com/en/fan-content-policy/" target="_blank" rel="noopener noreferrer" class="hover:text-mastersGreen-dim transition-colors underline">Supercell Fan Content Policy</a>
         </div>
     </aside>
 
@@ -691,12 +705,13 @@ function openDrawer(p) {
     document.getElementById('dLinkBI').href = insightsUrl(p.tag);
 
     var dStatus = document.getElementById('dStatus');
+    var top500 = p.peakRank <= 500 ? '(top 500)' : '';
     if (p.offline) {
         dStatus.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-slate-800 text-slate-500';
-        dStatus.textContent = 'Offline · Last reached pro ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
+        dStatus.textContent = 'Offline · Last reached pro ' + top500 + ' ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
     } else {
         dStatus.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-500';
-        dStatus.textContent = 'Active · Last reached pro ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
+        dStatus.textContent = 'Active · Last reached pro ' + top500 + ' ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
     }
 
     var hist = '';
