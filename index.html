@@ -126,16 +126,7 @@ tailwind.config = {
         </div>
 
         <div class="space-y-2 mb-3">
-            <div class="relative" id="countryDropdown">
-                <button type="button" id="countryBtn" class="country-btn" onclick="toggleCountryMenu(event)">
-                    <span class="flex items-center gap-2 min-w-0">
-                        <span id="countryBtnFlag" class="leading-none shrink-0">&#127760;</span>
-                        <span id="countryBtnLabel" class="truncate">All countries</span>
-                    </span>
-                    <span class="text-[9px] text-slate-500">&#9660;</span>
-                </button>
-                <div id="countryMenu" class="country-menu hidden"></div>
-            </div>
+            <div class="h-10 mb-3"></div> <!-- Spacer to maintain visual balance -->
             <select id="filterMonth" class="filter-select" onchange="onControlChange()">
                 <option value="-1">All-time</option>
             </select>
@@ -325,7 +316,6 @@ var currentView = 'player';   // 'player' | 'country-list' | 'country-detail'
 var currentSort = 'points', currentCountryFilter = 'all', currentMonth = -1;
 var currentDetailCC = '', currentPage = 1;
 var dataReady = false;
-var selectedCountryCode = '';
 
 // ============================= HELPERS =============================
 function $(id) { return document.getElementById(id); }
@@ -522,15 +512,6 @@ function syncSortOptions() {
             currentSort = 'points';
         }
     }
-    
-    // DON'T block pointer events - just add a visual class instead
-    if (currentView === 'country-list') {
-        $('countryDropdown').classList.add('disabled-dropdown');
-        $('countryBtn').setAttribute('tabindex', '-1');
-    } else {
-        $('countryDropdown').classList.remove('disabled-dropdown');
-        $('countryBtn').removeAttribute('tabindex');
-    }
 }
 
 function updateCountryBtn() {
@@ -585,8 +566,7 @@ function onControlChange() {
     var month = parseInt($('filterMonth').value, 10);
     var target;
     if (currentView === 'player') {
-        var cc = (currentCountryFilter !== 'all') ? currentCountryFilter : 'all';
-        target = buildHash('player', sort, cc, month, 1);
+        target = buildHash('player', sort, 'all', month, 1);
     } else if (currentView === 'country-detail') {
         target = buildHash('country', sort, currentDetailCC, month, 1);
     } else {
@@ -815,11 +795,6 @@ function toggleMoreMenu(ev) {
     $('moreMenu').classList.toggle('hidden');
     $('countryMenu').classList.add('hidden');
 }
-function toggleCountryMenu(ev) {
-    if (ev) ev.stopPropagation();
-    $('countryMenu').classList.toggle('hidden');
-    $('moreMenu').classList.add('hidden');
-}
 function closeMenus() {
     $('moreMenu').classList.add('hidden');
     $('countryMenu').classList.add('hidden');
@@ -852,53 +827,6 @@ function toggleCountryMenu(ev) {
     
     // Prevent this click from bubbling to document listener
     return false;
-}
-
-function buildCountryMenu() {
-    var seen = {}, codes = [];
-    allPlayers.forEach(function (p) {
-        if (!p.country || p.country === 'XX' || seen[p.country]) return;
-        seen[p.country] = true;
-        codes.push(p.country);
-    });
-    codes.sort(function (a, b) { return countryName(a).localeCompare(countryName(b)); });
-    var html = '<div class="country-option' + (selectedCountryCode === '' ? ' active' : '') + '" onclick="selectCountry(\'\')">🌐 All countries</div>';
-    codes.forEach(function (cc) {
-        html += '<div class="country-option' + (selectedCountryCode === cc ? ' active' : '') + '" onclick="selectCountry(\'' + cc + '\')">' +
-            '<img class="flag-icon-sm" src="' + getFlagUrl(cc) + '" alt=""> ' + esc(countryName(cc)) + '</div>';
-    });
-    $('countryMenu').innerHTML = html;
-}
-function selectCountry(cc) {
-    closeMenus();
-    selectedCountryCode = cc;
-    updateCountryBtn();
-    buildCountryMenu();
-    onControlChange();
-}
-function updateCountryBtn() {
-    if (currentView === 'country-list') {
-        selectedCountryCode = '';
-        $('countryBtnLabel').textContent = 'All countries';
-        $('countryBtnFlag').textContent = '🌐';
-        return;
-    }
-    
-    if (currentView === 'player') {
-        selectedCountryCode = (currentCountryFilter !== 'all') ? currentCountryFilter : '';
-    } else if (currentView === 'country-detail') {
-        selectedCountryCode = currentDetailCC;
-    } else {
-        selectedCountryCode = '';
-    }
-    
-    if (selectedCountryCode) {
-        $('countryBtnLabel').textContent = countryName(selectedCountryCode);
-        $('countryBtnFlag').innerHTML = '<img class="flag-icon-sm" src="' + getFlagUrl(selectedCountryCode) + '">';
-    } else {
-        $('countryBtnLabel').textContent = 'All countries';
-        $('countryBtnFlag').textContent = '🌐';
-    }
 }
 
 // ============================= DRAWER =============================
