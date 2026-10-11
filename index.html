@@ -63,8 +63,6 @@
         .country-option.active { background-color: #1a3122; }
         #playerDrawer { transition: transform 0.3s ease; transform: translateX(100%); }
         #playerDrawer.open { transform: translateX(0); }
-        #countryRankingPanel { transition: transform 0.3s ease; transform: translateX(100%); }
-        #countryRankingPanel.open { transform: translateX(0); }
         .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
         .elo-plus { color: #34d399; }
         .elo-minus { color: #f87171; }
@@ -83,7 +81,7 @@
 </head>
 <body class="font-sans antialiased">
 
-<!-- TOP BAR (sticky : reste visible au scroll, ne recouvre rien) -->
+<!-- TOP BAR (sticky) -->
 <header class="sticky top-0 z-50 h-16 bg-[#070d08] border-b border-slate-950 flex items-center px-4 md:px-6 relative">
     <div class="flex items-center gap-3 shrink-0">
         <div class="w-8 h-8 bg-gradient-to-tr from-mastersGreen to-mastersGreen-dim rounded-lg flex items-center justify-center font-black text-black text-sm shadow-lg">⚡</div>
@@ -104,6 +102,7 @@
 </header>
 
 <div class="flex flex-col md:flex-row min-h-[calc(100vh-4rem)]">
+    <!-- LEFT SIDEBAR (always visible) -->
     <aside class="sidebar w-full md:w-96 bg-[#09120b] border-b md:border-b-0 md:border-r border-slate-950 p-5 flex flex-col shrink-0">
         <div class="bg-[#0f1c13] border border-slate-950 rounded-lg p-3 mb-5">
             <span class="block text-[8px] uppercase tracking-widest font-black text-slate-500 mb-2">Parameters</span>
@@ -147,35 +146,52 @@
         </div>
     </aside>
 
-    <!-- content-area réserve TOUJOURS 24rem à droite : centrage permanent -->
+    <!-- MAIN CONTENT AREA (swaps between player ranking and country ranking) -->
     <div class="content-area flex-1 min-w-0 w-full">
-        <main class="mx-auto w-full max-w-5xl p-5 md:p-8 flex flex-col justify-between min-h-[calc(100vh-4rem)]">
-            <div>
-                <div class="mb-5 flex items-center justify-between">
-                    <h2 id="viewTitle" class="text-[10px] uppercase tracking-widest font-black text-slate-400">Standings — All-time</h2>
-                    <span id="playerCount" class="text-[10px] font-mono font-bold bg-[#09120b] border border-slate-950 text-slate-400 px-2 py-1 rounded">0 Records</span>
-                </div>
-
-                <div id="seasonStatus" class="hidden mb-4 text-[10px] font-mono text-amber-500 bg-amber-950/20 border border-amber-800/30 rounded-lg px-3 py-2"></div>
-
-                <div class="overflow-hidden bg-[#101d14] border border-slate-950 rounded-xl">
-                    <div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">
-                        <div class="col-span-1 text-center">#</div>
-                        <div class="col-span-1">Country</div>
-                        <div class="col-span-4">Player</div>
-                        <div class="col-span-2 text-right">Peak</div>
-                        <div class="col-span-4 text-right" id="statHeader">Points</div>
+        
+        <!-- PLAYER RANKING VIEW (default) -->
+        <div id="playerView" class="hidden">
+            <main class="mx-auto w-full max-w-5xl p-5 md:p-8 flex flex-col justify-between min-h-[calc(100vh-4rem)]">
+                <div>
+                    <div class="mb-5 flex items-center justify-between">
+                        <h2 id="viewTitle" class="text-[10px] uppercase tracking-widest font-black text-slate-400">Standings — All-time</h2>
+                        <span id="playerCount" class="text-[10px] font-mono font-bold bg-[#09120b] border border-slate-950 text-slate-400 px-2 py-1 rounded">0 Records</span>
                     </div>
-                    <div id="leaderboard" class="divide-y divide-slate-950/50"></div>
-                </div>
-            </div>
 
-            <div class="mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono pb-6">
-                <button id="btnPrev" onclick="changePage(-1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
-                <span id="pageIndicator" class="text-slate-500 font-bold">Page 1/1</span>
-                <button id="btnNext" onclick="changePage(1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
-            </div>
-        </main>
+                    <div id="seasonStatus" class="hidden mb-4 text-[10px] font-mono text-amber-500 bg-amber-950/20 border border-amber-800/30 rounded-lg px-3 py-2"></div>
+
+                    <div class="overflow-hidden bg-[#101d14] border border-slate-950 rounded-xl">
+                        <div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">
+                            <div class="col-span-1 text-center">#</div>
+                            <div class="col-span-1">Country</div>
+                            <div class="col-span-4">Player</div>
+                            <div class="col-span-2 text-right">Peak</div>
+                            <div class="col-span-4 text-right" id="statHeader">Points</div>
+                        </div>
+                        <div id="leaderboard" class="divide-y divide-slate-950/50"></div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono pb-6">
+                    <button id="btnPrev" onclick="changePage(-1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
+                    <span id="pageIndicator" class="text-slate-500 font-bold">Page 1/1</span>
+                    <button id="btnNext" onclick="changePage(1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
+                </div>
+            </main>
+        </div>
+
+        <!-- COUNTRY RANKING VIEW -->
+        <div id="countryView" class="hidden">
+            <main class="mx-auto w-full max-w-5xl p-5 md:p-8 flex flex-col justify-between min-h-[calc(100vh-4rem)]">
+                <div class="mb-5 flex items-center justify-between">
+                    <h2 class="text-[10px] uppercase tracking-widest font-black text-slate-400">Country Ranking</h2>
+                    <span id="countryTotalPlayers" class="text-[10px] font-mono font-bold bg-[#09120b] border border-slate-950 text-slate-400 px-2 py-1 rounded">0 Countries</span>
+                </div>
+
+                <div id="countryRankingList" class="space-y-2"></div>
+            </main>
+        </div>
+
     </div>
 </div>
 
@@ -227,19 +243,6 @@
         <div>
             <span class="block text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-2">Season history</span>
             <div id="dHistory" class="space-y-1 text-xs font-mono"></div>
-        </div>
-    </div>
-</div>
-
-<!-- COUNTRY RANKING PANEL -->
-<div id="countryRankingPanel" class="fixed top-16 right-0 h-[calc(100vh-4rem)] w-full sm:w-96 bg-[#101d14] border-l border-slate-800 shadow-2xl z-40 overflow-y-auto">
-    <div class="sticky top-0 bg-[#09120b] border-b border-slate-800 px-5 py-4 flex items-center justify-between">
-        <h3 class="font-bold text-white text-sm">Country Ranking</h3>
-        <button onclick="closeCountryRanking()" class="text-slate-400 hover:text-white transition-colors text-lg leading-none">✕</button>
-    </div>
-    <div class="p-5">
-        <div id="countryRankingContent">
-            <div class="text-center text-slate-500 text-sm py-8">Select a country to view ranking</div>
         </div>
     </div>
 </div>
@@ -306,57 +309,7 @@ var eloHistory = {};
 var currentPage = 1;
 var updatingHash = false;
 var selectedCountry = '';
-
-function escapeHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-function profileUrl(tag) {
-    return 'https://brawlace.com/players/%23' + encodeURIComponent(tag.replace(/^#/, ''));
-}
-function insightsUrl(tag) {
-    return 'https://brawlinsights.com/en/player/profile/' + encodeURIComponent(tag.replace(/^#/, ''));
-}
-function getFlagUrl(cc) { return (cc && cc !== 'XX') ? FLAG_CDN + cc.toLowerCase() + '.png' : ''; }
-function getSmallFlagUrl(cc) { return 'https://flagcdn.com/w20/' + cc.toLowerCase() + '.png'; }
-function countryName(cc) { return (cc && cc !== 'XX' && COUNTRY_NAMES[cc]) ? COUNTRY_NAMES[cc] : ''; }
-
-function papaLoad(fileUrl) {
-    return new Promise(function(resolve) {
-        Papa.parse(fileUrl, {
-            download: true, header: false, skipEmptyLines: true,
-            complete: function(res) { resolve(res.data || []); },
-            error: function() { resolve(null); }
-        });
-    });
-}
-
-function parseSeasonRow(row) {
-    var tag = null, placement = null;
-    for (var i = 0; i < row.length; i++) {
-        var f = String(row[i] == null ? '' : row[i]).trim();
-        if (f === '') continue;
-        if (tag === null && f.charAt(0) === '#') { tag = f.toUpperCase(); continue; }
-        if (placement === null && /^\d+$/.test(f)) { placement = parseInt(f, 10); continue; }
-    }
-    if (tag && placement !== null) return { tag: tag, placement: placement };
-    return null;
-}
-
-function tagPlayedIn(tag, seasonIdx) {
-    var list = seasonData[SEASONS[seasonIdx].key] || [];
-    for (var i = 0; i < list.length; i++) {
-        if (list[i].tag === tag) return true;
-    }
-    return false;
-}
-
-function lastPlayedIdx(tag) {
-    for (var i = LAST_SEASON_IDX; i >= 0; i--) {
-        if (tagPlayedIn(tag, i)) return i;
-    }
-    return -1;
-}
+var currentView = 'player'; // 'player' or 'country'
 
 // ======================= ELO v5 =======================
 function computeElo() {
@@ -437,6 +390,7 @@ function computeElo() {
     return ratings;
 }
 
+// ======================= PAGE LOAD =======================
 (function initMonths() {
     var sel = document.getElementById('filterMonth');
     SEASONS.forEach(function(s, i) {
@@ -515,36 +469,12 @@ Promise.all([
         actives.forEach(function(q) { if (q.elo > p.elo) p.rankElo++; });
     });
 
-    // ===== Compute Country Rankings =====
-    computeCountryRankings();
-
     buildCountryFilter();
     applyFromHash(true);
     document.getElementById('playerCount').innerText = allPlayers.length + ' Records';
 });
 
-// ======================= COUNTRY RANKINGS =======================
-var countryRankings = []; // [{code, name, totalPoints, totalElo, playersCount}]
-
-function computeCountryRankings() {
-    var countryData = {};
-    
-    allPlayers.forEach(function(p) {
-        var cc = p.country;
-        if (!countryData[cc]) {
-            countryData[cc] = { code: cc, name: countryName(cc) || cc, totalPoints: 0, totalElo: 0, count: 0 };
-        }
-        countryData[cc].totalPoints += p.points;
-        countryData[cc].totalElo += Math.round(p.elo);
-        countryData[cc].count++;
-    });
-    
-    countryRankings = Object.values(countryData).sort(function(a, b) {
-        return b.totalPoints - a.totalPoints;
-    });
-}
-
-// ======================= DROPDOWN MORE =======================
+// ======================= VIEW SWITCHING =======================
 function toggleMoreMenu() {
     var menu = document.getElementById('moreMenu');
     menu.classList.toggle('hidden');
@@ -552,88 +482,134 @@ function toggleMoreMenu() {
 
 function showPlayerRanking() {
     closeMoreMenu();
-    // Just close — player ranking is the main view already
+    setView('player');
 }
 
 function showCountryRanking() {
     closeMoreMenu();
-    renderCountryRankingList();
-    document.getElementById('countryRankingPanel').classList.add('open');
+    setView('country');
 }
 
 function closeMoreMenu() {
     document.getElementById('moreMenu').classList.add('hidden');
 }
 
-function closeCountryRanking() {
-    document.getElementById('countryRankingPanel').classList.remove('open');
+function setView(viewType) {
+    currentView = viewType;
+    var playerView = document.getElementById('playerView');
+    var countryView = document.getElementById('countryView');
+    
+    if (viewType === 'player') {
+        playerView.classList.remove('hidden');
+        countryView.classList.add('hidden');
+        document.getElementById('countryDropdown').parentNode.style.display = 'block';
+        document.getElementById('filterMonth').parentNode.style.display = 'block';
+        document.getElementById('filterSort').parentNode.style.display = 'block';
+        applyFilters();
+        writeHash();
+    } else {
+        playerView.classList.add('hidden');
+        countryView.classList.remove('hidden');
+        renderCountryRanking();
+        writeHash();
+    }
 }
 
-function renderCountryRankingList() {
-    var container = document.getElementById('countryRankingContent');
+// ======================= COUNTRY RANKING RENDER =======================
+function renderCountryRanking() {
+    var container = document.getElementById('countryRankingList');
     container.innerHTML = '';
     
+    // Compute totals EXCLUDING XX (unknown)
+    var countryData = {};
+    allPlayers.forEach(function(p) {
+        if (p.country === 'XX') return; // Skip unknown
+        if (!countryData[p.country]) {
+            countryData[p.country] = { code: p.country, name: countryName(p.country) || p.country, totalPoints: 0, totalElo: 0, playerCount: 0 };
+        }
+        countryData[p.country].totalPoints += p.points;
+        countryData[p.country].totalElo += Math.round(p.elo);
+        countryData[p.country].playerCount++;
+    });
+    
+    var rankings = Object.values(countryData).sort(function(a, b) {
+        return b.totalPoints - a.totalPoints;
+    });
+    
+    document.getElementById('countryTotalPlayers').textContent = rankings.length + ' Countries';
+    
+    rankings.forEach(function(c, idx) {
+        var row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-4 bg-[#101d14] border border-slate-800 rounded-xl hover:border-mastersGreen-dim transition-colors cursor-pointer';
+        row.onclick = function() {
+            showCountryTopPlayers(c.code);
+        };
+        
+        var flagHtml = '<img src="' + getFlagUrl(c.code) + '" class="w-8 h-5 rounded mr-3" alt="">'
+        
+        row.innerHTML = 
+            '<div class="flex items-center gap-3">' +
+                '<span class="text-sm font-bold text-mastersGreen font-mono">#' + (idx + 1) + '</span>' +
+                flagHtml +
+                '<span class="font-bold text-white text-base">' + c.name + '</span>' +
+                '<span class="text-xs text-slate-500 ml-2">(' + c.playerCount + ' players)</span>' +
+            '</div>' +
+            '<div class="text-right">' +
+                '<span class="text-sm font-mono text-emerald-400 font-bold">' + c.totalPoints.toLocaleString() + ' pts</span>' +
+                '<span class="text-xs text-slate-500 ml-3">' + c.totalElo.toLocaleString() + ' elo</span>' +
+            '</div>';
+        
+        container.appendChild(row);
+    });
+}
+
+function showCountryTopPlayers(cc) {
+    var countryPlayers = allPlayers.filter(function(p) { return p.country === cc; }).sort(function(a, b) {
+        return b.points - a.points;
+    }).slice(0, 50);
+    
+    var container = document.getElementById('countryRankingList');
+    container.innerHTML = '';
+    
+    // Header
+    var country = countryRankings.find(function(c) { return c.code === cc; }) || { name: countryName(cc) || cc };
+    var header = document.createElement('div');
+    header.className = 'text-center mb-6 p-6 bg-[#09120b] border border-slate-800 rounded-xl';
+    header.innerHTML = 
+        '<img src="' + getFlagUrl(cc) + '" class="w-20 h-12 mx-auto mb-3 rounded shadow-lg">' +
+        '<h2 class="text-xl font-bold text-white">' + country.name + '</h2>' +
+        '<p class="text-xs text-slate-500 mt-1">Top 50 players • Total: ' + 
+        countryPlayers.reduce(function(sum, p) { return sum + p.points; }, 0).toLocaleString() + ' pts</p>';
+    container.appendChild(header);
+    
+    // Back button
+    var backBtn = document.createElement('button');
+    backBtn.className = 'mb-4 text-sm text-mastersGreen-dim hover:text-mastersGreen font-medium';
+    backBtn.textContent = '← Back to all countries';
+    backBtn.onclick = function() { renderCountryRanking(); };
+    container.insertBefore(backBtn, header.nextSibling);
+    
+    // Player list
     var list = document.createElement('div');
     list.className = 'space-y-2';
     
-    countryRankings.forEach(function(c, idx) {
+    countryPlayers.forEach(function(p, idx) {
         var row = document.createElement('div');
-        row.className = 'flex items-center justify-between p-3 bg-[#09120b] border border-slate-800 rounded-lg cursor-pointer hover:border-mastersGreen-dim transition-colors';
-        row.onclick = function() {
-            renderCountryDetails(c.code);
-        };
-        
-        var flagHtml = c.code !== 'XX' 
-            ? '<img src="' + getFlagUrl(c.code) + '" class="w-6 h-4 rounded mr-3" alt="">': 
-            '<span class="w-6 h-4 bg-slate-700 rounded mr-3 inline-block"></span>';
+        row.className = 'flex justify-between items-center p-3 bg-[#09120b] border border-slate-800 rounded-lg hover:border-mastersGreen-dim transition-colors cursor-pointer';
+        row.onclick = function() { openDrawer(p); };
         
         row.innerHTML = 
             '<div class="flex items-center gap-3">' +
                 '<span class="text-xs font-bold text-mastersGreen font-mono">#' + (idx + 1) + '</span>' +
-                flagHtml +
-                '<span class="font-bold text-white text-sm">' + c.name + '</span>' +
+                '<img src="' + getFlagUrl(p.country) + '" class="w-6 h-4 rounded" alt="">' +
+                '<span class="text-sm text-white font-medium truncate max-w-[150px]">' + escapeHtml(p.pseudo) + '</span>' +
             '</div>' +
-            '<span class="text-xs font-mono text-emerald-400 font-bold">' + c.totalPoints.toLocaleString() + ' pts</span>';
+            '<span class="text-sm font-mono text-emerald-400 font-bold">' + p.points + ' pts</span>';
         
         list.appendChild(row);
     });
     
     container.appendChild(list);
-}
-
-function renderCountryDetails(cc) {
-    var country = countryRankings.find(function(c) { return c.code === cc; });
-    if (!country) return;
-    
-    var container = document.getElementById('countryRankingContent');
-    
-    var html = '';
-    html += '<div class="text-center mb-6">';
-    html += '<img src="' + getFlagUrl(cc) + '" class="w-16 h-10 mx-auto mb-2 rounded shadow-lg">';
-    html += '<h2 class="text-lg font-bold text-white">' + country.name + '</h2>';
-    html += '<p class="text-xs text-slate-500 mt-1">' + country.count + ' players • Total: ' + country.totalPoints.toLocaleString() + ' pts • ' + country.totalElo.toLocaleString() + ' elo</p>';
-    html += '</div>';
-    
-    html += '<span class="block text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-2">TOP PLAYERS</span>';
-    html += '<div class="space-y-1">';
-    
-    var countryPlayers = allPlayers.filter(function(p) { return p.country === cc; }).sort(function(a, b) {
-        return b.points - a.points;
-    }).slice(0, 50);
-    
-    countryPlayers.forEach(function(p, idx) {
-        html += '<div class="flex justify-between items-center p-2 bg-[#09120b] border border-slate-800 rounded">';
-        html += '<div class="flex items-center gap-2">';
-        html += '<span class="text-xs font-mono text-mastersGreen font-bold">#' + (idx + 1) + '</span>';
-        html += '<span class="text-xs text-white font-medium truncate max-w-[120px]">' + escapeHtml(p.pseudo) + '</span>';
-        html += '</div>';
-        html += '<span class="text-xs font-mono text-emerald-400 font-bold">' + p.points + ' pts</span>';
-        html += '</div>';
-    });
-    
-    html += '</div>';
-    
-    container.innerHTML = html;
 }
 
 // ======================= DROPDOWN PAYS =======================
@@ -725,7 +701,8 @@ function writeHash() {
     var sort = document.getElementById('filterSort').value;
     var cc = selectedCountry || 'all';
     var mi = parseInt(document.getElementById('filterMonth').value, 10);
-    var h = '#/' + sort + '/' + cc + '/' + mi + '?page=' + currentPage;
+    var pageParam = currentView === 'player' ? ('?page=' + currentPage) : '';
+    var h = '#/' + currentView + '/' + sort + '/' + cc + '/' + mi + pageParam;
     if (location.hash !== h) {
         updatingHash = true;
         location.hash = h;
@@ -745,11 +722,13 @@ function applyFromHash(initial) {
         });
     }
     
-    var sort = seg[0] || 'points';
-    var cc = seg[1] && seg[1] !== 'all' ? seg[1].toUpperCase() : '';
-    var mi = seg[2] !== undefined && seg[2] !== '' ? parseInt(seg[2], 10) : -1;
+    var view = seg[0] || 'player';
+    var sort = seg[1] || 'points';
+    var cc = seg[2] && seg[2] !== 'all' ? seg[2].toUpperCase() : '';
+    var mi = seg[3] !== undefined && seg[3] !== '' ? parseInt(seg[3], 10) : -1;
     var page = queryParams.page ? parseInt(queryParams.page, 10) : 1;
 
+    if (['player','country'].indexOf(view) === -1) view = 'player';
     if (['points','elo','peak','activity'].indexOf(sort) === -1) sort = 'points';
     if (isNaN(mi) || mi < -1 || mi > 17) mi = -1;
     if (isNaN(page) || page < 1) page = 1;
@@ -759,9 +738,9 @@ function applyFromHash(initial) {
     updateCountryButton();
     document.getElementById('filterMonth').value = String(mi);
     
-    applyFilters(true);
+    setView(view);
     currentPage = page;
-    updatePageData();
+    if (view === 'player') updatePageData();
 }
 
 window.addEventListener('hashchange', function() {
@@ -770,6 +749,8 @@ window.addEventListener('hashchange', function() {
 });
 
 function applyFilters(skipHash) {
+    if (currentView !== 'player') return;
+    
     var q = document.getElementById('searchBar').value.trim().toLowerCase();
     var cc = selectedCountry;
     var mi = parseInt(document.getElementById('filterMonth').value, 10);
@@ -923,6 +904,8 @@ function closeDrawer() {
 }
 
 function updatePageData() {
+    if (currentView !== 'player') return;
+    
     var mi = parseInt(document.getElementById('filterMonth').value, 10);
     var sortMode = document.getElementById('filterSort').value;
     var totalPages = Math.ceil(filteredPlayers.length / recordsPerPage) || 1;
@@ -938,10 +921,57 @@ function updatePageData() {
 
 function changePage(dir) { currentPage += dir; updatePageData(); }
 
+// Helpers
+function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function profileUrl(tag) {
+    return 'https://brawlace.com/players/%23' + encodeURIComponent(tag.replace(/^#/, ''));
+}
+function insightsUrl(tag) {
+    return 'https://brawlinsights.com/en/player/profile/' + encodeURIComponent(tag.replace(/^#/, ''));
+}
+function getFlagUrl(cc) { return (cc && cc !== 'XX') ? FLAG_CDN + cc.toLowerCase() + '.png' : ''; }
+function getSmallFlagUrl(cc) { return 'https://flagcdn.com/w20/' + cc.toLowerCase() + '.png'; }
+function countryName(cc) { return (cc && cc !== 'XX' && COUNTRY_NAMES[cc]) ? COUNTRY_NAMES[cc] : ''; }
+function papaLoad(fileUrl) {
+    return new Promise(function(resolve) {
+        Papa.parse(fileUrl, {
+            download: true, header: false, skipEmptyLines: true,
+            complete: function(res) { resolve(res.data || []); },
+            error: function() { resolve(null); }
+        });
+    });
+}
+function parseSeasonRow(row) {
+    var tag = null, placement = null;
+    for (var i = 0; i < row.length; i++) {
+        var f = String(row[i] == null ? '' : row[i]).trim();
+        if (f === '') continue;
+        if (tag === null && f.charAt(0) === '#') { tag = f.toUpperCase(); continue; }
+        if (placement === null && /^\d+$/.test(f)) { placement = parseInt(f, 10); continue; }
+    }
+    if (tag && placement !== null) return { tag: tag, placement: placement };
+    return null;
+}
+function tagPlayedIn(tag, seasonIdx) {
+    var list = seasonData[SEASONS[seasonIdx].key] || [];
+    for (var i = 0; i < list.length; i++) {
+        if (list[i].tag === tag) return true;
+    }
+    return false;
+}
+function lastPlayedIdx(tag) {
+    for (var i = LAST_SEASON_IDX; i >= 0; i--) {
+        if (tagPlayedIn(tag, i)) return i;
+    }
+    return -1;
+}
+
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeDrawer();
-        closeCountryRanking();
         closeMoreMenu();
     }
 });
