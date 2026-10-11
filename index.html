@@ -362,37 +362,18 @@ function parseSeasonRow(row) {
     return (tag && placement !== null) ? { tag: tag, placement: placement } : null;
 }
 function parseLeaderboardRow(row) {
-    if (!row || row.length < 2) return null;
-    var tag = null, name = '', points = 0;
-    
-    // Positional parsing: try to identify by order and content
-    // Assumption: tag (starting with #), name (anything), points (last numeric field)
-    var numericFieldFound = false;
-    var tagIndex = -1, nameIndex = -1, pointsIndex = -1;
-    
-    for (var i = 0; i < row.length; i++) {
-        var f = String(row[i] == null ? '' : row[i]).trim();
-        if (f === '') continue;
-        
-        if (f.charAt(0) === '#') {
-            tag = f.toUpperCase();
-            tagIndex = i;
-            continue;
-        }
-        
-        // Find the last numeric field (assumed to be points)
-        if (/^\d+$/.test(f)) {
-            points = parseInt(f, 10);
-            pointsIndex = i;
-            numericFieldFound = true;
-        } else if (nameIndex === -1 && tagIndex >= 0) {
-            // First non-numeric, non-tag field after tag is name
-            name = f;
-            nameIndex = i;
-        }
+    if (!row || row.length < 4) return null;
+    var tag = String(row[0] || '').trim().toUpperCase();
+    if (tag.charAt(0) !== '#') return null;
+    var name = String(row[1] || '').trim();
+    var points = parseInt(String(row[2]).replace(/[^\d]/g, ''), 10) || 0;
+    var peak = parseInt(String(row[3]).replace(/[^\d]/g, ''), 10) || null;
+    var seasonPts = {};
+    for (var i = 0; i < SEASONS.length; i++) {
+        var v = row[4 + i] !== undefined ? parseInt(String(row[4 + i]).replace(/[^\d]/g, ''), 10) : NaN;
+        seasonPts[SEASONS[i].key] = isNaN(v) ? 0 : v;
     }
-    
-    return (tag && (name || numericFieldFound)) ? { tag: tag, name: name, points: points } : null;
+    return { tag: tag, name: name, points: points, peak: peak, seasonPts: seasonPts };
 }
 
 // ============================= ELO =============================
@@ -617,8 +598,15 @@ function applyMonthAndSearch(list) {
 }
 function sortPlayerList(arr) {
     arr = arr.slice();
+    var mk = (currentMonth !== -1 && SEASONS[currentMonth]) ? SEASONS[currentMonth].key : null;
     if (currentSort === 'points') {
-        arr.sort(function (a, b) { return (b.points || 0) - (a.points || 0); });
+        if (mk) arr.sort(function (a, b) {
+            var pa = seasonPlacementMap[mk][a.tag], pb = seasonPlacementMap[mk][b.tag];
+            if (pa === undefined) return 1;
+            if (pb === undefined) return -1;
+            return pa - pb;
+        });
+        else arr.sort(function (a, b) { return (b.points || 0) - (a.points || 0); });
     } else if (currentSort === 'elo') {
         arr.sort(function (a, b) { return (b.elo || 0) - (a.elo || 0); });
     } else if (currentSort === 'peak') {
@@ -661,7 +649,8 @@ function statValue(p) {
     if (currentSort === 'elo') return fmt(p.elo || 0) + (isActive(p) ? '' : '<span class="offline-pill">Offline</span>');
     if (currentSort === 'activity') return p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : '-';
     if (currentSort === 'peak') return (p.peak != null && p.peak > 0) ? '#' + p.peak : '-';
-    return fmt(p.points);
+    var mk = (currentMonth !== -1 && SEASONS[currentMonth]) ? SEASONS[currentMonth].key : null;
+    return fmt(mk ? (p.seasonPts[mk] || 0) : p.points);
 }
 function playerRowHtml(p, rank) {
     var rc = rank <= 3 ? 'rank-' + rank : '';
@@ -875,12 +864,13 @@ function showPlayer(encodedTag) {
     $('dTag').textContent = p.tag;
     $('dCountry').textContent = countryName(p.country) + ' (' + p.country + ')';
     var st = $('dStatus');
+    var lastLabel = p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'Unknown';
     if (isActive(p)) {
         st.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-400';
-        st.textContent = 'Active';
+        st.textContent = 'Active — Last Reach Pro (Top 500) ' + lastLabel;
     } else {
         st.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-red-900/40 text-red-400';
-        st.textContent = 'Offline';
+        st.textContent = 'Inactive — Last Reach Pro (Top 500) ' + lastLabel;
     }
     $('dPoints').textContent = fmt(p.points);
     $('dPointsRank').textContent = pointsRankMap[p.tag] ? '#' + pointsRankMap[p.tag] : '';
@@ -973,20 +963,23 @@ Promise.all(
     });
     computeElo();
 
+    // Placement lookup per season (for month view ordering)
+    seasonPlacementMap = {};
+    SEASONS.forEach(function (s) {
+        var m = {};
+        (seasonData[s.key] || []).forEach(function (sp) { m[sp.tag] = sp.placement; });
+        seasonPlacementMap[s.key] = m;
+    });
+
     allPlayers = lb.map(function (p) {
-        var lastIdx = -1, peak = null;
+        var lastIdx = -1;
         for (var i = LAST_SEASON_IDX; i >= 0; i--) {
-            var list = seasonData[SEASONS[i].key];
-            for (var j = 0; j < list.length; j++) {
-                if (list[j].tag === p.tag) {
-                    if (lastIdx < 0) lastIdx = i;
-                    if (peak === null || list[j].placement < peak) peak = list[j].placement;
-                }
-            }
+            if (seasonTagSets[i] && seasonTagSets[i].has(p.tag)) { lastIdx = i; break; }
         }
         var rec = {
-            tag: p.tag, name: p.name, points: p.points,
-            elo: eloMap[p.tag] || 0, peak: peak, lastIdx: lastIdx,
+            tag: p.tag, name: p.name, points: p.points, peak: p.peak,
+            seasonPts: p.seasonPts,
+            elo: eloMap[p.tag] || 0, lastIdx: lastIdx,
             country: countryMap[p.tag] || 'XX'
         };
         playerByTag[p.tag] = rec;
