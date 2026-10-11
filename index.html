@@ -4,7 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ranked List — Brawl Stars</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700;900&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['Geist Mono', 'ui-monospace', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         body { background-color: #0a0e14; color: #e2e8f0; }
@@ -13,7 +28,7 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         .player-row { background-color: #0f141f; border-bottom: 1px solid #1e293b; transition: all 0.15s ease; }
         .player-row:hover { background-color: #131a26; border-color: #475569; }
-        .rank-badge { font-family: monospace; font-weight: 700; font-size: 0.875rem; text-align: center; }
+        .rank-badge { font-family: 'Geist Mono', monospace; font-weight: 700; font-size: 0.875rem; text-align: center; }
         .rank-1 { color: #fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.4); }
         .rank-2 { color: #94a3b8; }
         .rank-3 { color: #cd7f32; }
@@ -40,11 +55,11 @@
         .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
         .elo-plus { color: #34d399; }
         .elo-minus { color: #f87171; }
-        /* Le décalage tiroir vit sur le WRAPPER ; le mx-auto vit sur <main>.
-           Séparer les deux évite que margin-right écrase le centrage. */
+        /* La marge droite PERMANENTE (24rem = largeur du tiroir) équilibre
+           la sidebar : le tableau est centré écran, tiroir ouvert ou fermé.
+           Le tiroir glisse dans cet espace réservé sans rien recouvrir. */
         @media (min-width: 768px) {
-            .content-area { transition: margin-right 0.3s ease; }
-            body.drawer-open .content-area { margin-right: 24rem; }
+            .content-area { margin-right: 24rem; }
         }
     </style>
 </head>
@@ -101,7 +116,7 @@
         </div>
     </aside>
 
-    <!-- Wrapper qui reçoit le décalage du tiroir ; le <main> se centre à l'intérieur -->
+    <!-- content-area réserve TOUJOURS 24rem à droite : centrage permanent -->
     <div class="content-area flex-1 min-w-0 w-full">
         <main class="mx-auto w-full max-w-5xl p-5 md:p-8 flex flex-col justify-between min-h-screen">
             <div>
@@ -133,7 +148,7 @@
     </div>
 </div>
 
-<!-- SIDE DRAWER -->
+<!-- SIDE DRAWER (glisse dans l'espace réservé, ne recouvre jamais le contenu) -->
 <div id="playerDrawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-[#0f141f] border-l border-slate-800 shadow-2xl z-40 overflow-y-auto">
     <div class="sticky top-0 bg-[#090f1c] border-b border-slate-800 px-5 py-4 flex items-center justify-between">
         <h3 class="font-bold text-white text-sm">Player Profile</h3>
@@ -179,9 +194,10 @@
 </div>
 
 <script>
-// ======================= ELO CONFIG (v4) =======================
+// ======================= ELO CONFIG (v5) =======================
 var START_RATING = 1500;
-var ELO_CEILING = 3000;
+var ELO_CEILING = 3000;    // plafond mou : les gains tendent vers zéro
+var ELO_FLOOR = 1000;      // plancher dur : on ne descend jamais sous 1000
 var MAX_GAIN = 500;
 var PLACE_EXP = 4;
 var FIELD_MIN = 20;
@@ -191,6 +207,8 @@ var LOSS_BASE = 25;
 var LOSS_SCALE = 0.25;
 var SHIELD_WINDOW = 12;
 var OFFLINE_MONTHS = 12;
+var DECAY_RATIO = 0.75;   // chaque absence pénalisée supplémentaire coûte 75% de la précédente
+                          // ex : -127 -95 -71 -54 -40 -30 -23 -17 ... jusqu'à -1
 
 var SEASONS = [
     { key: 'mars25',      label: 'March 2025' }, { key: 'avril25',     label: 'April 2025' },
@@ -290,11 +308,17 @@ function lastPlayedIdx(tag) {
     return -1;
 }
 
-// ======================= ELO v4 =======================
+// ======================= ELO v5 =======================
+// Nouveautés vs v4 :
+//  - Décroissance géométrique des pertes d'inactivité : chaque absence
+//    pénalisée consécutive coûte DECAY_RATIO fois la précédente (min -1),
+//    ex -127 -95 -71 -54 ... -1 -1, jusqu'au retour du joueur.
+//  - Plancher dur : ELO_FLOOR = 1000.
 function computeElo() {
     var ratings = {};
     var history = {};
     var debutIdx = {};
+    var missRun = {};   // nb d'absences pénalisées consécutives (reset au retour)
 
     SEASONS.forEach(function(season, idx) {
         var players = seasonData[season.key] || [];
@@ -315,6 +339,7 @@ function computeElo() {
                 ratings[tag] = START_RATING;
                 debutIdx[tag] = idx;
             }
+            missRun[tag] = 0; // retour en jeu : la décroissance repart de zéro
 
             var R = ratings[tag];
             var gain = 0;
@@ -349,14 +374,17 @@ function computeElo() {
 
             var delta = 0;
             if (misses >= 2) {
+                missRun[tag] = (missRun[tag] || 0) + 1;
                 var above = Math.max(0, ratings[tag] - medianR);
-                var loss = LOSS_BASE + Math.round(above * LOSS_SCALE);
-                delta = -Math.min(MAX_GAIN, loss);
+                var L0 = LOSS_BASE + Math.round(above * LOSS_SCALE);
+                var tapered = Math.round(L0 * Math.pow(DECAY_RATIO, missRun[tag] - 1));
+                delta = -Math.max(1, Math.min(MAX_GAIN, tapered));
             }
 
             if (!history[tag]) history[tag] = {};
             history[tag][season.key] = (history[tag][season.key] || 0) + delta;
             ratings[tag] += delta;
+            if (ratings[tag] < ELO_FLOOR) ratings[tag] = ELO_FLOOR; // plancher dur
         }
     });
 
@@ -665,10 +693,10 @@ function openDrawer(p) {
     var dStatus = document.getElementById('dStatus');
     if (p.offline) {
         dStatus.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-slate-800 text-slate-500';
-        dStatus.textContent = 'Offline · Last played ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
+        dStatus.textContent = 'Offline · Last reached pro ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
     } else {
         dStatus.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-500';
-        dStatus.textContent = 'Active · Last played ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
+        dStatus.textContent = 'Active · Last reached pro ' + (p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'never');
     }
 
     var hist = '';
@@ -697,12 +725,10 @@ function openDrawer(p) {
     }
     document.getElementById('dHistory').innerHTML = hist || '<div class="text-slate-600 text-xs">No ranked seasons recorded.</div>';
     document.getElementById('playerDrawer').classList.add('open');
-    document.body.classList.add('drawer-open');
 }
 
 function closeDrawer() {
     document.getElementById('playerDrawer').classList.remove('open');
-    document.body.classList.remove('drawer-open');
 }
 
 function updatePageData() {
