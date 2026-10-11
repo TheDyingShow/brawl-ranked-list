@@ -666,6 +666,10 @@ function renderPlayerView() {
     }
 }
 
+function closeMenus() {
+    $('moreMenu').classList.add('hidden');
+}
+
 function toggleMoreMenu(ev) {
     if (ev) ev.stopPropagation();
     $('moreMenu').classList.toggle('hidden');
