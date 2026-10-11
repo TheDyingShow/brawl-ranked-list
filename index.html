@@ -46,9 +46,16 @@
         </div>
     </div>
 
-    <!-- More dropdown -->
-    <div class="ml-8 relative" id="moreDropdown">
-        <button onclick="toggleMoreMenu(event)" class="text-slate-300 hover:text-white transition-colors text-sm font-medium">More ▼</button>
+    <!-- More dropdown, aligned with sidebar filter arrows -->
+    <div id="moreDropdown">
+        <button onclick="toggleMoreMenu(event)" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors text-sm font-medium">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <circle cx="5" cy="12" r="2"/>
+                <circle cx="12" cy="12" r="2"/>
+                <circle cx="19" cy="12" r="2"/>
+            </svg>
+            More <span class="text-[9px]">&#9660;</span>
+        </button>
         <div id="moreMenu" class="dropdown-menu hidden">
             <button class="dropdown-item" onclick="switchView('player')">Player ranking</button>
             <button class="dropdown-item" onclick="switchView('country')">Country ranking</button>
@@ -63,7 +70,7 @@
             <span class="block text-[8px] uppercase tracking-widest font-black text-slate-500 mb-2">Parameters</span>
             <span class="text-[10px] font-bold text-mastersGreen-dim uppercase tracking-wide">Minimum Pro Rank (11,250+)</span>
             <div class="mt-2 pt-2 border-t border-slate-800/60 text-[10px] text-slate-500">
-                Timeline: <span class="font-bold text-mastersGreen-glow font-mono">March 2025 — August 2026</span> <span class="text-mastersGreen-dim">(Ranked 2.0)</span>
+                Timeline: <span class="font-bold text-mastersGreen-glow">March 2025 — August 2026</span> <span class="text-mastersGreen-dim">(Ranked 2.0)</span>
             </div>
         </div>
 
@@ -87,7 +94,7 @@
         </div>
 
         <div class="pt-2 border-t border-slate-950 text-[9px] text-slate-600 font-mono text-center md:text-left space-y-2">
-            <p>© 2026 rankedlist.org • Developed by <a href="https://x.com/TheKitboxerShow" target="_blank" rel="noopener noreferrer" class="hover:text-mastersGreen-dim transition-colors">@TheKitboxerShow</a></p>
+            <p>&copy; 2026 <a href="https://rankedlist.org/" class="hover:text-mastersGreen-dim transition-colors">rankedlist.org</a> &bull; Developed by <a href="https://x.com/TheKitboxerShow" target="_blank" rel="noopener noreferrer" class="hover:text-mastersGreen-dim transition-colors">@TheKitboxerShow</a></p>
             <p>This content is not affiliated with, endorsed, sponsored, or specifically approved by Supercell and Supercell is not responsible for it. <a href="https://supercell.com/en/fan-content-policy/" target="_blank" rel="noopener noreferrer" class="underline hover:text-mastersGreen-dim transition-colors">Supercell Fan Content Policy</a></p>
         </div>
     </aside>
