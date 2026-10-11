@@ -492,9 +492,41 @@ function syncSortOptions() {
     for (var i = 0; i < opts.length; i++) {
         opts[i].disabled = list && (opts[i].value === 'peak' || opts[i].value === 'activity');
     }
+    // Disable country selector in Country Ranking list view
+    var countrySelectDisabled = (currentView === 'country-list');
+    $('countryDropdown').style.pointerEvents = countrySelectDisabled ? 'none' : 'auto';
+    $('countryDropdown').style.opacity = countrySelectDisabled ? '0.4' : '1';
 }
+
 function updateSearchPlaceholder() {
     $('searchBar').placeholder = (currentView === 'country-list') ? 'Search...' : 'Search player/tag...';
+}
+
+function updateCountryBtn() {
+    var isDetail = currentView === 'country-detail';
+    // In country-list view, always show "All countries" and make unclickable
+    if (currentView === 'country-list') {
+        selectedCountryCode = '';
+        $('countryBtnLabel').textContent = 'All countries';
+        $('countryBtnFlag').textContent = '🌐';
+        return;
+    }
+    // Player ranking: use the current filter
+    if (currentView === 'player' && currentCountryFilter !== 'all') {
+        selectedCountryCode = currentCountryFilter;
+    } else if (currentView === 'country-detail') {
+        selectedCountryCode = currentDetailCC;
+    } else {
+        selectedCountryCode = '';
+    }
+    
+    if (selectedCountryCode) {
+        $('countryBtnLabel').textContent = countryName(selectedCountryCode);
+        $('countryBtnFlag').innerHTML = '<img class="flag-icon-sm" src="' + getFlagUrl(selectedCountryCode) + '">';
+    } else {
+        $('countryBtnLabel').textContent = 'All countries';
+        $('countryBtnFlag').textContent = '🌐';
+    }
 }
 function switchView(view) {
     closeMenus();
@@ -542,13 +574,19 @@ function applyMonthAndSearch(list) {
 }
 function sortPlayerList(arr) {
     arr = arr.slice();
-    if (currentSort === 'points') arr.sort(function (a, b) { return b.points - a.points; });
-    else if (currentSort === 'elo') arr.sort(function (a, b) { return (b.elo || 0) - (a.elo || 0); });
-    else if (currentSort === 'peak') arr.sort(function (a, b) {
-        if (a.peak == null) return 1; if (b.peak == null) return -1;
-        return a.peak - b.peak;
-    });
-    else if (currentSort === 'activity') arr.sort(function (a, b) { return b.lastIdx - a.lastIdx; });
+    if (currentSort === 'points') {
+        arr.sort(function (a, b) { return (b.points || 0) - (a.points || 0); });
+    } else if (currentSort === 'elo') {
+        arr.sort(function (a, b) { return (b.elo || 0) - (a.elo || 0); });
+    } else if (currentSort === 'peak') {
+        arr.sort(function (a, b) {
+            if (a.peak == null) return 1;
+            if (b.peak == null) return -1;
+            return a.peak - b.peak;
+        });
+    } else if (currentSort === 'activity') {
+        arr.sort(function (a, b) { return b.lastIdx - a.lastIdx; });
+    }
     return arr;
 }
 
@@ -788,6 +826,7 @@ function showPlayer(encodedTag) {
     var tag = decodeURIComponent(encodedTag);
     var p = playerByTag[tag];
     if (!p) return;
+    
     $('dFlag').src = getFlagUrl(p.country);
     $('dName').textContent = p.name;
     $('dTag').textContent = p.tag;
@@ -807,14 +846,36 @@ function showPlayer(encodedTag) {
     $('dPeak').textContent = (p.peak != null && p.peak > 0) ? '#' + p.peak : '-';
     $('dLink').href = profileUrl(p.tag);
     $('dLinkBI').href = insightsUrl(p.tag);
+
+    // Build season history — only show from first active season onwards
     var hist = '';
-    SEASONS.forEach(function (s) {
+    var firstActiveSeason = null;
+    var hasChanges = false;
+    
+    // Find first season where player had any Elo change
+    SEASONS.forEach(function (s, idx) {
+        var d = eloHist[p.tag] ? eloHist[p.tag][s.key] : null;
+        if ((d !== null && d !== undefined) && (firstActiveSeason === null)) {
+            firstActiveSeason = idx;
+        }
+    });
+    
+    // Only render from first active season
+    SEASONS.forEach(function (s, idx) {
+        if (firstActiveSeason !== null && idx < firstActiveSeason) return;
+        
         var d = eloHist[p.tag] ? eloHist[p.tag][s.key] : null;
         var val = (d !== null && d !== undefined) ? ((d >= 0 ? '+' : '') + d) : '—';
         var cls = (d !== null && d !== undefined && d > 0) ? 'elo-plus' : ((d < 0) ? 'elo-minus' : 'text-slate-600');
+        
         hist += '<div class="flex justify-between px-2 py-1 rounded ' + (val !== '—' ? 'bg-[#09120b]' : '') + '">' +
             '<span class="text-slate-500">' + s.label + '</span><span class="' + cls + ' font-bold">' + val + '</span></div>';
     });
+    
+    if (hist === '') {
+        hist = '<div class="text-center text-slate-600 text-xs py-4">No season history available</div>';
+    }
+    
     $('dHistory').innerHTML = hist;
     $('playerDrawer').classList.add('open');
 }
