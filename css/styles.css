@@ -75,10 +75,12 @@ select, option {
     border: 2px solid #09120b;
 }
 
-/* Request 6: More button aligned above the sidebar dropdown arrows */
-#moreDropdown {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    right: 2.6rem;
+/* More button aligned with the sidebar filter dropdown arrows */
+@media (min-width: 768px) {
+    #moreDropdown {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 21.2rem;   /* aligns with the ▼ of All-time / Sort: */
+    }
 }
