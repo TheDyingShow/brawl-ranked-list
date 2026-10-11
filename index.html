@@ -18,9 +18,14 @@
                     },
                     colors: {
                         mastersGreen: {
-                            DEFAULT: '#aaff00', // exact Masters rework green
+                            DEFAULT: '#aaff00',
                             dim: '#88cc00',
                             glow: '#ccff66',
+                        },
+                        // slate remplacé par une échelle gris-vert : tout le site bascule
+                        slate: {
+                            50:'#f3f8f4',100:'#e4eee6',200:'#c9dcce',300:'#a3c3ab',400:'#77a486',
+                            500:'#558168',600:'#426753',700:'#355444',800:'#2b4337',900:'#233729',950:'#11211a'
                         }
                     }
                 }
@@ -29,56 +34,52 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { background-color: #0a0e14; color: #e2e8f0; padding-top: 72px; /* space for fixed header */ }
+        body { background-color: #0a120c; color: #e0ece3; }
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0a0e14; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        .player-row { background-color: #0f141f; border-bottom: 1px solid #1e293b; transition: all 0.15s ease; }
-        .player-row:hover { background-color: #131a26; border-color: #475569; }
+        ::-webkit-scrollbar-track { background: #0a120c; }
+        ::-webkit-scrollbar-thumb { background: #2f4d3a; border-radius: 4px; }
+        .player-row { background-color: #101d14; border-bottom: 1px solid #1d3326; transition: all 0.15s ease; }
+        .player-row:hover { background-color: #15231a; border-color: #2f4d3a; }
         .rank-badge { font-family: 'Geist Mono', monospace; font-weight: 700; font-size: 0.875rem; text-align: center; }
         .rank-1 { color: #fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.4); }
-        .rank-2 { color: #94a3b8; }
+        .rank-2 { color: #9db3a4; }
         .rank-3 { color: #cd7f32; }
         .flag-icon { width: 32px; height: 22px; border-radius: 4px; object-fit: cover; }
         .flag-icon-sm { width: 22px; height: 15px; border-radius: 2px; object-fit: cover; }
         .filter-select, .country-btn {
-            background-color: #0f172a; border: 1px solid #020617; color: #e2e8f0;
+            background-color: #0f1c13; border: 1px solid #030906; color: #e0ece3;
             font-size: 0.7rem; border-radius: 0.5rem; padding: 0.5rem 0.6rem; width: 100%;
         }
-        .filter-select:focus { outline: none; border-color: mastersGreen.dim; }
+        .filter-select:focus { outline: none; border-color: #88cc00; }
         .country-btn { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .country-btn:hover, .country-btn.open { border-color: mastersGreen.dim; }
+        .country-btn:hover, .country-btn.open { border-color: #88cc00; }
         .country-menu {
             position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
             margin-top: 0.25rem; max-height: 16rem; overflow-y: auto; overflow-x: hidden;
-            background-color: #0f172a; border: 1px solid #020617; border-radius: 0.5rem;
+            background-color: #0f1c13; border: 1px solid #030906; border-radius: 0.5rem;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        .country-option { display: flex; align-items: center; gap: 0.55rem; width: 100%; text-align: left; padding: 0.45rem 0.6rem; font-size: 0.7rem; color: #e2e8f0; }
-        .country-option:hover { background-color: #16203a; }
-        .country-option.active { background-color: #1a2547; }
+        .country-option { display: flex; align-items: center; gap: 0.55rem; width: 100%; text-align: left; padding: 0.45rem 0.6rem; font-size: 0.7rem; color: #e0ece3; }
+        .country-option:hover { background-color: #18291d; }
+        .country-option.active { background-color: #1a3122; }
         #playerDrawer { transition: transform 0.3s ease; transform: translateX(100%); }
         #playerDrawer.open { transform: translateX(0); }
         .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
         .elo-plus { color: #34d399; }
         .elo-minus { color: #f87171; }
-        /* Fixed top bar */
-        .topbar {
-            position: fixed; top: 0; left: 0; right: 0; height: 72px; z-index: 100;
-            background-color: #0a0e14; border-bottom: 1px solid #020617;
-            display: flex; align-items: center; padding: 0 1rem;
-        }
+        /* La marge droite PERMANENTE (24rem = largeur du tiroir) garde le tableau
+           centré écran, tiroir ouvert ou fermé. */
         @media (min-width: 768px) {
             .content-area { margin-right: 24rem; }
         }
     </style>
 </head>
-<body class="font-sans antialiased min-h-screen">
+<body class="font-sans antialiased">
 
-<!-- FIXED TOP BAR -->
-<header class="topbar">
+<!-- TOP BAR (sticky : reste visible au scroll, ne recouvre rien) -->
+<header class="sticky top-0 z-50 h-16 bg-[#070d08] border-b border-slate-950 flex items-center px-4 md:px-6">
     <div class="flex items-center gap-3 shrink-0">
-        <div class="w-8 h-8 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-lg flex items-center justify-center font-black text-black text-sm shadow-lg">⚡</div>
+        <div class="w-8 h-8 bg-gradient-to-tr from-mastersGreen to-mastersGreen-dim rounded-lg flex items-center justify-center font-black text-black text-sm shadow-lg">⚡</div>
         <div>
             <h1 class="font-black tracking-wider text-sm uppercase text-white leading-none">RANKED LIST</h1>
             <span class="text-[9px] tracking-widest uppercase font-bold text-slate-500">Brawl Stars</span>
@@ -86,19 +87,19 @@
     </div>
 </header>
 
-<div class="flex flex-col md:flex-row min-h-screen">
-    <aside class="sidebar w-full md:w-96 bg-[#090f1c] border-b md:border-b-0 md:border-r border-slate-900 p-5 flex flex-col shrink-0">
-        <div class="bg-[#0f172a] border border-slate-900 rounded-lg p-3 mb-5">
+<div class="flex flex-col md:flex-row min-h-[calc(100vh-4rem)]">
+    <aside class="sidebar w-full md:w-96 bg-[#09120b] border-b md:border-b-0 md:border-r border-slate-950 p-5 flex flex-col shrink-0">
+        <div class="bg-[#0f1c13] border border-slate-950 rounded-lg p-3 mb-5">
             <span class="block text-[8px] uppercase tracking-widest font-black text-slate-500 mb-2">Parameters</span>
-            <span class="text-[10px] font-bold text-mastersGreen-dim uppercase tracking-wide">MIN PRO RANK (11,250+)</span>
+            <span class="text-[10px] font-bold text-mastersGreen-dim uppercase tracking-wide">Minimum Pro Rank (11,250+)</span>
             <div class="mt-2 pt-2 border-t border-slate-800/60 text-[10px] text-slate-500">
-                Timeline: <span class="font-bold text-mastersGreen-glow font-mono">March 2025 (Ranked 2.0) — August 2026 (Now)</span>
+                Timeline: <span class="font-bold text-mastersGreen-glow font-mono">March 2025 — August 2026</span> <span class="text-mastersGreen-dim">(Ranked 2.0)</span>
             </div>
         </div>
 
         <div class="relative mb-3">
             <input type="text" id="searchBar" onkeyup="applyFilters()" placeholder="Search player/tag..."
-                   class="w-full bg-[#0f172a] border border-slate-950 text-xs rounded-lg px-3 py-2.5 pl-9 text-white placeholder-slate-600 focus:outline-none focus:border-mastersGreen-dim transition-all">
+                   class="w-full bg-[#0f1c13] border border-slate-950 text-xs rounded-lg px-3 py-2.5 pl-9 text-white placeholder-slate-600 focus:outline-none focus:border-mastersGreen-dim transition-all">
             <span class="absolute left-3 top-2.5 text-[10px] opacity-40">🔍</span>
         </div>
 
@@ -124,47 +125,47 @@
             </select>
         </div>
 
-        <div class="mt-auto pt-4 border-t border-slate-900 text-[9px] text-slate-600 font-mono text-center md:text-left">
-            © 2026 rankedlist.org • Developed by <a href="https://x.com/TheKitboxerShow" target="_blank" rel="noopener noreferrer" class="hover:text-mastersGreen-dim transition-colors">@TheKitboxerShow</a><br>
-            This content is not affiliated with, endorsed, sponsored, or specifically approved by Supercell and Supercell is not responsible for it. <a href="https://supercell.com/en/fan-content-policy/" target="_blank" rel="noopener noreferrer" class="hover:text-mastersGreen-dim transition-colors underline">Supercell Fan Content Policy</a>
+        <div class="mt-auto pt-4 border-t border-slate-950 text-[9px] text-slate-600 font-mono text-center md:text-left space-y-2">
+            <p>© 2026 rankedlist.org • Developed by <a href="https://x.com/TheKitboxerShow" target="_blank" rel="noopener noreferrer" class="hover:text-mastersGreen-dim transition-colors">@TheKitboxerShow</a></p>
+            <p>This content is not affiliated with, endorsed, sponsored, or specifically approved by Supercell and Supercell is not responsible for it. <a href="https://supercell.com/en/fan-content-policy/" target="_blank" rel="noopener noreferrer" class="underline hover:text-mastersGreen-dim transition-colors">Supercell Fan Content Policy</a></p>
         </div>
     </aside>
 
     <!-- content-area réserve TOUJOURS 24rem à droite : centrage permanent -->
     <div class="content-area flex-1 min-w-0 w-full">
-        <main class="mx-auto w-full max-w-5xl p-5 md:p-8 flex flex-col justify-between min-h-screen">
+        <main class="mx-auto w-full max-w-5xl p-5 md:p-8 flex flex-col justify-between min-h-[calc(100vh-4rem)]">
             <div>
                 <div class="mb-5 flex items-center justify-between">
                     <h2 id="viewTitle" class="text-[10px] uppercase tracking-widest font-black text-slate-400">Standings — All-time</h2>
-                    <span id="playerCount" class="text-[10px] font-mono font-bold bg-[#090f1c] border border-slate-900 text-slate-400 px-2 py-1 rounded">0 Records</span>
+                    <span id="playerCount" class="text-[10px] font-mono font-bold bg-[#09120b] border border-slate-950 text-slate-400 px-2 py-1 rounded">0 Records</span>
                 </div>
 
                 <div id="seasonStatus" class="hidden mb-4 text-[10px] font-mono text-amber-500 bg-amber-950/20 border border-amber-800/30 rounded-lg px-3 py-2"></div>
 
-                <div class="overflow-hidden bg-[#0f141f] border border-slate-900 rounded-xl">
-                    <div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#090f1c] border-b border-slate-900 text-[9px] uppercase tracking-wider font-bold text-slate-500">
+                <div class="overflow-hidden bg-[#101d14] border border-slate-950 rounded-xl">
+                    <div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">
                         <div class="col-span-1 text-center">#</div>
                         <div class="col-span-1">Country</div>
                         <div class="col-span-4">Player</div>
                         <div class="col-span-2 text-right">Peak</div>
                         <div class="col-span-4 text-right" id="statHeader">Points</div>
                     </div>
-                    <div id="leaderboard" class="divide-y divide-slate-900/50"></div>
+                    <div id="leaderboard" class="divide-y divide-slate-950/50"></div>
                 </div>
             </div>
 
             <div class="mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono pb-6">
-                <button id="btnPrev" onclick="changePage(-1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
+                <button id="btnPrev" onclick="changePage(-1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
                 <span id="pageIndicator" class="text-slate-500 font-bold">Page 1/1</span>
-                <button id="btnNext" onclick="changePage(1)" class="bg-[#090f1c] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
+                <button id="btnNext" onclick="changePage(1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
             </div>
         </main>
     </div>
 </div>
 
-<!-- SIDE DRAWER (glisse dans l'espace réservé, ne recouvre jamais le contenu) -->
-<div id="playerDrawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-[#0f141f] border-l border-slate-800 shadow-2xl z-40 overflow-y-auto">
-    <div class="sticky top-0 bg-[#090f1c] border-b border-slate-800 px-5 py-4 flex items-center justify-between">
+<!-- SIDE DRAWER (commence SOUS la barre du haut : # et ✕ toujours visibles) -->
+<div id="playerDrawer" class="fixed top-16 right-0 h-[calc(100vh-4rem)] w-full sm:w-96 bg-[#101d14] border-l border-slate-800 shadow-2xl z-40 overflow-y-auto">
+    <div class="sticky top-0 bg-[#09120b] border-b border-slate-800 px-5 py-4 flex items-center justify-between">
         <h3 class="font-bold text-white text-sm">Player Profile</h3>
         <button onclick="closeDrawer()" class="text-slate-400 hover:text-white transition-colors text-lg leading-none">✕</button>
     </div>
@@ -179,22 +180,28 @@
             <span id="dStatus" class="hidden text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded"></span>
         </div>
         <div class="space-y-2">
-            <div class="stat-line bg-[#090f1c] border border-slate-800 rounded-lg px-4 py-3">
+            <div class="stat-line bg-[#09120b] border border-slate-800 rounded-lg px-4 py-3">
                 <span class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Points</span>
-                <span id="dPoints" class="text-lg font-black text-emerald-400 font-mono">0</span>
+                <span class="flex items-baseline gap-2">
+                    <span id="dPoints" class="text-lg font-black text-emerald-400 font-mono">0</span>
+                    <span id="dPointsRank" class="text-[10px] font-mono font-bold text-slate-500"></span>
+                </span>
             </div>
-            <div class="stat-line bg-[#090f1c] border border-slate-800 rounded-lg px-4 py-3">
+            <div class="stat-line bg-[#09120b] border border-slate-800 rounded-lg px-4 py-3">
                 <span class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Elo</span>
-                <span id="dElo" class="text-lg font-black text-blue-400 font-mono">-</span>
+                <span class="flex items-baseline gap-2">
+                    <span id="dElo" class="text-lg font-black text-mastersGreen font-mono">-</span>
+                    <span id="dEloRank" class="text-[10px] font-mono font-bold text-slate-500"></span>
+                </span>
             </div>
-            <div class="stat-line bg-[#090f1c] border border-slate-800 rounded-lg px-4 py-3">
+            <div class="stat-line bg-[#09120b] border border-slate-800 rounded-lg px-4 py-3">
                 <span class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Peak</span>
                 <span id="dPeak" class="text-lg font-black text-amber-500 font-mono">-</span>
             </div>
         </div>
         <div class="space-y-2">
             <a id="dLink" target="_blank" rel="noopener noreferrer"
-               class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
+               class="block text-center bg-mastersGreen-dim hover:bg-mastersGreen text-black font-bold py-3 px-4 rounded-lg transition-colors text-sm">
                 View BrawlAce Profile ↗</a>
             <a id="dLinkBI" target="_blank" rel="noopener noreferrer"
                class="block text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
@@ -210,8 +217,8 @@
 <script>
 // ======================= ELO CONFIG (v5) =======================
 var START_RATING = 1500;
-var ELO_CEILING = 3000;    // plafond mou : les gains tendent vers zéro
-var ELO_FLOOR = 1000;      // plancher dur : on ne descend jamais sous 1000
+var ELO_CEILING = 3000;
+var ELO_FLOOR = 1000;
 var MAX_GAIN = 500;
 var PLACE_EXP = 4;
 var FIELD_MIN = 20;
@@ -221,8 +228,7 @@ var LOSS_BASE = 25;
 var LOSS_SCALE = 0.25;
 var SHIELD_WINDOW = 12;
 var OFFLINE_MONTHS = 12;
-var DECAY_RATIO = 0.75;   // chaque absence pénalisée supplémentaire coûte 75% de la précédente
-                          // ex : -127 -95 -71 -54 -40 -30 -23 -17 ... jusqu'à -1
+var DECAY_RATIO = 0.75;
 
 var SEASONS = [
     { key: 'mars25',      label: 'March 2025' }, { key: 'avril25',     label: 'April 2025' },
@@ -323,16 +329,11 @@ function lastPlayedIdx(tag) {
 }
 
 // ======================= ELO v5 =======================
-// Nouveautés vs v4 :
-//  - Décroissance géométrique des pertes d'inactivité : chaque absence
-//    pénalisée consécutive coûte DECAY_RATIO fois la précédente (min -1),
-//    ex -127 -95 -71 -54 ... -1 -1, jusqu'au retour du joueur.
-//  - Plancher dur : ELO_FLOOR = 1000.
 function computeElo() {
     var ratings = {};
     var history = {};
     var debutIdx = {};
-    var missRun = {};   // nb d'absences pénalisées consécutives (reset au retour)
+    var missRun = {};
 
     SEASONS.forEach(function(season, idx) {
         var players = seasonData[season.key] || [];
@@ -353,7 +354,7 @@ function computeElo() {
                 ratings[tag] = START_RATING;
                 debutIdx[tag] = idx;
             }
-            missRun[tag] = 0; // retour en jeu : la décroissance repart de zéro
+            missRun[tag] = 0;
 
             var R = ratings[tag];
             var gain = 0;
@@ -398,7 +399,7 @@ function computeElo() {
             if (!history[tag]) history[tag] = {};
             history[tag][season.key] = (history[tag][season.key] || 0) + delta;
             ratings[tag] += delta;
-            if (ratings[tag] < ELO_FLOOR) ratings[tag] = ELO_FLOOR; // plancher dur
+            if (ratings[tag] < ELO_FLOOR) ratings[tag] = ELO_FLOOR;
         }
     });
 
@@ -446,7 +447,7 @@ Promise.all([
     if (manquantes.length) {
         var st = document.getElementById('seasonStatus');
         st.classList.remove('hidden');
-        st.textContent = '⚠ Fichiers de saison introuvables : ' + manquantes.join(', ');
+        st.textContent = '⚠ Missing season files: ' + manquantes.join(', ');
     }
 
     (all[1] || []).forEach(function(row) {
@@ -471,6 +472,17 @@ Promise.all([
         p.lastIdx = lastPlayedIdx(p.tag);
         p.monthsIdle = p.lastIdx < 0 ? 99 : LAST_SEASON_IDX - p.lastIdx;
         p.offline = p.monthsIdle > OFFLINE_MONTHS;
+    });
+
+    // ===== Classements globaux (tous pays) pour l'affichage du profil =====
+    allPlayers.forEach(function(p) {
+        p.rankPts = 1;
+        allPlayers.forEach(function(q) { if (q.points > p.points) p.rankPts++; });
+    });
+    var actives = allPlayers.filter(function(p) { return !p.offline && p.elo > 0; });
+    actives.forEach(function(p) {
+        p.rankElo = 1;
+        actives.forEach(function(q) { if (q.elo > p.elo) p.rankElo++; });
     });
 
     buildCountryFilter();
@@ -508,7 +520,7 @@ function makeCountryOption(code, label) {
     if (code && code !== 'XX') {
         flagPart = '<img src="' + getSmallFlagUrl(code) + '" class="flag-icon-sm shrink-0" alt="" loading="lazy">';
     } else if (code === 'XX') {
-        flagPart = '<span class="flag-icon-sm bg-[#1e293b] inline-flex items-center justify-center text-[8px] text-slate-600 rounded-[2px] shrink-0">?</span>';
+        flagPart = '<span class="flag-icon-sm bg-[#1d3326] inline-flex items-center justify-center text-[8px] text-slate-600 rounded-[2px] shrink-0">?</span>';
     } else {
         flagPart = '<span class="text-base leading-none shrink-0">🌐</span>';
     }
@@ -662,7 +674,7 @@ function displayPage(pageData, startIndex, mi, sortMode) {
             if (player.offline) {
                 stat = '<span class="text-[10px] uppercase tracking-wider font-bold text-slate-600 font-mono">Offline</span>';
             } else {
-                stat = '<span class="font-black text-blue-400 font-mono text-sm">' + Math.round(player.elo) + '</span>';
+                stat = '<span class="font-black text-mastersGreen font-mono text-sm">' + Math.round(player.elo) + '</span>';
             }
         } else {
             stat = '<span class="font-black text-emerald-400 font-mono text-sm">' + player.points + '</span>' +
@@ -672,7 +684,7 @@ function displayPage(pageData, startIndex, mi, sortMode) {
         var flagUrl = getFlagUrl(player.country);
         var flagHtml = flagUrl
             ? '<img src="' + flagUrl + '" class="flag-icon" alt="' + (countryName(player.country) || player.country) + '" title="' + (countryName(player.country) || player.country) + '" loading="lazy">'
-            : '<span class="flag-icon bg-[#1e293b] inline-flex items-center justify-center text-[9px] text-slate-600">?</span>';
+            : '<span class="flag-icon bg-[#1d3326] inline-flex items-center justify-center text-[9px] text-slate-600">?</span>';
 
         var nameCell = '<div class="col-span-4 min-w-0 ' + (player.offline ? 'opacity-40' : '') + '">' +
             '<div class="font-bold text-white text-sm truncate" title="' + escapeHtml(player.pseudo) + '">' + escapeHtml(player.pseudo) + '</div>' +
@@ -698,8 +710,11 @@ function openDrawer(p) {
     document.getElementById('dName').textContent = p.pseudo;
     document.getElementById('dTag').textContent = p.tag;
     document.getElementById('dCountry').textContent = countryName(p.country) || 'Country unknown';
+
     document.getElementById('dPoints').textContent = p.points;
+    document.getElementById('dPointsRank').textContent = '#' + p.rankPts;
     document.getElementById('dElo').textContent = p.offline ? 'Offline' : (p.elo ? Math.round(p.elo) : '-');
+    document.getElementById('dEloRank').textContent = (p.offline || !p.rankElo) ? '' : '#' + p.rankElo;
     document.getElementById('dPeak').textContent = p.peakRank >= 999 ? 'N/A' : 'Top ' + p.peakRank;
     document.getElementById('dLink').href = profileUrl(p.tag);
     document.getElementById('dLinkBI').href = insightsUrl(p.tag);
@@ -733,7 +748,7 @@ function openDrawer(p) {
                     ? '<span class="elo-plus">+' + arr + '</span>'
                     : arr < 0 ? '<span class="elo-minus">' + arr + '</span>' : '';
             }
-            hist += '<div class="flex justify-between bg-[#090f1c] border border-slate-800 rounded px-3 py-1.5">' +
+            hist += '<div class="flex justify-between bg-[#09120b] border border-slate-800 rounded px-3 py-1.5">' +
                     '<span class="text-slate-400">' + s.label + '</span>' +
                     '<span>' + placeStr + ' ' + eloStr + '</span></div>';
         }
