@@ -482,7 +482,6 @@ function route() {
         $('filterMonth').value = currentMonth;
         $('searchBar').value = '';
         syncSortOptions();
-        updateCountryBtn();
         updateSearchPlaceholder();
         render();
     } catch (err) {
@@ -514,33 +513,6 @@ function syncSortOptions() {
     }
 }
 
-function updateCountryBtn() {
-    // In Country Ranking list view: always show "All countries" (non-clickable)
-    if (currentView === 'country-list') {
-        selectedCountryCode = '';
-        $('countryBtnLabel').textContent = 'All countries';
-        $('countryBtnFlag').textContent = '🌐';
-        return;
-    }
-    
-    // In Player Ranking view: show current country filter if set
-    if (currentView === 'player') {
-        selectedCountryCode = (currentCountryFilter !== 'all') ? currentCountryFilter : '';
-    } else if (currentView === 'country-detail') {
-        // In Country Detail: show the current country
-        selectedCountryCode = currentDetailCC;
-    } else {
-        selectedCountryCode = '';
-    }
-    
-    if (selectedCountryCode) {
-        $('countryBtnLabel').textContent = countryName(selectedCountryCode);
-        $('countryBtnFlag').innerHTML = '<img class="flag-icon-sm" src="' + getFlagUrl(selectedCountryCode) + '">';
-    } else {
-        $('countryBtnLabel').textContent = 'All countries';
-        $('countryBtnFlag').textContent = '🌐';
-    }
-}
 function updateSearchPlaceholder() {
     $('searchBar').placeholder = (currentView === 'country-list') ? 'Search...' : 'Search player/tag...';
 }
@@ -790,44 +762,11 @@ function renderCountryDetail() {
 }
 
 // ============================= MENUS =============================
-function toggleMoreMenu(ev) {
-    if (ev) ev.stopPropagation();
-    $('moreMenu').classList.toggle('hidden');
-    $('countryMenu').classList.add('hidden');
-}
-function closeMenus() {
-    $('moreMenu').classList.add('hidden');
-    $('countryMenu').classList.add('hidden');
-}
 document.addEventListener('click', function (e) {
-    // Close MORE menu
     if (!$('moreDropdown').contains(e.target)) {
         $('moreMenu').classList.add('hidden');
     }
-    
-    // Close COUNTRY menu ONLY if clicking outside country dropdown area
-    // DON'T close if clicking the country button itself (toggleCountryMenu handles that)
-    if (!$('countryDropdown').contains(e.target)) {
-        $('countryMenu').classList.add('hidden');
-    }
 });
-
-// Separate toggle function for country menu - prevent default and stop propagation
-function toggleCountryMenu(ev) {
-    if (ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-    }
-    
-    // First close any other open menus
-    $('moreMenu').classList.add('hidden');
-    
-    // Now toggle country menu
-    $('countryMenu').classList.toggle('hidden');
-    
-    // Prevent this click from bubbling to document listener
-    return false;
-}
 
 // ============================= DRAWER =============================
 function showPlayer(encodedTag) {
@@ -941,7 +880,6 @@ try {
             ss.classList.remove('hidden');
             ss.textContent = '⚠ Missing season data: ' + missingSeasons.join(', ');
         }
-        buildCountryMenu();
         dataReady = true;
         route();
     }).catch(function (err) {
