@@ -500,10 +500,31 @@ function route() {
     }
 }
 function syncSortOptions() {
-    var opts = $('filterSort').options, list = currentView === 'country-list';
+    var opts = $('filterSort').options;
+    var isMonthly = (currentMonth !== -1);
+    var isCountryList = (currentView === 'country-list');
+    
     for (var i = 0; i < opts.length; i++) {
-        opts[i].disabled = list && (opts[i].value === 'peak' || opts[i].value === 'activity');
+        var opt = opts[i];
+        var disable = false;
+        
+        if (isCountryList && (opt.value === 'peak' || opt.value === 'activity')) {
+            disable = true;
+        } else if (isMonthly && opt.value !== 'points') {
+            // Monthly views: only points is valid
+            disable = true;
+        }
+        
+        opt.disabled = disable;
+        opt.title = isMonthly ? 'Only available for All-time' : 'Not available for Country Ranking';
+        if (disable && opt.selected) {
+            // Auto-switch to points if current sort is invalid
+            opts[0].selected = true;
+            currentSort = 'points';
+        }
     }
+    
+    // Disable country selector in Country Ranking list view
     var countrySelectDisabled = (currentView === 'country-list');
     $('countryDropdown').style.pointerEvents = countrySelectDisabled ? 'none' : 'auto';
     $('countryDropdown').style.opacity = countrySelectDisabled ? '0.4' : '1';
@@ -658,7 +679,8 @@ function renderPlayerView() {
         $('viewTitle').textContent = 'Standings — ' + monthLabel(currentMonth) +
             (currentCountryFilter !== 'all' ? ' — ' + countryName(currentCountryFilter) : '');
         $('playerCount').textContent = list.length.toLocaleString() + ' Records';
-        $('statHeader').textContent = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last activity' : SORTS[currentSort]);
+        $('statHeader').textContent = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last activity' : 
+            (currentSort === 'peak' ? 'Peak Rank' : (currentMonth !== -1 ? 'Points (' + SEASONS[currentMonth].label + ')' : SORTS[currentSort])));
         var html = '';
         pg.slice.forEach(function (p, i) { html += playerRowHtml(p, (currentPage - 1) * RECORDS_PER_PAGE + i + 1); });
         $('leaderboard').innerHTML = html || emptyRow('No players found');
