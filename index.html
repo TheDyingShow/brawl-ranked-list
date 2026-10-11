@@ -755,17 +755,13 @@ function renderCountryDetail() {
 }
 
 // ============================= MENUS =============================
+/*
 document.addEventListener('click', function (e) {
-    // Only close MORE menu if clicking OUTSIDE the entire dropdown area
-    var moreBtn = $('moreDropdown');
-    var moreMenu = $('moreMenu');
-    
-    if (moreMenu && !moreMenu.classList.contains('hidden')) {
-        if (!moreBtn.contains(e.target)) {
-            moreMenu.classList.add('hidden');
-        }
+    if (!$('moreDropdown').contains(e.target)) {
+        $('moreMenu').classList.add('hidden');
     }
 });
+*/
 
 // ============================= DRAWER =============================
 function showPlayer(encodedTag) {
