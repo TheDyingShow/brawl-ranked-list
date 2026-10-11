@@ -523,12 +523,14 @@ function syncSortOptions() {
         }
     }
     
-    // Country dropdown: enable in Player Ranking and Country Detail views
-    // Disable ONLY in Country Ranking list view
-    var countryDropdownDisabled = (currentView === 'country-list');
-    $('countryDropdown').style.pointerEvents = countryDropdownDisabled ? 'none' : 'auto';
-    $('countryDropdown').style.opacity = countryDropdownDisabled ? '0.4' : '1';
-    $('countryBtn').style.cursor = countryDropdownDisabled ? 'not-allowed' : 'pointer';
+    // DON'T block pointer events - just add a visual class instead
+    if (currentView === 'country-list') {
+        $('countryDropdown').classList.add('disabled-dropdown');
+        $('countryBtn').setAttribute('tabindex', '-1');
+    } else {
+        $('countryDropdown').classList.remove('disabled-dropdown');
+        $('countryBtn').removeAttribute('tabindex');
+    }
 }
 
 function updateCountryBtn() {
@@ -823,8 +825,34 @@ function closeMenus() {
     $('countryMenu').classList.add('hidden');
 }
 document.addEventListener('click', function (e) {
-    if (!$('moreDropdown').contains(e.target) && !$('countryDropdown').contains(e.target)) closeMenus();
+    // Close MORE menu
+    if (!$('moreDropdown').contains(e.target)) {
+        $('moreMenu').classList.add('hidden');
+    }
+    
+    // Close COUNTRY menu ONLY if clicking outside country dropdown area
+    // DON'T close if clicking the country button itself (toggleCountryMenu handles that)
+    if (!$('countryDropdown').contains(e.target)) {
+        $('countryMenu').classList.add('hidden');
+    }
 });
+
+// Separate toggle function for country menu - prevent default and stop propagation
+function toggleCountryMenu(ev) {
+    if (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+    }
+    
+    // First close any other open menus
+    $('moreMenu').classList.add('hidden');
+    
+    // Now toggle country menu
+    $('countryMenu').classList.toggle('hidden');
+    
+    // Prevent this click from bubbling to document listener
+    return false;
+}
 
 function buildCountryMenu() {
     var seen = {}, codes = [];
@@ -855,13 +883,15 @@ function updateCountryBtn() {
         $('countryBtnFlag').textContent = '🌐';
         return;
     }
-    if (currentView === 'player' && currentCountryFilter !== 'all') {
-        selectedCountryCode = currentCountryFilter;
+    
+    if (currentView === 'player') {
+        selectedCountryCode = (currentCountryFilter !== 'all') ? currentCountryFilter : '';
     } else if (currentView === 'country-detail') {
         selectedCountryCode = currentDetailCC;
     } else {
         selectedCountryCode = '';
     }
+    
     if (selectedCountryCode) {
         $('countryBtnLabel').textContent = countryName(selectedCountryCode);
         $('countryBtnFlag').innerHTML = '<img class="flag-icon-sm" src="' + getFlagUrl(selectedCountryCode) + '">';
