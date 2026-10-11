@@ -511,23 +511,52 @@ function syncSortOptions() {
         if (isCountryList && (opt.value === 'peak' || opt.value === 'activity')) {
             disable = true;
         } else if (isMonthly && opt.value !== 'points') {
-            // Monthly views: only points is valid
             disable = true;
         }
         
         opt.disabled = disable;
-        opt.title = isMonthly ? 'Only available for All-time' : 'Not available for Country Ranking';
+        opt.title = disable ? (isMonthly ? 'Only available for All-time' : 'Not available for Country Ranking') : '';
+        
         if (disable && opt.selected) {
-            // Auto-switch to points if current sort is invalid
             opts[0].selected = true;
             currentSort = 'points';
         }
     }
     
-    // Disable country selector in Country Ranking list view
-    var countrySelectDisabled = (currentView === 'country-list');
-    $('countryDropdown').style.pointerEvents = countrySelectDisabled ? 'none' : 'auto';
-    $('countryDropdown').style.opacity = countrySelectDisabled ? '0.4' : '1';
+    // Country dropdown: enable in Player Ranking and Country Detail views
+    // Disable ONLY in Country Ranking list view
+    var countryDropdownDisabled = (currentView === 'country-list');
+    $('countryDropdown').style.pointerEvents = countryDropdownDisabled ? 'none' : 'auto';
+    $('countryDropdown').style.opacity = countryDropdownDisabled ? '0.4' : '1';
+    $('countryBtn').style.cursor = countryDropdownDisabled ? 'not-allowed' : 'pointer';
+}
+
+function updateCountryBtn() {
+    // In Country Ranking list view: always show "All countries" (non-clickable)
+    if (currentView === 'country-list') {
+        selectedCountryCode = '';
+        $('countryBtnLabel').textContent = 'All countries';
+        $('countryBtnFlag').textContent = '🌐';
+        return;
+    }
+    
+    // In Player Ranking view: show current country filter if set
+    if (currentView === 'player') {
+        selectedCountryCode = (currentCountryFilter !== 'all') ? currentCountryFilter : '';
+    } else if (currentView === 'country-detail') {
+        // In Country Detail: show the current country
+        selectedCountryCode = currentDetailCC;
+    } else {
+        selectedCountryCode = '';
+    }
+    
+    if (selectedCountryCode) {
+        $('countryBtnLabel').textContent = countryName(selectedCountryCode);
+        $('countryBtnFlag').innerHTML = '<img class="flag-icon-sm" src="' + getFlagUrl(selectedCountryCode) + '">';
+    } else {
+        $('countryBtnLabel').textContent = 'All countries';
+        $('countryBtnFlag').textContent = '🌐';
+    }
 }
 function updateSearchPlaceholder() {
     $('searchBar').placeholder = (currentView === 'country-list') ? 'Search...' : 'Search player/tag...';
