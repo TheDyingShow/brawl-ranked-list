@@ -22,7 +22,6 @@
                             dim: '#88cc00',
                             glow: '#ccff66',
                         },
-                        // slate remplacé par une échelle gris-vert : tout le site bascule
                         slate: {
                             50:'#f3f8f4',100:'#e4eee6',200:'#c9dcce',300:'#a3c3ab',400:'#77a486',
                             500:'#558168',600:'#426753',700:'#355444',800:'#2b4337',900:'#233729',950:'#11211a'
@@ -64,11 +63,19 @@
         .country-option.active { background-color: #1a3122; }
         #playerDrawer { transition: transform 0.3s ease; transform: translateX(100%); }
         #playerDrawer.open { transform: translateX(0); }
+        #countryRankingPanel { transition: transform 0.3s ease; transform: translateX(100%); }
+        #countryRankingPanel.open { transform: translateX(0); }
         .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
         .elo-plus { color: #34d399; }
         .elo-minus { color: #f87171; }
-        /* La marge droite PERMANENTE (24rem = largeur du tiroir) garde le tableau
-           centré écran, tiroir ouvert ou fermé. */
+        /* Dropdown styles */
+        .dropdown-menu {
+            position: absolute; right: 0; top: 100%; z-index: 100;
+            min-width: 180px; background-color: #0f1c13; border: 1px solid #030906; border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin-top: 0.25rem;
+        }
+        .dropdown-item { display: block; width: 100%; text-align: left; padding: 0.6rem 1rem; font-size: 0.8rem; color: #e0ece3; cursor: pointer; }
+        .dropdown-item:hover { background-color: #18291d; }
         @media (min-width: 768px) {
             .content-area { margin-right: 24rem; }
         }
@@ -77,12 +84,21 @@
 <body class="font-sans antialiased">
 
 <!-- TOP BAR (sticky : reste visible au scroll, ne recouvre rien) -->
-<header class="sticky top-0 z-50 h-16 bg-[#070d08] border-b border-slate-950 flex items-center px-4 md:px-6">
+<header class="sticky top-0 z-50 h-16 bg-[#070d08] border-b border-slate-950 flex items-center px-4 md:px-6 relative">
     <div class="flex items-center gap-3 shrink-0">
         <div class="w-8 h-8 bg-gradient-to-tr from-mastersGreen to-mastersGreen-dim rounded-lg flex items-center justify-center font-black text-black text-sm shadow-lg">⚡</div>
         <div>
             <h1 class="font-black tracking-wider text-sm uppercase text-white leading-none">RANKED LIST</h1>
             <span class="text-[9px] tracking-widest uppercase font-bold text-slate-500">Brawl Stars</span>
+        </div>
+    </div>
+    
+    <!-- More dropdown -->
+    <div class="ml-6 relative" id="moreDropdown">
+        <button onclick="toggleMoreMenu()" class="text-slate-300 hover:text-white transition-colors text-sm font-medium">More ▼</button>
+        <div id="moreMenu" class="dropdown-menu hidden">
+            <button class="dropdown-item" onclick="showPlayerRanking()">Player ranking</button>
+            <button class="dropdown-item" onclick="showCountryRanking()">Country ranking</button>
         </div>
     </div>
 </header>
@@ -171,7 +187,8 @@
     </div>
     <div class="p-5 space-y-4">
         <div class="flex flex-col items-center text-center space-y-2">
-            <img id="dFlag" class="flag-icon shadow-md" alt="">
+            <!-- BIGGER FLAG -->
+            <img id="dFlag" class="w-12 h-8 shadow-lg rounded-md" alt="">
             <div class="min-w-0 w-full">
                 <h2 id="dName" class="text-lg font-bold text-white truncate"></h2>
                 <p id="dTag" class="text-xs font-mono text-slate-500 mt-0.5"></p>
@@ -210,6 +227,19 @@
         <div>
             <span class="block text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-2">Season history</span>
             <div id="dHistory" class="space-y-1 text-xs font-mono"></div>
+        </div>
+    </div>
+</div>
+
+<!-- COUNTRY RANKING PANEL -->
+<div id="countryRankingPanel" class="fixed top-16 right-0 h-[calc(100vh-4rem)] w-full sm:w-96 bg-[#101d14] border-l border-slate-800 shadow-2xl z-40 overflow-y-auto">
+    <div class="sticky top-0 bg-[#09120b] border-b border-slate-800 px-5 py-4 flex items-center justify-between">
+        <h3 class="font-bold text-white text-sm">Country Ranking</h3>
+        <button onclick="closeCountryRanking()" class="text-slate-400 hover:text-white transition-colors text-lg leading-none">✕</button>
+    </div>
+    <div class="p-5">
+        <div id="countryRankingContent">
+            <div class="text-center text-slate-500 text-sm py-8">Select a country to view ranking</div>
         </div>
     </div>
 </div>
@@ -485,10 +515,126 @@ Promise.all([
         actives.forEach(function(q) { if (q.elo > p.elo) p.rankElo++; });
     });
 
+    // ===== Compute Country Rankings =====
+    computeCountryRankings();
+
     buildCountryFilter();
     applyFromHash(true);
     document.getElementById('playerCount').innerText = allPlayers.length + ' Records';
 });
+
+// ======================= COUNTRY RANKINGS =======================
+var countryRankings = []; // [{code, name, totalPoints, totalElo, playersCount}]
+
+function computeCountryRankings() {
+    var countryData = {};
+    
+    allPlayers.forEach(function(p) {
+        var cc = p.country;
+        if (!countryData[cc]) {
+            countryData[cc] = { code: cc, name: countryName(cc) || cc, totalPoints: 0, totalElo: 0, count: 0 };
+        }
+        countryData[cc].totalPoints += p.points;
+        countryData[cc].totalElo += Math.round(p.elo);
+        countryData[cc].count++;
+    });
+    
+    countryRankings = Object.values(countryData).sort(function(a, b) {
+        return b.totalPoints - a.totalPoints;
+    });
+}
+
+// ======================= DROPDOWN MORE =======================
+function toggleMoreMenu() {
+    var menu = document.getElementById('moreMenu');
+    menu.classList.toggle('hidden');
+}
+
+function showPlayerRanking() {
+    closeMoreMenu();
+    // Just close — player ranking is the main view already
+}
+
+function showCountryRanking() {
+    closeMoreMenu();
+    renderCountryRankingList();
+    document.getElementById('countryRankingPanel').classList.add('open');
+}
+
+function closeMoreMenu() {
+    document.getElementById('moreMenu').classList.add('hidden');
+}
+
+function closeCountryRanking() {
+    document.getElementById('countryRankingPanel').classList.remove('open');
+}
+
+function renderCountryRankingList() {
+    var container = document.getElementById('countryRankingContent');
+    container.innerHTML = '';
+    
+    var list = document.createElement('div');
+    list.className = 'space-y-2';
+    
+    countryRankings.forEach(function(c, idx) {
+        var row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-3 bg-[#09120b] border border-slate-800 rounded-lg cursor-pointer hover:border-mastersGreen-dim transition-colors';
+        row.onclick = function() {
+            renderCountryDetails(c.code);
+        };
+        
+        var flagHtml = c.code !== 'XX' 
+            ? '<img src="' + getFlagUrl(c.code) + '" class="w-6 h-4 rounded mr-3" alt="">': 
+            '<span class="w-6 h-4 bg-slate-700 rounded mr-3 inline-block"></span>';
+        
+        row.innerHTML = 
+            '<div class="flex items-center gap-3">' +
+                '<span class="text-xs font-bold text-mastersGreen font-mono">#' + (idx + 1) + '</span>' +
+                flagHtml +
+                '<span class="font-bold text-white text-sm">' + c.name + '</span>' +
+            '</div>' +
+            '<span class="text-xs font-mono text-emerald-400 font-bold">' + c.totalPoints.toLocaleString() + ' pts</span>';
+        
+        list.appendChild(row);
+    });
+    
+    container.appendChild(list);
+}
+
+function renderCountryDetails(cc) {
+    var country = countryRankings.find(function(c) { return c.code === cc; });
+    if (!country) return;
+    
+    var container = document.getElementById('countryRankingContent');
+    
+    var html = '';
+    html += '<div class="text-center mb-6">';
+    html += '<img src="' + getFlagUrl(cc) + '" class="w-16 h-10 mx-auto mb-2 rounded shadow-lg">';
+    html += '<h2 class="text-lg font-bold text-white">' + country.name + '</h2>';
+    html += '<p class="text-xs text-slate-500 mt-1">' + country.count + ' players • Total: ' + country.totalPoints.toLocaleString() + ' pts • ' + country.totalElo.toLocaleString() + ' elo</p>';
+    html += '</div>';
+    
+    html += '<span class="block text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-2">TOP PLAYERS</span>';
+    html += '<div class="space-y-1">';
+    
+    var countryPlayers = allPlayers.filter(function(p) { return p.country === cc; }).sort(function(a, b) {
+        return b.points - a.points;
+    }).slice(0, 50);
+    
+    countryPlayers.forEach(function(p, idx) {
+        html += '<div class="flex justify-between items-center p-2 bg-[#09120b] border border-slate-800 rounded">';
+        html += '<div class="flex items-center gap-2">';
+        html += '<span class="text-xs font-mono text-mastersGreen font-bold">#' + (idx + 1) + '</span>';
+        html += '<span class="text-xs text-white font-medium truncate max-w-[120px]">' + escapeHtml(p.pseudo) + '</span>';
+        html += '</div>';
+        html += '<span class="text-xs font-mono text-emerald-400 font-bold">' + p.points + ' pts</span>';
+        html += '</div>';
+    });
+    
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
 
 // ======================= DROPDOWN PAYS =======================
 function buildCountryFilter() {
@@ -571,6 +717,7 @@ function closeCountryMenu() {
 }
 document.addEventListener('click', function(e) {
     if (!document.getElementById('countryDropdown').contains(e.target)) closeCountryMenu();
+    if (document.getElementById('moreDropdown') && !document.getElementById('moreDropdown').contains(e.target)) closeMoreMenu();
 });
 
 // ======================= ROUTAGE =======================
@@ -578,7 +725,7 @@ function writeHash() {
     var sort = document.getElementById('filterSort').value;
     var cc = selectedCountry || 'all';
     var mi = parseInt(document.getElementById('filterMonth').value, 10);
-    var h = '#/' + sort + '/' + cc + '/' + mi;
+    var h = '#/' + sort + '/' + cc + '/' + mi + '?page=' + currentPage;
     if (location.hash !== h) {
         updatingHash = true;
         location.hash = h;
@@ -586,19 +733,35 @@ function writeHash() {
 }
 
 function applyFromHash(initial) {
-    var seg = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+    var hashStr = location.hash.replace(/^#\/?/, '');
+    var parts = hashStr.split('?');
+    var seg = parts[0].split('/').filter(Boolean);
+    var queryParams = {};
+    
+    if (parts[1]) {
+        parts[1].split('&').forEach(function(param) {
+            var kv = param.split('=');
+            if (kv[0]) queryParams[kv[0]] = kv[1];
+        });
+    }
+    
     var sort = seg[0] || 'points';
     var cc = seg[1] && seg[1] !== 'all' ? seg[1].toUpperCase() : '';
     var mi = seg[2] !== undefined && seg[2] !== '' ? parseInt(seg[2], 10) : -1;
+    var page = queryParams.page ? parseInt(queryParams.page, 10) : 1;
 
     if (['points','elo','peak','activity'].indexOf(sort) === -1) sort = 'points';
     if (isNaN(mi) || mi < -1 || mi > 17) mi = -1;
+    if (isNaN(page) || page < 1) page = 1;
 
     document.getElementById('filterSort').value = sort;
     selectedCountry = cc;
     updateCountryButton();
     document.getElementById('filterMonth').value = String(mi);
+    
     applyFilters(true);
+    currentPage = page;
+    updatePageData();
 }
 
 window.addEventListener('hashchange', function() {
@@ -650,8 +813,6 @@ function applyFilters(skipHash) {
     document.getElementById('statHeader').textContent =
         mi >= 0 ? 'Placement' : (sortMode === 'elo' ? 'Elo' : 'Points');
 
-    currentPage = 1;
-    updatePageData();
     if (!skipHash) writeHash();
 }
 
@@ -772,12 +933,17 @@ function updatePageData() {
     document.getElementById('pageIndicator').innerText = 'Page ' + currentPage + '/' + totalPages;
     document.getElementById('btnPrev').disabled = (currentPage === 1);
     document.getElementById('btnNext').disabled = (currentPage === totalPages);
+    writeHash();
 }
 
 function changePage(dir) { currentPage += dir; updatePageData(); }
 
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeDrawer();
+    if (e.key === 'Escape') {
+        closeDrawer();
+        closeCountryRanking();
+        closeMoreMenu();
+    }
 });
 </script>
 </body>
