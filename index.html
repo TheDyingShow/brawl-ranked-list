@@ -666,6 +666,11 @@ function renderPlayerView() {
     }
 }
 
+function toggleMoreMenu(ev) {
+    if (ev) ev.stopPropagation();
+    $('moreMenu').classList.toggle('hidden');
+}
+
 function renderCountryList() {
     try {
         var actives = allPlayers.filter(isActive);
