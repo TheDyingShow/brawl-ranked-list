@@ -45,6 +45,10 @@ body { background-color: #0a120c; color: #e0ece3; }
 .back-btn { font-size: 0.75rem; font-weight: 700; color: #88cc00; cursor: pointer;
     display: inline-flex; align-items: center; gap: 0.4rem; }
 .back-btn:hover { color: #ccff66; }
-@media (min-width: 768px) {
-    .content-area { margin-right: 24rem; }
+@media (max-width: 1200px) {
+    /* At smaller widths (or high zoom), stack vertically */
+    .content-area { margin-right: 0 !important; }
+    .sidebar { width: 100%; margin-bottom: 1rem; }
+    .player-profile-drawer { transform: translateY(100%); }
+    .player-profile-drawer.open { transform: translateY(0); }
 }
