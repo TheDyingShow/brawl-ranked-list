@@ -470,13 +470,6 @@ function route() {
     if (!dataReady) return;
     try {
         parseHash();
-        if (currentView === 'player') {
-            selectedCountryCode = (currentCountryFilter !== 'all') ? currentCountryFilter : '';
-        } else if (currentView === 'country-detail') {
-            selectedCountryCode = currentDetailCC;
-        } else {
-            selectedCountryCode = '';
-        }
         if (currentView === 'country-list' && (currentSort === 'peak' || currentSort === 'activity')) currentSort = 'points';
         $('filterSort').value = currentSort;
         $('filterMonth').value = currentMonth;
