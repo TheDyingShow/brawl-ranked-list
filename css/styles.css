@@ -48,3 +48,10 @@ body { background-color: #0a120c; color: #e0ece3; }
 @media (min-width: 768px) {
     .content-area { margin-right: 24rem; }
 }
+select, option {
+    font-family: 'Geist', 'ui-sans-serif', 'system-ui', 'sans-serif';
+}
+
+.timeline-text {
+    font-family: 'Geist', 'ui-sans-serif', 'system-ui', 'sans-serif';
+}
