@@ -130,3 +130,14 @@ select, option {
         font-size: 0.75rem !important;
     }
 }
+/* Reserve enough room for the fixed-size flag inside its grid cell */
+.player-row > div:nth-child(2) {
+    min-width: 44px;  /* 32px flag + breathing room */
+    flex-shrink: 0;
+}
+
+/* Header rows: keep the "Country" label aligned with the flag cell */
+#leaderboard .grid-cols-12 > div:nth-child(2),
+#countryRankingList > .grid.grid-cols-12 > div:nth-child(2) {
+    min-width: 44px;
+}
