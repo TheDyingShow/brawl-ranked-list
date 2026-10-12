@@ -46,11 +46,10 @@ function playerRowHtml(p, rank) {
     var rc = rank <= 3 ? 'rank-' + rank : '';
     var stCls = currentSort === 'elo' ? 'text-mastersGreen' : 'text-emerald-400';
     
-    // Build player row with appropriate columns
     var html = '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer" onclick="showPlayer(\'' + tagParam(p.tag) + '\')">' +
         '<div class="col-span-1 rank-badge ' + rc + '">' + rank + '</div>';
     
-    // Flag column (keep it simple)
+    // Flag column
     html += '<div class="col-span-1 flex justify-start">' +
         (p.country && p.country !== 'XX' ? '<img class="flag-icon flag-click" src="' + getFlagUrl(p.country) + '" alt="' + esc(p.country) + '" title="' + esc(countryName(p.country)) + '" onclick="flagClick(\'' + p.country + '\', event)">' : '') +
     '</div>';
@@ -59,12 +58,12 @@ function playerRowHtml(p, rank) {
     html += '<div class="col-span-4 min-w-0"><span class="font-bold text-white text-sm truncate block">' + esc(p.name) + '</span>' +
         '<span class="text-[10px] font-mono text-slate-600">' + esc(p.tag) + '</span></div>';
     
-    // Peak column (only show if NOT sorting by peak, since peak is the sort column when selected)
+    // Peak column - HIDE it when sorting by peak (will be shown in main stat column instead)
     if (currentSort !== 'peak') {
         html += '<div class="col-span-2 text-right font-mono text-xs text-amber-500 font-bold">' + ((p.peak != null && p.peak > 0) ? '#' + p.peak : '-') + '</div>';
     }
     
-    // Main stat column (Points/Elo/Peak/Activity depending on sort)
+    // Main stat column
     html += '<div class="col-span-4 text-right font-mono text-sm font-bold ' + stCls + '">' + statValue(p) + '</div>';
     
     html += '</div>';
@@ -235,16 +234,15 @@ function renderCountryDetail() {
         
         // Dynamic header based on currentSort
         var mainStatLabel = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last Activity' : (currentSort === 'peak' ? 'Peak' : 'Points'));
-        
-        var colSpanForMainStat = currentSort === 'peak' ? 5 : 4; // Adjust if peak column removed
+        var hasPeakColumn = currentSort !== 'peak'; // Hide peak column when sorting by peak
         
         $('countryRankingList').innerHTML =
             '<div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
                 '<div class="col-span-1 text-center">#</div>' +
                 '<div class="col-span-1">Flag</div>' +
                 '<div class="col-span-4">Player</div>' +
-                '<div class="col-span-2 text-right">Peak</div>' +
-                '<div class="col-span-4 text-right">' + mainStatLabel + '</div>' +
+                (hasPeakColumn ? '<div class="col-span-2 text-right">Peak</div>' : '') +
+                '<div class="col-span-' + (hasPeakColumn ? '4' : '5') + ' text-right">' + mainStatLabel + '</div>' +
             '</div>';
         
         var pg = paginate(list);
