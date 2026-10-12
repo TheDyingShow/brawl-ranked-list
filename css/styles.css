@@ -84,12 +84,15 @@ select, option {
         left: 18.8rem;   /* aligns with the ▼ of All-time / Sort: */
     }
 }
-.sidebar {
-    border-right: 1px solid #11211a;
-}
+.sidebar { border-right: 1px solid #11221a; }
 @media (max-width: 768px) {
-    .sidebar {
-        border-right: none;
-        border-bottom: 1px solid #11211a;
+    .sidebar { border-right: none; border-bottom: 1px solid #11221a; }
+}
+@media (min-width: 768px) {
+    .sidebar-inner {
+        position: sticky;
+        top: 4rem;
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
     }
 }
