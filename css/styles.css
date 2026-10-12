@@ -89,9 +89,25 @@ select, option {
 #loadingOverlay { transition: opacity 0.25s ease-out; }
 #loadingOverlay.hidden { opacity: 0; pointer-events: none; }
 
-/* Force horizontal scroll starting at 768px to prevent table crushing in tablet range */
+/* Desktop layout: prevent crushing by forcing minimum width */
 @media (min-width: 768px) {
     .layout-shell {
-        min-width: 1024px;
+        /* Calculate: sidebar (384px) + content (768px) + margins (32px) = 1184px minimum */
+        min-width: 1184px;
+    }
+    
+    /* Remove conflicting margin rule */
+    .content-area { 
+        margin-right: 0 !important;
+    }
+    
+    /* Use flex gap instead */
+    .flex > .sidebar,
+    .flex > .content-area {
+        margin: 0;
+    }
+    
+    .flex {
+        gap: 1rem;
     }
 }
