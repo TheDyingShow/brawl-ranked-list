@@ -89,10 +89,24 @@ select, option {
 #loadingOverlay { transition: opacity 0.25s ease-out; }
 #loadingOverlay.hidden { opacity: 0; pointer-events: none; }
 
-/* Desktop layout: prevent crushing by forcing minimum width */
+/* ===== Responsive shrink behavior ===== */
+
+/* Below this total width, the whole page pans instead of the sidebar squashing */
 @media (min-width: 768px) {
     .layout-shell {
-        /* Calculate: sidebar (384px) + content (768px) + margins (32px) = 1184px minimum */
-        min-width: 1184px;
+        min-width: 1120px;
     }
+}
+
+/* Give leaderboard rows a floor so columns never crush below this */
+#leaderboard .player-row,
+#countryRankingList .player-row,
+#countryRankingList > .grid:first-child {
+    min-width: 720px;
+}
+
+/* Table containers pan horizontally when rows reach their floor */
+#leaderboard,
+#countryRankingList {
+    overflow-x: auto;
 }
