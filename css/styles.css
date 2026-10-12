@@ -112,32 +112,31 @@ select, option {
     }
 }
 
-/* Mobile adjustments */
+/* Mobile/tablet header adjustments: prevent "Country" from collapsing into "Player" */
 @media (max-width: 767px) {
-    /* Phone view: headers match the compressed rows */
-    #leaderboard .grid-cols-12,
-    #countryRankingList .grid-cols-12 {
-        grid-template-columns: repeat(12, 1fr) !important;
+    /* Header row cells */
+    #leaderboard > .grid-cols-12 > div:nth-child(2),  /* Country header */
+    #countryRankingList > .grid.grid-cols-12 > div:nth-child(2) {
+        min-width: 80px !important;
+        flex-shrink: 0;
+        text-indent: 5px;
     }
     
-    /* Make player rows more compact on mobile */
-    .player-row {
-        padding: 0.5rem 0.75rem !important;
+    #leaderboard > .grid-cols-12 > div:nth-child(3),  /* Player header */
+    #countryRankingList > .grid.grid-cols-12 > div:nth-child(3) {
+        min-width: 150px !important;
+        flex-shrink: 0;
+        padding-left: 0.5rem;
     }
     
-    /* Smaller font for tags on mobile */
-    .player-row .font-mono {
-        font-size: 0.75rem !important;
+    /* Data rows: flag cell */
+    .player-row > div:nth-child(2) {
+        min-width: 52px !important;
     }
-}
-/* Reserve enough room for the fixed-size flag inside its grid cell */
-.player-row > div:nth-child(2) {
-    min-width: 44px;  /* 32px flag + breathing room */
-    flex-shrink: 0;
-}
-
-/* Header rows: keep the "Country" label aligned with the flag cell */
-#leaderboard .grid-cols-12 > div:nth-child(2),
-#countryRankingList > .grid.grid-cols-12 > div:nth-child(2) {
-    min-width: 44px;
+    
+    /* Data rows: player name cell */
+    .player-row > div:nth-child(3) {
+        min-width: 150px !important;
+        padding-left: 0.5rem;
+    }
 }
