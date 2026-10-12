@@ -81,7 +81,7 @@ select, option {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        left: 20.8rem;   /* aligns with the ▼ of All-time / Sort: */
+        left: 18.8rem;   /* aligns with the ▼ of All-time / Sort: */
     }
 }
 .sidebar {
