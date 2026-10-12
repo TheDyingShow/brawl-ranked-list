@@ -91,22 +91,28 @@ select, option {
 
 /* ===== Responsive shrink behavior ===== */
 
-/* Below this total width, the whole page pans instead of the sidebar squashing */
+/* Desktop-only: prevent crushing by forcing minimum width on the whole layout */
 @media (min-width: 768px) {
     .layout-shell {
-        min-width: 1120px;
+        min-width: 1200px; /* Increased to accommodate table + sidebar */
     }
 }
 
-/* Give leaderboard rows a floor so columns never crush below this */
-#leaderboard .player-row,
-#countryRankingList .player-row,
-#countryRankingList > .grid:first-child {
-    min-width: 720px;
-}
-
-/* Table containers pan horizontally when rows reach their floor */
-#leaderboard,
-#countryRankingList {
-    overflow-x: auto;
+/* Mobile adjustments */
+@media (max-width: 767px) {
+    /* Phone view: headers match the compressed rows */
+    #leaderboard .grid-cols-12,
+    #countryRankingList .grid-cols-12 {
+        grid-template-columns: repeat(12, 1fr) !important;
+    }
+    
+    /* Make player rows more compact on mobile */
+    .player-row {
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    /* Smaller font for tags on mobile */
+    .player-row .font-mono {
+        font-size: 0.75rem !important;
+    }
 }
