@@ -108,40 +108,40 @@ select, option {
 /* Minimum width for desktop/tablet: prevents crushing */
 @media (min-width: 768px) {
     .layout-shell {
-        min-width: 1280px;  /* Increased from 1200px for extra breathing room */
+        min-width: 1320px;  /* Increased for extra breathing room */
     }
 }
 
-/* Tablet/Desktop: lock grid cells to minimum widths */
+/* Tablet/Desktop spacing */
 @media (min-width: 768px) {
     /* Header row cells */
-    .grid-cols-12 > div:nth-child(1) { min-width: 32px !important; }   /* # */
-    .grid-cols-12 > div:nth-child(2) { min-width: 60px !important; }  /* Country */
-    .grid-cols-12 > div:nth-child(3) { min-width: 180px !important; } /* Player */
-    .grid-cols-12 > div:nth-child(4) { min-width: 80px !important; }  /* Peak */
+    .grid-cols-12 > div:nth-child(1) { min-width: 40px !important; }   /* # */
+    .grid-cols-12 > div:nth-child(2) { min-width: 70px !important; }  /* Country */
+    .grid-cols-12 > div:nth-child(3) { min-width: 220px !important; padding-left: 0.5rem; } /* Player */
+    .grid-cols-12 > div:nth-child(4) { min-width: 90px !important; }  /* Peak */
     .grid-cols-12 > div:nth-child(5) { min-width: 100px !important; } /* Points */
     
     /* Data row cells */
-    .player-row > div:nth-child(1) { min-width: 32px !important; }
+    .player-row > div:nth-child(1) { min-width: 40px !important; }
     .player-row > div:nth-child(2) { min-width: 52px !important; }
-    .player-row > div:nth-child(3) { min-width: 180px !important; }
-    .player-row > div:nth-child(4) { min-width: 80px !important; }
+    .player-row > div:nth-child(3) { min-width: 220px !important; padding-left: 0.5rem; }
+    .player-row > div:nth-child(4) { min-width: 90px !important; }
     .player-row > div:nth-child(5) { min-width: 100px !important; }
 }
 
-/* Mobile adjustments */
+/* Mobile / Shrunk Desktop spacing (aggressive) */
 @media (max-width: 767px) {
     /* Header row cells */
-    .grid-cols-12 > div:nth-child(1) { min-width: 32px !important; }
-    .grid-cols-12 > div:nth-child(2) { min-width: 60px !important; }
-    .grid-cols-12 > div:nth-child(3) { min-width: 150px !important; }
-    .grid-cols-12 > div:nth-child(4) { min-width: 70px !important; }
-    .grid-cols-12 > div:nth-child(5) { min-width: 80px !important; }
+    .grid-cols-12 > div:nth-child(1) { min-width: 40px !important; }
+    .grid-cols-12 > div:nth-child(2) { min-width: 90px !important; padding-left: 3px; }  /* More room for Country */
+    .grid-cols-12 > div:nth-child(3) { min-width: 180px !important; padding-left: 0.5rem; } /* More room for Player */
+    .grid-cols-12 > div:nth-child(4) { min-width: 80px !important; }
+    .grid-cols-12 > div:nth-child(5) { min-width: 90px !important; }
     
     /* Data row cells */
-    .player-row > div:nth-child(1) { min-width: 32px !important; }
-    .player-row > div:nth-child(2) { min-width: 52px !important; }
-    .player-row > div:nth-child(3) { min-width: 150px !important; }
-    .player-row > div:nth-child(4) { min-width: 70px !important; }
-    .player-row > div:nth-child(5) { min-width: 80px !important; }
+    .player-row > div:nth-child(1) { min-width: 40px !important; }
+    .player-row > div:nth-child(2) { min-width: 64px !important; }  /* 32px flag + 32px buffer */
+    .player-row > div:nth-child(3) { min-width: 180px !important; padding-left: 0.5rem; }
+    .player-row > div:nth-child(4) { min-width: 80px !important; }
+    .player-row > div:nth-child(5) { min-width: 90px !important; }
 }
