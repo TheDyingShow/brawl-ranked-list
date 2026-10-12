@@ -133,10 +133,10 @@ function sortPlayerList(arr) {
 // ============================= COUNTRY LIST VIEW =============================
 function renderCountryList() {
     try {
-        var list = allPlayers.slice();  // CHANGED: Now aggregates ALL players, not just active
+        var list = allPlayers.slice();  // Changed: allPlayers instead of .filter(isActive)
         list = applyMonthAndSearch(list);
         var agg = {}, seen = {};
-        list.forEach(function (p) {  // CHANGED: Using 'list' instead of 'actives'
+        list.forEach(function (p) {  // Changed: 'list' instead of 'actives'
             if (!p.country || p.country === 'XX') return;
             if (!agg[p.country]) agg[p.country] = { cc: p.country, n: 0, pts: 0, elo: 0 };
             agg[p.country].n++; agg[p.country].pts += p.points; agg[p.country].elo += (p.elo || 0);
@@ -209,10 +209,22 @@ function renderCountryDetail() {
                     '<div class="font-mono text-sm font-bold text-mastersGreen">' + fmt(totalElo) + ' elo</div>' +
                 '</div>' +
             '</div>';
+        
+        // Dynamic header based on currentSort
+        var mainStatLabel = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last Activity' : (currentSort === 'peak' ? 'Peak' : 'Points'));
+        $('countryRankingList').innerHTML =
+            '<div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
+                '<div class="col-span-1 text-center">#</div>' +
+                '<div class="col-span-1">Flag</div>' +
+                '<div class="col-span-4">Player</div>' +
+                '<div class="col-span-2 text-right">Peak</div>' +
+                '<div class="col-span-4 text-right">' + mainStatLabel + '</div>' +
+            '</div>';
+        
         var pg = paginate(list);
         var html = '';
         pg.slice.forEach(function (p, i) { html += playerRowHtml(p, (currentPage - 1) * RECORDS_PER_PAGE + i + 1); });
-        $('countryRankingList').innerHTML = html || emptyRow('No players found');
+        $('countryRankingList').innerHTML += html || emptyRow('No players found');
         $('countryPagination').classList.remove('hidden');
         setPager('btnPrevC', 'pageIndicatorC', 'btnNextC', pg.pages);
     } catch (err) {
