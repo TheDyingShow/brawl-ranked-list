@@ -65,37 +65,40 @@
 
 <div class="flex flex-col md:flex-row min-h-[calc(100vh-4rem)]">
     <!-- LEFT SIDEBAR -->
-    <aside class="sidebar md:w-96 bg-[#09120b] border-b md:border-b-0 shrink-0">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar md:w-96 bg-[#09120b] shrink-0">
         <div class="sidebar-inner p-5 flex flex-col">
-            <span class="block text-[8px] uppercase tracking-widest font-black text-slate-500 mb-2">Parameters</span>
-            <span class="text-[10px] font-bold text-mastersGreen-dim uppercase tracking-wide">Minimum Pro Rank (11,250+)</span>
-            <div class="mt-2 pt-2 border-t border-slate-800/60 text-[10px] text-slate-500">
-                Timeline: <span class="font-bold text-mastersGreen-glow">March 2025 — August 2026</span> <span class="text-mastersGreen-dim">(Ranked 2.0)</span>
+            <div class="bg-[#0f1c13] border border-slate-950 rounded-lg p-3 mb-5">
+                <span class="block text-[8px] uppercase tracking-widest font-black text-slate-500 mb-2">Parameters</span>
+                <span class="text-[10px] font-bold text-mastersGreen-dim uppercase tracking-wide">Minimum Pro Rank (11,250+)</span>
+                <div class="mt-2 pt-2 border-t border-slate-800/60 text-[10px] text-slate-500">
+                    Timeline: <span class="font-bold text-mastersGreen-glow">March 2025 &mdash; August 2026</span> <span class="text-mastersGreen-dim">(Ranked 2.0)</span>
+                </div>
             </div>
-        </div>
 
-        <!-- Search bar -->
-        <div class="relative mb-3">
-            <input type="text" id="searchBar" oninput="onSearchInput()" placeholder="Search player/tag..."
-                   class="w-full bg-[#0f1c13] border border-slate-950 text-xs rounded-lg px-3 py-2.5 pl-9 text-white placeholder-slate-600 focus:outline-none focus:border-mastersGreen-dim transition-all">
-            <span class="absolute left-3 top-2.5 text-[10px] opacity-40">🔍</span>
-        </div>
+            <!-- Search bar -->
+            <div class="relative mb-3">
+                <input type="text" id="searchBar" oninput="onSearchInput()" placeholder="Search player/tag..."
+                       class="w-full bg-[#0f1c13] border border-slate-950 text-xs rounded-lg px-3 py-2.5 pl-9 text-white placeholder-slate-600 focus:outline-none focus:border-mastersGreen-dim transition-all">
+                <span class="absolute left-3 top-2.5 text-[10px] opacity-40">&#128269;</span>
+            </div>
 
-        <div class="space-y-2 mb-2">
-            <select id="filterMonth" class="filter-select" onchange="onControlChange()">
-                <option value="-1">All-time</option>
-            </select>
-            <select id="filterSort" class="filter-select" onchange="onControlChange()">
-                <option value="points">Sort: Points</option>
-                <option value="elo">Sort: Elo</option>
-                <option value="peak">Sort: Best placement</option>
-                <option value="activity">Sort: Activity</option>
-            </select>
-        </div>
+            <div class="space-y-2 mb-2">
+                <select id="filterMonth" class="filter-select" onchange="onControlChange()">
+                    <option value="-1">All-time</option>
+                </select>
+                <select id="filterSort" class="filter-select" onchange="onControlChange()">
+                    <option value="points">Sort: Points</option>
+                    <option value="elo">Sort: Elo</option>
+                    <option value="peak">Sort: Best placement</option>
+                    <option value="activity">Sort: Activity</option>
+                </select>
+            </div>
 
-        <div class="pt-2 border-t border-slate-950 text-[9px] text-slate-600 font-mono text-center md:text-left space-y-2">
-            <p>&copy; 2026 <a href="https://rankedlist.org/" class="hover:text-mastersGreen-dim transition-colors">rankedlist.org</a> &bull; Developed by <a href="https://x.com/TheKitboxerShow" target="_blank" rel="noopener noreferrer" class="hover:text-mastersGreen-dim transition-colors">@TheKitboxerShow</a></p>
-            <p>This content is not affiliated with, endorsed, sponsored, or specifically approved by Supercell and Supercell is not responsible for it. <a href="https://supercell.com/en/fan-content-policy/" target="_blank" rel="noopener noreferrer" class="underline hover:text-mastersGreen-dim transition-colors">Supercell Fan Content Policy</a></p>
+            <div class="pt-2 border-t border-slate-950 text-[9px] text-slate-600 font-mono text-center md:text-left space-y-2">
+                <p>&copy; 2026 <a href="https://rankedlist.org/" class="hover:text-mastersGreen-dim transition-colors">rankedlist.org</a> &bull; Developed by <a href="https://x.com/TheKitboxerShow" target="_blank" rel="noopener noreferrer" class="hover:text-mastersGreen-dim transition-colors">@TheKitboxerShow</a></p>
+                <p>This content is not affiliated with, endorsed, sponsored, or specifically approved by Supercell and Supercell is not responsible for it. <a href="https://supercell.com/en/fan-content-policy/" target="_blank" rel="noopener noreferrer" class="underline hover:text-mastersGreen-dim transition-colors">Supercell Fan Content Policy</a></p>
+            </div>
         </div>
     </aside>
 
