@@ -45,16 +45,30 @@ function statValue(p) {
 function playerRowHtml(p, rank) {
     var rc = rank <= 3 ? 'rank-' + rank : '';
     var stCls = currentSort === 'elo' ? 'text-mastersGreen' : 'text-emerald-400';
-    return '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer" onclick="showPlayer(\'' + tagParam(p.tag) + '\')">' +
-        '<div class="col-span-1 rank-badge ' + rc + '">' + rank + '</div>' +
-        '<div class="col-span-1 flex justify-start">' +
-            (p.country && p.country !== 'XX' ? '<img class="flag-icon flag-click" src="' + getFlagUrl(p.country) + '" alt="' + esc(p.country) + '" title="' + esc(countryName(p.country)) + '" onclick="flagClick(\'' + p.country + '\', event)">' : '') +
-        '</div>' +
-        '<div class="col-span-4 min-w-0"><span class="font-bold text-white text-sm truncate block">' + esc(p.name) + '</span>' +
-        '<span class="text-[10px] font-mono text-slate-600">' + esc(p.tag) + '</span></div>' +
-        '<div class="col-span-2 text-right font-mono text-xs text-amber-500 font-bold">' + ((p.peak != null && p.peak > 0) ? '#' + p.peak : '-') + '</div>' +
-        '<div class="col-span-4 text-right font-mono text-sm font-bold ' + stCls + '">' + statValue(p) + '</div>' +
+    
+    // Build player row with appropriate columns
+    var html = '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer" onclick="showPlayer(\'' + tagParam(p.tag) + '\')">' +
+        '<div class="col-span-1 rank-badge ' + rc + '">' + rank + '</div>';
+    
+    // Flag column (keep it simple)
+    html += '<div class="col-span-1 flex justify-start">' +
+        (p.country && p.country !== 'XX' ? '<img class="flag-icon flag-click" src="' + getFlagUrl(p.country) + '" alt="' + esc(p.country) + '" title="' + esc(countryName(p.country)) + '" onclick="flagClick(\'' + p.country + '\', event)">' : '') +
     '</div>';
+    
+    // Player name
+    html += '<div class="col-span-4 min-w-0"><span class="font-bold text-white text-sm truncate block">' + esc(p.name) + '</span>' +
+        '<span class="text-[10px] font-mono text-slate-600">' + esc(p.tag) + '</span></div>';
+    
+    // Peak column (only show if NOT sorting by peak, since peak is the sort column when selected)
+    if (currentSort !== 'peak') {
+        html += '<div class="col-span-2 text-right font-mono text-xs text-amber-500 font-bold">' + ((p.peak != null && p.peak > 0) ? '#' + p.peak : '-') + '</div>';
+    }
+    
+    // Main stat column (Points/Elo/Peak/Activity depending on sort)
+    html += '<div class="col-span-4 text-right font-mono text-sm font-bold ' + stCls + '">' + statValue(p) + '</div>';
+    
+    html += '</div>';
+    return html;
 }
 
 function emptyRow(msg) {
@@ -133,10 +147,10 @@ function sortPlayerList(arr) {
 // ============================= COUNTRY LIST VIEW =============================
 function renderCountryList() {
     try {
-        var list = allPlayers.slice();  // Changed: allPlayers instead of .filter(isActive)
+        var list = allPlayers.slice();
         list = applyMonthAndSearch(list);
         var agg = {}, seen = {};
-        list.forEach(function (p) {  // Changed: 'list' instead of 'actives'
+        list.forEach(function (p) {
             if (!p.country || p.country === 'XX') return;
             if (!agg[p.country]) agg[p.country] = { cc: p.country, n: 0, pts: 0, elo: 0 };
             agg[p.country].n++; agg[p.country].pts += p.points; agg[p.country].elo += (p.elo || 0);
@@ -160,7 +174,16 @@ function renderCountryList() {
         $('countryDetailHeader').classList.add('hidden');
         $('countryRankingWrap').classList.remove('hidden');
         $('countryPagination').classList.remove('hidden');
-        var html = '';
+        
+        // Country list header stays the same
+        var html = '<div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
+            '<div class="col-span-1 text-center">#</div>' +
+            '<div class="col-span-5">Country</div>' +
+            '<div class="col-span-2 text-right">Players</div>' +
+            '<div class="col-span-2 text-right">Points</div>' +
+            '<div class="col-span-2 text-right">Elo</div>' +
+        '</div>';
+        
         pg.slice.forEach(function (c, i) {
             var rank = (currentPage - 1) * RECORDS_PER_PAGE + i + 1;
             var rc = rank <= 3 ? 'rank-' + rank : '';
@@ -212,6 +235,9 @@ function renderCountryDetail() {
         
         // Dynamic header based on currentSort
         var mainStatLabel = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last Activity' : (currentSort === 'peak' ? 'Peak' : 'Points'));
+        
+        var colSpanForMainStat = currentSort === 'peak' ? 5 : 4; // Adjust if peak column removed
+        
         $('countryRankingList').innerHTML =
             '<div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
                 '<div class="col-span-1 text-center">#</div>' +
