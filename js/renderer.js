@@ -133,16 +133,16 @@ function sortPlayerList(arr) {
 // ============================= COUNTRY LIST VIEW =============================
 function renderCountryList() {
     try {
-        var actives = allPlayers.filter(isActive);
-        actives = applyMonthAndSearch(actives);
+        var list = allPlayers.slice();  // CHANGED: Now aggregates ALL players, not just active
+        list = applyMonthAndSearch(list);
         var agg = {}, seen = {};
-        actives.forEach(function (p) {
+        list.forEach(function (p) {  // CHANGED: Using 'list' instead of 'actives'
             if (!p.country || p.country === 'XX') return;
             if (!agg[p.country]) agg[p.country] = { cc: p.country, n: 0, pts: 0, elo: 0 };
             agg[p.country].n++; agg[p.country].pts += p.points; agg[p.country].elo += (p.elo || 0);
             seen[p.country] = true;
         });
-        var list = Object.keys(agg).map(function (k) { return agg[k]; });
+        var list2 = Object.keys(agg).map(function (k) { return agg[k]; });
         var zeros = [];
         allPlayers.forEach(function (p) {
             if (!p.country || p.country === 'XX' || seen[p.country]) return;
@@ -150,8 +150,8 @@ function renderCountryList() {
             zeros.push({ cc: p.country, n: 0, pts: 0, elo: 0 });
         });
         zeros.sort(function (a, b) { return countryName(a.cc).localeCompare(countryName(b.cc)); });
-        list.sort(function (a, b) { return currentSort === 'elo' ? (b.elo - a.elo) : (b.pts - a.pts); });
-        var shown = list.concat(zeros);
+        list2.sort(function (a, b) { return currentSort === 'elo' ? (b.elo - a.elo) : (b.pts - a.pts); });
+        var shown = list2.concat(zeros);
         var q = $('searchBar').value.trim().toLowerCase();
         if (q) shown = shown.filter(function (c) { return countryName(c.cc).toLowerCase().indexOf(q) !== -1 || c.cc.toLowerCase().indexOf(q) !== -1; });
         var pg = paginate(shown);
