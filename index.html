@@ -63,6 +63,13 @@
     </div>
 </header>
 
+<div id="loadingOverlay" class="fixed inset-0 bg-[#070d08] z-50 flex items-center justify-center">
+    <div class="text-center">
+        <span id="loadingTitle" class="block text-[10px] text-mastersGreen-dim animate-pulse mb-2">Loading data...</span>
+        <span class="block text-xs font-mono text-slate-500" id="loadingStage">Fetching CSVs...</span>
+    </div>
+</div>
+
 <div class="flex flex-col md:flex-row min-h-[calc(100vh-4rem)]">
     <!-- LEFT SIDEBAR -->
     <aside class="sidebar w-full md:w-96 bg-[#09120b] border-b md:border-r border-slate-950 shrink-0">
