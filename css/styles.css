@@ -103,40 +103,45 @@ select, option {
 #loadingOverlay { transition: opacity 0.25s ease-out; }
 #loadingOverlay.hidden { opacity: 0; pointer-events: none; }
 
-/* ===== Responsive shrink behavior ===== */
+/* ===== Responsive behavior ===== */
 
-/* Desktop-only: prevent crushing by forcing minimum width on the whole layout */
+/* Minimum width for desktop/tablet: prevents crushing */
 @media (min-width: 768px) {
     .layout-shell {
-        min-width: 1200px; /* Increased to accommodate table + sidebar */
+        min-width: 1280px;  /* Increased from 1200px for extra breathing room */
     }
 }
 
-/* Mobile/tablet header adjustments: prevent "Country" from collapsing into "Player" */
+/* Tablet/Desktop: lock grid cells to minimum widths */
+@media (min-width: 768px) {
+    /* Header row cells */
+    .grid-cols-12 > div:nth-child(1) { min-width: 32px !important; }   /* # */
+    .grid-cols-12 > div:nth-child(2) { min-width: 60px !important; }  /* Country */
+    .grid-cols-12 > div:nth-child(3) { min-width: 180px !important; } /* Player */
+    .grid-cols-12 > div:nth-child(4) { min-width: 80px !important; }  /* Peak */
+    .grid-cols-12 > div:nth-child(5) { min-width: 100px !important; } /* Points */
+    
+    /* Data row cells */
+    .player-row > div:nth-child(1) { min-width: 32px !important; }
+    .player-row > div:nth-child(2) { min-width: 52px !important; }
+    .player-row > div:nth-child(3) { min-width: 180px !important; }
+    .player-row > div:nth-child(4) { min-width: 80px !important; }
+    .player-row > div:nth-child(5) { min-width: 100px !important; }
+}
+
+/* Mobile adjustments */
 @media (max-width: 767px) {
     /* Header row cells */
-    #leaderboard > .grid-cols-12 > div:nth-child(2),  /* Country header */
-    #countryRankingList > .grid.grid-cols-12 > div:nth-child(2) {
-        min-width: 80px !important;
-        flex-shrink: 0;
-        text-indent: 5px;
-    }
+    .grid-cols-12 > div:nth-child(1) { min-width: 32px !important; }
+    .grid-cols-12 > div:nth-child(2) { min-width: 60px !important; }
+    .grid-cols-12 > div:nth-child(3) { min-width: 150px !important; }
+    .grid-cols-12 > div:nth-child(4) { min-width: 70px !important; }
+    .grid-cols-12 > div:nth-child(5) { min-width: 80px !important; }
     
-    #leaderboard > .grid-cols-12 > div:nth-child(3),  /* Player header */
-    #countryRankingList > .grid.grid-cols-12 > div:nth-child(3) {
-        min-width: 150px !important;
-        flex-shrink: 0;
-        padding-left: 0.5rem;
-    }
-    
-    /* Data rows: flag cell */
-    .player-row > div:nth-child(2) {
-        min-width: 52px !important;
-    }
-    
-    /* Data rows: player name cell */
-    .player-row > div:nth-child(3) {
-        min-width: 150px !important;
-        padding-left: 0.5rem;
-    }
+    /* Data row cells */
+    .player-row > div:nth-child(1) { min-width: 32px !important; }
+    .player-row > div:nth-child(2) { min-width: 52px !important; }
+    .player-row > div:nth-child(3) { min-width: 150px !important; }
+    .player-row > div:nth-child(4) { min-width: 70px !important; }
+    .player-row > div:nth-child(5) { min-width: 80px !important; }
 }
