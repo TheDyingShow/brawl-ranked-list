@@ -3,7 +3,7 @@
 // ============================= ROUTING =============================
 // #/player/{sort}/{country|all}/{month}?page=N
 // #/country/{sort}/{cc|all}/{month}?page=N   (cc = 'all' -> list, else detail)
-var enteredFromState = null; // Track where we came from when entering country-detail
+var enteredFromState = null; // Tracks where we came from before entering country-detail
 
 function buildHash(view, sort, cc, month, page) {
     return '#/' + view + '/' + sort + '/' + (cc || 'all') + '/' +
@@ -52,19 +52,30 @@ function currentHash() {
 function route() {
     if (!dataReady) return;
     
-    // Track transition into country-detail
+    // Track where we came from BEFORE parsing the hash
     var prevView = currentView;
+    var prevDetailCC = currentDetailCC;
+    var prevSort = currentSort;
+    var prevCountryFilter = currentCountryFilter;
+    
     parseHash();
     
-    // Track where we came from before entering country-detail
-    if (prevView === 'country-list' && currentView === 'country-detail') {
+    // Only track entering country-detail from a DIFFERENT view (not staying inside it)
+    // Condition 1: Was in country-list, now in country-detail (different country)
+    var enteringCountryDetailFromList = (prevView === 'country-list' && currentView === 'country-detail' && prevDetailCC !== currentDetailCC);
+    
+    // Condition 2: Was in player view, now in country-detail
+    var enteringCountryDetailFromPlayer = (prevView === 'player' && currentView === 'country-detail');
+    
+    if (enteringCountryDetailFromList) {
         enteredFromState = {view: 'country', sort: currentSort, country: 'all', month: currentMonth};
-    } else if (prevView === 'player' && currentView === 'country-detail') {
-        enteredFromState = {view: 'player', sort: currentSort, country: currentCountryFilter, month: currentMonth};
-    } else {
-        // Clear it if we're leaving country-detail
+    } else if (enteringCountryDetailFromPlayer) {
+        enteredFromState = {view: 'player', sort: prevSort, country: prevCountryFilter, month: currentMonth};
+    } else if (prevView === 'country-detail' && currentView !== 'country-detail') {
+        // Leaving country-detail — clear the state
         enteredFromState = null;
     }
+    // If prevView === currentView (e.g., both country-detail), do NOT clear enteredFromState
     
     // Country LIST view only supports points / elo
     if (currentView === 'country-list' && (currentSort === 'peak' || currentSort === 'activity')) currentSort = 'points';
