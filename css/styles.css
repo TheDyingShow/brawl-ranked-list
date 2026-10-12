@@ -8,8 +8,22 @@ body { background-color: #0a120c; color: #e0ece3; }
 .rank-1 { color: #fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.4); }
 .rank-2 { color: #9db3a4; }
 .rank-3 { color: #cd7f32; }
-.flag-icon { width: 32px; height: 22px; border-radius: 4px; object-fit: cover; }
-.flag-icon-sm { width: 22px; height: 15px; border-radius: 2px; object-fit: cover; }
+.flag-icon {
+    width: 32px;
+    height: 22px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    min-width: 32px;
+}
+.flag-icon-sm {
+    width: 22px;
+    height: 15px;
+    border-radius: 2px;
+    object-fit: cover;
+    flex-shrink: 0;
+    min-width: 22px;
+}
 .flag-click { cursor: pointer; transition: transform 0.15s ease; }
 .flag-click:hover { transform: scale(1.2); }
 .filter-select {
