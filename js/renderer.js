@@ -58,7 +58,7 @@ function playerRowHtml(p, rank) {
     html += '<div class="col-span-4 min-w-0"><span class="font-bold text-white text-sm truncate block">' + esc(p.name) + '</span>' +
         '<span class="text-[10px] font-mono text-slate-600">' + esc(p.tag) + '</span></div>';
     
-    // Peak column - HIDE it when sorting by peak (will be shown in main stat column instead)
+    // Peak column - HIDE it when sorting by peak (shown in main stat column instead)
     if (currentSort !== 'peak') {
         html += '<div class="col-span-2 text-right font-mono text-xs text-amber-500 font-bold">' + ((p.peak != null && p.peak > 0) ? '#' + p.peak : '-') + '</div>';
     }
@@ -103,7 +103,7 @@ function renderPlayerView() {
     }
 }
 
-// ============================= FILTER / SORT (used by player + country detail) =============================
+// ============================= FILTER / SORT =============================
 function applyMonthAndSearch(list) {
     if (currentMonth !== -1) {
         var set = seasonTagSets[currentMonth];
@@ -174,7 +174,6 @@ function renderCountryList() {
         $('countryRankingWrap').classList.remove('hidden');
         $('countryPagination').classList.remove('hidden');
         
-        // Country list header stays the same
         var html = '<div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
             '<div class="col-span-1 text-center">#</div>' +
             '<div class="col-span-5">Country</div>' +
@@ -232,9 +231,8 @@ function renderCountryDetail() {
                 '</div>' +
             '</div>';
         
-        // Dynamic header based on currentSort
         var mainStatLabel = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last Activity' : (currentSort === 'peak' ? 'Peak' : 'Points'));
-        var hasPeakColumn = currentSort !== 'peak'; // Hide peak column when sorting by peak
+        var hasPeakColumn = currentSort !== 'peak';
         
         $('countryRankingList').innerHTML =
             '<div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
@@ -282,7 +280,6 @@ function showPlayer(encodedTag) {
     $('dLink').href = profileUrl(p.tag);
     $('dLinkBI').href = insightsUrl(p.tag);
 
-    // Season history — only from the first season the player was involved in
     var hist = '';
     var firstActiveSeason = null;
     SEASONS.forEach(function (s, idx) {
