@@ -48,6 +48,7 @@ body { background-color: #0a120c; color: #e0ece3; }
 @media (min-width: 768px) {
     .content-area { margin-right: 24rem; }
 }
+
 /* ===== Polishing batch ===== */
 
 /* Request 2: Geist everywhere, including native dropdowns */
@@ -70,16 +71,20 @@ select, option {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        left: 18.3rem;   /* aligns with the ▼ of All-time / Sort: */
+        left: 18.3rem;
     }
 }
-/* Sidebar: full-height border on the aside, sticky content inside */
+
+/* Sidebar inner content sticks on desktop (correct target, not .sidebar) */
 @media (min-width: 768px) {
-    .sidebar {
+    .sidebar-inner {
         position: sticky;
         top: 4rem;
-        align-self: flex-start;
         max-height: calc(100vh - 4rem);
         overflow-y: auto;
     }
 }
+
+/* ===== Loading overlay ===== */
+#loadingOverlay { transition: opacity 0.25s ease-out; }
+#loadingOverlay.hidden { opacity: 0; pointer-events: none; }

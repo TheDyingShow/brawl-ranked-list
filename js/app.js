@@ -30,6 +30,36 @@ document.addEventListener('keydown', function (e) {
     });
 })();
 
+// ============================= LOADING OVERLAY HELPERS =============================
+function hideLoading() {
+    var o = $('loadingOverlay');
+    if (o) o.classList.add('hidden');
+}
+
+function loadingError(msg) {
+    var o = $('loadingOverlay');
+    if (!o) return;
+    var stage = o.querySelector('#loadingStage');
+    if (stage) stage.textContent = msg;
+    var title = o.querySelector('#loadingTitle');
+    if (title) {
+        title.classList.remove('animate-pulse');
+        title.classList.remove('text-mastersGreen-dim');
+        title.classList.add('text-red-400');
+    }
+}
+
+function finishBoot() {
+    hideLoading();
+    route();
+    // Safety net: if the first route() somehow rendered nothing
+    // (race condition at load time), force it again.
+    window.setTimeout(function () {
+        var lb = $('leaderboard');
+        if (lb && lb.children.length === 0) route();
+    }, 400);
+}
+
 // ============================= DATA LOAD + BOOT =============================
 try {
     Promise.all(
@@ -101,12 +131,15 @@ try {
         }
 
         dataReady = true;
-        route();
+        finishBoot();
     }).catch(function (err) {
         console.error('Init load error:', err);
+        loadingError('Failed to load data. Check your connection and refresh.');
     });
 } catch (err) {
     console.error('Init error:', err);
+    loadingError('Something went wrong while initializing.');
 }
 
 window.addEventListener('hashchange', route);
+window.addEventListener('load', function () { if (dataReady) route(); });
