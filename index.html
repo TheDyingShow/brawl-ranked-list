@@ -57,15 +57,15 @@
             More <span class="text-[9px]">&#9660;</span>
         </button>
         <div id="moreMenu" class="dropdown-menu hidden">
-            <button class="dropdown-item" onclick="switchView('player')">Player ranking</button>
-            <button class="dropdown-item" onclick="switchView('country')">Country ranking</button>
+            <button class="dropdown-item" onclick="switchView('player')">Player Ranking</button>
+            <button class="dropdown-item" onclick="switchView('country')">Country Ranking</button>
         </div>
     </div>
 </header>
 
 <div class="flex flex-col md:flex-row min-h-[calc(100vh-4rem)]">
     <!-- LEFT SIDEBAR -->
-    <aside class="sidebar w-full md:w-96 bg-[#09120b] border-b md:border-b-0 md:border-r border-slate-950 shrink-0">
+    <aside class="sidebar w-full md:w-96 bg-[#09120b] border-b md:border-b-50 md:border-r border-slate-950 shrink-0">
         <div class="sidebar-inner p-5 flex flex-col">
             <div class="bg-[#0f1c13] border border-slate-950 rounded-lg p-3 mb-5">
                 <span class="block text-[8px] uppercase tracking-widest font-black text-slate-500 mb-2">Parameters</span>
@@ -89,7 +89,7 @@
                 <select id="filterSort" class="filter-select" onchange="onControlChange()">
                     <option value="points">Sort: Points</option>
                     <option value="elo">Sort: Elo</option>
-                    <option value="peak">Sort: Best placement</option>
+                    <option value="peak">Sort: Best Placement</option>
                     <option value="activity">Sort: Activity</option>
                 </select>
             </div>
@@ -108,7 +108,7 @@
             <main class="mx-auto w-full max-w-5xl p-5 md:p-8 flex flex-col justify-between min-h-[calc(100vh-4rem)]">
                 <div>
                     <div class="mb-5 flex items-center justify-between">
-                        <h2 id="viewTitle" class="text-[10px] uppercase tracking-widest font-black text-slate-400">Standings — All-time</h2>
+                        <h2 id="viewTitle" class="text-[10px] uppercase tracking-widest font-black text-slate-400">Player Ranking — All-time</h2>
                         <span id="playerCount" class="text-[10px] font-mono font-bold bg-[#09120b] border border-slate-950 text-slate-400 px-2 py-1 rounded">0 Records</span>
                     </div>
 
@@ -205,12 +205,12 @@
         </div>
         <div class="space-y-2">
             <a id="dLink" target="_blank" rel="noopener noreferrer"
-               class="block text-center bg-mastersGreen-dim hover:bg-mastersGreen text-black font-bold py-3 px-4 rounded-lg transition-colors text-sm">View BrawlAce Profile ↗</a>
+               class="block text-center bg-mastersGreen-dim hover:bg-mastersGreen text-black font-bold py-3 px-4 rounded-lg transition-colors text-sm">View Brawl Ace Profile ↗</a>
             <a id="dLinkBI" target="_blank" rel="noopener noreferrer"
                class="block text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">View Brawl Insights Profile ↗</a>
         </div>
         <div>
-            <span class="block text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-2">Season history</span>
+            <span class="block text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-2">Season history (elo)</span>
             <div id="dHistory" class="space-y-1 text-xs font-mono"></div>
         </div>
     </div>
