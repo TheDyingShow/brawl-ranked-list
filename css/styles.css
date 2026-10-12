@@ -84,8 +84,9 @@ select, option {
         left: 18.8rem;   /* aligns with the ▼ of All-time / Sort: */
     }
 }
+/* Sidebar: full-height border on the aside, sticky content inside */
 .sidebar { border-right: 1px solid #11221a; }
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .sidebar { border-right: none; border-bottom: 1px solid #11221a; }
 }
 @media (min-width: 768px) {
