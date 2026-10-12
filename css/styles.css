@@ -88,3 +88,8 @@ select, option {
 /* ===== Loading overlay ===== */
 #loadingOverlay { transition: opacity 0.25s ease-out; }
 #loadingOverlay.hidden { opacity: 0; pointer-events: none; }
+
+/* Below ~1024px, keep the desktop layout and scroll horizontally instead of crushing it */
+.layout-shell {
+    min-width: 1024px;
+}
