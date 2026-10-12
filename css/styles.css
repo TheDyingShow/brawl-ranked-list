@@ -145,3 +145,13 @@ select, option {
     .player-row > div:nth-child(4) { min-width: 80px !important; }
     .player-row > div:nth-child(5) { min-width: 90px !important; }
 }
+
+/* ===== More dropdown wrapper positioning ===== */
+
+/* Mobile/Tablet: wrapper needs relative positioning for the menu to anchor correctly */
+@media (max-width: 1319px) {
+    #moreDropdown {
+        position: relative;
+        display: inline-block;
+    }
+}
