@@ -3,6 +3,8 @@
 // ============================= ROUTING =============================
 // #/player/{sort}/{country|all}/{month}?page=N
 // #/country/{sort}/{cc|all}/{month}?page=N   (cc = 'all' -> list, else detail)
+var enteredFromState = null; // Track where we came from when entering country-detail
+
 function buildHash(view, sort, cc, month, page) {
     return '#/' + view + '/' + sort + '/' + (cc || 'all') + '/' +
         (month === undefined ? -1 : month) + '?page=' + (page || 1);
@@ -49,7 +51,21 @@ function currentHash() {
 
 function route() {
     if (!dataReady) return;
+    
+    // Track transition into country-detail
+    var prevView = currentView;
     parseHash();
+    
+    // Track where we came from before entering country-detail
+    if (prevView === 'country-list' && currentView === 'country-detail') {
+        enteredFromState = {view: 'country', sort: currentSort, country: 'all', month: currentMonth};
+    } else if (prevView === 'player' && currentView === 'country-detail') {
+        enteredFromState = {view: 'player', sort: currentSort, country: currentCountryFilter, month: currentMonth};
+    } else {
+        // Clear it if we're leaving country-detail
+        enteredFromState = null;
+    }
+    
     // Country LIST view only supports points / elo
     if (currentView === 'country-list' && (currentSort === 'peak' || currentSort === 'activity')) currentSort = 'points';
     $('filterSort').value = currentSort;
@@ -100,8 +116,14 @@ function flagClick(cc, ev) {
 }
 
 function goBack() {
-    if (history.length > 1) history.back();
-    else location.hash = buildHash('country', currentSort, 'all', currentMonth, 1);
+    if (enteredFromState) {
+        // Exit country-detail back to the view we came from
+        location.hash = buildHash(enteredFromState.view, enteredFromState.sort, enteredFromState.country || 'all', enteredFromState.month, 1);
+        enteredFromState = null;
+    } else {
+        // Fallback: go to country list if no tracking state
+        location.hash = buildHash('country', 'points', 'all', -1, 1);
+    }
 }
 
 function changePage(delta) {
