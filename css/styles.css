@@ -79,8 +79,8 @@ select, option {
     border: 2px solid #09120b;
 }
 
-/* More button aligned with the sidebar filter dropdown arrows */
-@media (min-width: 768px) {
+/* More button aligned with the sidebar filter dropdown arrows — Desktop only */
+@media (min-width: 1320px) {
     #moreDropdown {
         position: absolute;
         top: 50%;
