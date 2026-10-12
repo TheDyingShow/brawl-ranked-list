@@ -70,7 +70,7 @@ select, option {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        left: 18.8rem;   /* aligns with the ▼ of All-time / Sort: */
+        left: 18.0rem;   /* aligns with the ▼ of All-time / Sort: */
     }
 }
 /* Sidebar: full-height border on the aside, sticky content inside */
