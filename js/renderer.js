@@ -186,7 +186,7 @@ function renderCountryList() {
 function renderCountryDetail() {
     try {
         var cc = currentDetailCC;
-        var list = allPlayers.filter(function (p) { return p.country === cc; }).filter(isActive);
+        var list = allPlayers.filter(function (p) { return p.country === cc; });
         list = applyMonthAndSearch(list);
         list = sortPlayerList(list);
         var totalPts = 0, totalElo = 0;
@@ -202,7 +202,7 @@ function renderCountryDetail() {
                 '<img class="flag-icon ml-4" src="' + getFlagUrl(cc) + '" alt="' + esc(cc) + '">' +
                 '<div class="flex-1 min-w-0">' +
                     '<span class="block font-black text-white text-base truncate">' + esc(countryName(cc)) + '</span>' +
-                    '<span class="text-[10px] font-mono text-slate-500">' + list.length + ' active / ' + allOfCc.length + ' total players</span>' +
+                    '<span class="text-[10px] font-mono text-slate-500">' + list.length + ' total players</span>' +
                 '</div>' +
                 '<div class="text-right">' +
                     '<div class="font-mono text-sm font-bold text-emerald-400">' + fmt(totalPts) + ' pts</div>' +
@@ -212,7 +212,7 @@ function renderCountryDetail() {
         var pg = paginate(list);
         var html = '';
         pg.slice.forEach(function (p, i) { html += playerRowHtml(p, (currentPage - 1) * RECORDS_PER_PAGE + i + 1); });
-        $('countryRankingList').innerHTML = html || emptyRow('No active players found');
+        $('countryRankingList').innerHTML = html || emptyRow('No players found');
         $('countryPagination').classList.remove('hidden');
         setPager('btnPrevC', 'pageIndicatorC', 'btnNextC', pg.pages);
     } catch (err) {
