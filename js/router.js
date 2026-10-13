@@ -4,20 +4,25 @@
 // #/player/{sort}/{country|all}/{month}?page=N
 // #/country/{sort}/{cc|all}/{month}?page=N   (cc = 'all' -> list, else detail)
 var enteredFromState = null; // Tracks where we came from before entering country-detail
+var currentQuery = ''; // Search text persisted in the hash (?q=...)
 
-function buildHash(view, sort, cc, month, page) {
+function buildHash(view, sort, cc, month, page, q) {
     return '#/' + view + '/' + sort + '/' + (cc || 'all') + '/' +
-        (month === undefined ? -1 : month) + '?page=' + (page || 1);
+        (month === undefined ? -1 : month) + '?page=' + (page || 1) +
+        (q ? '&q=' + encodeURIComponent(q) : '');
 }
 
 function parseHash() {
     var h = location.hash || '', query = '', qi = h.indexOf('?');
     if (qi >= 0) { query = h.slice(qi + 1); h = h.slice(0, qi); }
-    var page = 1;
+    var page = 1, q = '';
     query.split('&').forEach(function (kv) {
         var p = kv.split('=');
         if (p[0] === 'page') { var v = parseInt(p[1], 10); if (v > 0) page = v; }
+        if (p[0] === 'q') { try { q = decodeURIComponent(p[1] || ''); } catch (e) { q = ''; } }
     });
+    currentQuery = q;
+    
     var parts = h.replace(/^#\/?/, '').split('/').filter(Boolean);
     var view = 'player', sort = 'points', third = 'all', month = -1;
     if (parts[0] === 'country') view = 'country';
@@ -42,11 +47,12 @@ function parseHash() {
     currentPage = page;
 }
 
-function currentHash() {
+function currentHash(pageOverride) {
+    var q = $('searchBar').value.trim();
     if (currentView === 'player') {
-        return buildHash('player', currentSort, currentCountryFilter, currentMonth, currentPage);
+        return buildHash('player', currentSort, currentCountryFilter, currentMonth, pageOverride || currentPage, q);
     }
-    return buildHash('country', currentSort, currentView === 'country-detail' ? currentDetailCC : 'all', currentMonth, currentPage);
+    return buildHash('country', currentSort, currentView === 'country-detail' ? currentDetailCC : 'all', currentMonth, pageOverride || currentPage, q);
 }
 
 function route() {
@@ -81,7 +87,7 @@ function route() {
     if (currentView === 'country-list' && (currentSort === 'peak' || currentSort === 'activity')) currentSort = 'points';
     $('filterSort').value = currentSort;
     $('filterMonth').value = currentMonth;
-    $('searchBar').value = '';
+    $('searchBar').value = currentQuery;
     syncSortOptions();
     updateSearchPlaceholder();
     render();
@@ -140,20 +146,21 @@ function goBack() {
 function changePage(delta) {
     var np = currentPage + delta;
     if (np < 1) return;
-    location.hash = currentHash().split('?')[0] + '?page=' + np;
+    location.hash = currentHash(np);
 }
 
 function onControlChange() {
+    var q = $('searchBar').value.trim();
     var sort = $('filterSort').value;
     var month = parseInt($('filterMonth').value, 10);
     var target;
     if (currentView === 'player') {
         var cc = (currentCountryFilter !== 'all') ? currentCountryFilter : 'all';
-        target = buildHash('player', sort, cc, month, 1);
+        target = buildHash('player', sort, cc, month, 1, q); // <-- add q here
     } else if (currentView === 'country-detail') {
-        target = buildHash('country', sort, currentDetailCC, month, 1);
+        target = buildHash('country', sort, currentDetailCC, month, 1, q); // <-- add q here
     } else {
-        target = buildHash('country', sort, 'all', month, 1);
+        target = buildHash('country', sort, 'all', month, 1, q); // <-- add q here
     }
     if (location.hash === target) route();
     else location.hash = target;
