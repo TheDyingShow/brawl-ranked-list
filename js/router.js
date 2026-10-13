@@ -63,6 +63,7 @@ function route() {
     var prevDetailCC = currentDetailCC;
     var prevSort = currentSort;
     var prevCountryFilter = currentCountryFilter;
+    var prevMonth = currentMonth;
     
     parseHash();
     
@@ -76,7 +77,7 @@ function route() {
     if (enteringCountryDetailFromList) {
         enteredFromState = {view: 'country', sort: currentSort, country: 'all', month: currentMonth};
     } else if (enteringCountryDetailFromPlayer) {
-        enteredFromState = {view: 'player', sort: prevSort, country: prevCountryFilter, month: currentMonth};
+        enteredFromState = {view: 'player', sort: prevSort, country: prevCountryFilter, month: prevMonth};
     } else if (prevView === 'country-detail' && currentView !== 'country-detail') {
         // Leaving country-detail — clear the state
         enteredFromState = null;
@@ -129,7 +130,7 @@ function switchView(view) {
 
 function flagClick(cc, ev) {
     if (ev) ev.stopPropagation();
-    location.hash = buildHash('country', 'points', cc, -1, 1);
+    location.hash = buildHash('country', currentSort, cc, currentMonth, 1);
 }
 
 function goBack() {
