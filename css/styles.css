@@ -153,6 +153,6 @@ select, option {
     #moreDropdown {
         position: relative;
         display: inline-block;
-        margin-left: 3rem;
+        margin-left: 1rem;
     }
 }
