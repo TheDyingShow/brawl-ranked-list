@@ -7,32 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700;900&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-                        mono: ['Geist Mono', 'ui-monospace', 'monospace'],
-                    },
-                    colors: {
-                        mastersGreen: {
-                            DEFAULT: '#aaff00',
-                            dim: '#88cc00',
-                            glow: '#ccff66',
-                        },
-                        slate: {
-                            50:'#f3f8f4',100:'#e4eee6',200:'#c9dcce',300:'#a3c3ab',400:'#77a486',
-                            500:'#558168',600:'#426753',700:'#355444',800:'#2b4337',900:'#233729',950:'#11211a'
-                        }
-                    }
-                }
-            }
-        };
-    </script>
+    <link rel="stylesheet" href="css/tailwind.css?v=1">
+    <link rel="stylesheet" href="css/styles.css?v=1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="font-sans antialiased">
 
@@ -215,8 +192,6 @@
         </div>
     </div>
 </div>
-
-<link rel="stylesheet" href="css/styles.css?v=3">
 
 <!-- Load JS modules in order -->
 <script src="js/config.js"></script>

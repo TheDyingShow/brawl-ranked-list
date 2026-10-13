@@ -64,7 +64,8 @@ function playerRowHtml(p, rank) {
     }
     
     // Main stat column
-    html += '<div class="col-span-' + (currentSort === 'peak' ? '6' : '4') + ' text-right font-mono text-sm font-bold ' + stCls + '">' + statValue(p) + '</div>';
+    var statSpan = currentSort === 'peak' ? 'col-span-6' : 'col-span-4';
+    html += '<div class="' + statSpan + ' text-right font-mono text-sm font-bold ' + stCls + '">' + statValue(p) + '</div>';
     
     html += '</div>';
     return html;
@@ -99,7 +100,9 @@ function renderPlayerView() {
             '<div class="col-span-1">Country</div>' +
             '<div class="col-span-4">Player</div>' +
             (currentSort !== 'peak' ? '<div class="col-span-2 text-right">Peak</div>' : '') +
-            '<div class="col-span-' + (currentSort !== 'peak' ? '4' : '6') + ' text-right">' + statLbl + '</div>';        
+            (currentSort !== 'peak'
+                ? '<div class="col-span-4 text-right">' + statLbl + '</div>'
+                : '<div class="col-span-6 text-right">' + statLbl + '</div>');
         var html = '';
         pg.slice.forEach(function (p, i) { html += playerRowHtml(p, (currentPage - 1) * RECORDS_PER_PAGE + i + 1); });
         $('leaderboard').innerHTML = html || emptyRow('No players found');
