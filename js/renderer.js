@@ -46,7 +46,7 @@ function playerRowHtml(p, rank) {
     var rc = rank <= 3 ? 'rank-' + rank : '';
     var stCls = currentSort === 'elo' ? 'text-mastersGreen' : 'text-emerald-400';
     
-    var html = '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer" onclick="showPlayer(\'' + tagParam(p.tag) + '\')">' +
+    var html = '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer' + (isActive(p) ? '' : ' player-row-offline') + '" onclick="showPlayer(\'' + tagParam(p.tag) + '\')">' +
         '<div class="col-span-1 rank-badge ' + rc + '">' + rank + '</div>';
     
     // Flag column
@@ -82,11 +82,7 @@ function renderPlayerView() {
         if (currentCountryFilter !== 'all') list = list.filter(function (p) { return p.country === currentCountryFilter; });
         list = applyMonthAndSearch(list);
         if (currentSort === 'elo') {
-            list = list.sort(function (a, b) {
-                var A = isActive(a) ? 0 : 1, B = isActive(b) ? 0 : 1;
-                if (A !== B) return A - B;
-                return (b.elo || 0) - (a.elo || 0);
-            });
+            list = list.sort(function (a, b) { return (b.elo || 0) - (a.elo || 0); });
         } else {
             list = sortPlayerList(list);
         }
@@ -300,12 +296,19 @@ function showPlayer(encodedTag) {
         var d = eloHist[p.tag] ? eloHist[p.tag][s.key] : null;
         var val = (d !== null && d !== undefined) ? ((d >= 0 ? '+' : '') + d) : '—';
         var cls = (d !== null && d !== undefined && d > 0) ? 'elo-plus' : ((d < 0) ? 'elo-minus' : 'text-slate-600');
-        hist += '<div class="flex justify-between px-2 py-1 rounded ' + (val !== '—' ? 'bg-[#09120b]' : '') + '">' +
-            '<span class="text-slate-500">' + s.label + '</span><span class="' + cls + ' font-bold">' + val + '</span></div>';
+        var place = (seasonPlacementMap[s.key] || {})[p.tag];
+        var peakTxt = (place != null) ? ' <span class="text-slate-600">#' + place + '</span>' : '';
+        hist += '<div class="flex justify-between px-2 py-1 rounded cursor-pointer hover:bg-[#15231a] transition-colors ' + (val !== '—' ? 'bg-[#09120b]' : '') + '" onclick="goToSeason(' + idx + ')">' +
+            '<span class="text-slate-500">' + s.label + peakTxt + '</span><span class="' + cls + ' font-bold">' + val + '</span></div>';
     });
     if (hist === '') hist = '<div class="text-center text-slate-600 text-xs py-4">No season history available</div>';
     $('dHistory').innerHTML = hist;
     $('playerDrawer').classList.add('open');
+}
+
+function goToSeason(idx) {
+    closeDrawer();
+    location.hash = buildHash('player', 'points', 'all', idx, 1);
 }
 
 function closeDrawer() { $('playerDrawer').classList.remove('open'); }
