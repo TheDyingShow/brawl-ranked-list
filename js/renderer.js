@@ -276,7 +276,7 @@ function showPlayer(encodedTag) {
     $('dName').textContent = p.name;
     $('dName').textContent = p.name;
     $('dTag').textContent = p.tag;
-    $('dCountry').textContent = countryName(p.country) + ' (' + p.country + ')';
+    $('dCountry').textContent = (p.country && p.country !== 'XX') ? countryName(p.country) + ' (' + p.country + ')' : 'Country Not Found';
     var st = $('dStatus');
     var lastLabel = p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'Unknown';
     if (isActive(p)) {
@@ -316,7 +316,6 @@ function showPlayer(encodedTag) {
 }
 
 function goToSeason(idx) {
-    closeDrawer();
     location.hash = buildHash('player', 'points', 'all', idx, 1);
 }
 
