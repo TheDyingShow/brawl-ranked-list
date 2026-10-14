@@ -267,7 +267,10 @@ function showPlayer(encodedTag) {
     var p = playerByTag[tag];
     if (!p) return;
     if (p.country && p.country !== 'XX') {
-        $('dFlag').src = getFlagUrl(p.country);
+        var hasC = p.country && p.country !== 'XX';
+        $('dFlag').classList.toggle('hidden-el', !hasC);
+        $('dFlagPh').classList.toggle('hidden-el', !!hasC);
+        if (hasC) $('dFlag').src = getFlagUrl(p.country);
         $('dFlag').style.display = '';
         $('dFlag').classList.remove('hidden-flag');
     } else {
