@@ -300,7 +300,7 @@ function showPlayer(encodedTag) {
         var cls = (d !== null && d !== undefined && d > 0) ? 'elo-plus' : ((d < 0) ? 'elo-minus' : 'text-slate-600');
         var place = (seasonPlacementMap[s.key] || {})[p.tag];
         var peakTxt = (place != null) ? ' <span class="text-amber-500">#' + place + '</span>' : '';
-        hist += '<div class="flex justify-between px-2 py-1 rounded cursor-pointer hover:bg-[#15231a] transition-colors ' + (val !== '—' ? 'bg-[#09120b]' : '') + hist += '<div class="season-row flex justify-between px-2 py-1 rounded cursor-pointer ' + (val !== '—' ? 'bg-[#09120b]' : '') + '" onclick="goToSeason(' + idx + ')">' +
+        hist += '<div class="season-row flex justify-between px-2 py-1 rounded cursor-pointer ' + (val !== '—' ? 'bg-[#09120b]' : '') + '" onclick="goToSeason(' + idx + ')">' +
             '<span class="text-slate-500">' + s.label + peakTxt + '</span><span class="' + cls + ' font-bold">' + val + '</span></div>';
     });
     if (hist === '') hist = '<div class="text-center text-slate-600 text-xs py-4">No season history available</div>';
