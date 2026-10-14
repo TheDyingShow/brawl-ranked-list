@@ -35,7 +35,7 @@ function setPager(btnPrevId, indId, btnNextId, pages) {
 }
 
 function statValue(p) {
-    if (currentSort === 'elo') return fmt(p.elo || 0) + (isActive(p) ? '' : '<span class="offline-pill">Offline</span>');
+    if (currentSort === 'elo') return (isActive(p) ? '' : '<span class="offline-pill">Offline</span>') + fmt(p.elo || 0);
     if (currentSort === 'activity') return p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : '-';
     if (currentSort === 'peak') return (p.peak != null && p.peak > 0) ? '#' + p.peak : '-';
     var mk = (currentMonth !== -1 && SEASONS[currentMonth]) ? SEASONS[currentMonth].key : null;
