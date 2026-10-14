@@ -18,6 +18,7 @@ var SEASONS = [
     { key: 'mars26',      label: 'March 2026' }, { key: 'avril26',     label: 'April 2026' },
     { key: 'mai26',       label: 'May 2026' },   { key: 'juin26',      label: 'June 2026' },
     { key: 'juillet26',   label: 'July 2026' },  { key: 'aout26',      label: 'August 2026' }
+    { key: 'septembre26', label: 'September 2026' },
 ];
 var LAST_SEASON_IDX = SEASONS.length - 1;
 
