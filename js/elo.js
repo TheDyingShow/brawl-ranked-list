@@ -84,7 +84,11 @@ function computeElo() {
             if (present[tag]) return;
             if (debutIdx[tag] === undefined || debutIdx[tag] >= idx) return;
             careerMiss[tag] = (careerMiss[tag] || 0) + 1;
-            var delta = careerMiss[tag] > DECAY_GRACE ? -DECAY_FLAT : 0;
+            var delta = 0;
+            if (careerMiss[tag] > DECAY_GRACE) {
+                var excess = Math.max(0, ratings[tag] - 1500);
+                delta = -(DECAY_FLAT + Math.round(excess * 0.05));
+            }
             if (!history[tag]) history[tag] = {};
             history[tag][season.key] = (history[tag][season.key] || 0) + delta;
             ratings[tag] = Math.max(ELO_FLOOR, ratings[tag] + delta);
