@@ -156,3 +156,7 @@ select, option {
         margin-left: 1rem;
     }
 }
+
+/* Inactive players are dimmed (osu! style) */
+.player-row-offline { opacity: 0.45; }
+.player-row-offline:hover { opacity: 0.8; }
