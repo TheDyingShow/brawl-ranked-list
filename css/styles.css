@@ -173,3 +173,7 @@ select, option {
     font-size: 11px; font-weight: 700;
     flex-shrink: 0; min-width: 32px;
 }
+
+.hidden-el { display: none; }
+
+#dFlagPh { width: 48px; height: 32px; font-size: 16px; }
