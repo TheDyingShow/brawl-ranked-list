@@ -160,3 +160,7 @@ select, option {
 /* Inactive players are dimmed (osu! style) */
 .player-row-offline { opacity: 0.45; }
 .player-row-offline:hover { opacity: 0.8; }
+
+/* Season history rows: hover identical to player rows */
+.season-row { transition: all 0.15s ease; }
+.season-row:hover { background-color: #15231a; }
