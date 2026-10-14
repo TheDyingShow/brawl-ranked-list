@@ -89,7 +89,7 @@ function renderPlayerView() {
             list = sortPlayerList(list);
         }
         var pg = paginate(list);
-        $('viewTitle').textContent = 'Standings — ' + monthLabel(currentMonth) +
+        $('viewTitle').textContent = 'Player Ranking — ' + monthLabel(currentMonth) +
             (currentCountryFilter !== 'all' ? ' — ' + countryName(currentCountryFilter) : '');
         $('playerCount').textContent = list.length.toLocaleString() + ' Records';
         var statLbl = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last activity' : SORTS[currentSort]);
