@@ -46,12 +46,14 @@ function playerRowHtml(p, rank) {
     var rc = rank <= 3 ? 'rank-' + rank : '';
     var stCls = currentSort === 'elo' ? 'text-mastersGreen' : 'text-emerald-400';
     
-    var html = '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer' + (isActive(p) ? '' : ' player-row-offline') + '" onclick="showPlayer(\'' + tagParam(p.tag) + '\')">' +
+    var html = '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer' + (currentSort === 'elo' && !isActive(p) ? ' player-row-offline' : '') + '" onclick="showPlayer(\'' + tagParam(p.tag) + '\')">' +
         '<div class="col-span-1 rank-badge ' + rc + '">' + rank + '</div>';
     
     // Flag column
     html += '<div class="col-span-1 flex justify-start">' +
-        (p.country && p.country !== 'XX' ? '<img class="flag-icon flag-click" src="' + getFlagUrl(p.country) + '" alt="' + esc(p.country) + '" title="' + esc(countryName(p.country)) + '" onclick="flagClick(\'' + p.country + '\', event)">' : '') +
+        (p.country && p.country !== 'XX'
+            ? '<img class="flag-icon flag-click" src="' + getFlagUrl(p.country) + '" alt="' + esc(p.country) + '" title="' + esc(countryName(p.country)) + '" onclick="flagClick(\'' + p.country + '\', event)">'
+            : '<div class="flag-placeholder" title="Unknown country">?</div>') +
     '</div>';
     
     // Player name
