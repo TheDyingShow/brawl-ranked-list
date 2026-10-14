@@ -25,7 +25,7 @@ var SCARCITY_REF_FIELD = 500; // field size giving no bonus
 var SCARCITY_MIN_FIELD = 10;  // guard for absurdly small fields
 var SCARCITY_EXP = 0.4;       // bonus = (refField / fieldSize) ^ exp
 var SCARCITY_MAX_BONUS = 3;   // cap (April 2025: 20 pros -> 3.0)
-var MAX_DELTA = 300;          // clamp on a single season's swing
+var MAX_DELTA = 600;          // clamp on a single season's swing
 var MIN_PRESENT_GAIN = 8;     // flat qualification reward, scaled by bonus
 var DECAY_FLAT = 20;          // per missed season after grace
 var DECAY_GRACE = 2;          // career free misses before decay starts
