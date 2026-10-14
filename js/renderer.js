@@ -266,16 +266,14 @@ function showPlayer(encodedTag) {
     var tag = decodeURIComponent(encodedTag);
     var p = playerByTag[tag];
     if (!p) return;
-    if (p.country && p.country !== 'XX') {
-        var hasC = p.country && p.country !== 'XX';
-        $('dFlag').classList.toggle('hidden-el', !hasC);
-        $('dFlagPh').classList.toggle('hidden-el', !!hasC);
-        if (hasC) $('dFlag').src = getFlagUrl(p.country);
-        $('dFlag').style.display = '';
-        $('dFlag').classList.remove('hidden-flag');
-    } else {
-        $('dFlag').classList.add('hidden-flag');
-    }
+    
+    // Flag placeholder handling
+    var hasC = p.country && p.country !== 'XX';
+    $('dFlag').classList.toggle('hidden-el', !hasC);
+    $('dFlagPh').classList.toggle('hidden-el', !!hasC);
+    if (hasC) $('dFlag').src = getFlagUrl(p.country);
+    
+    $('dName').textContent = p.name;
     $('dName').textContent = p.name;
     $('dTag').textContent = p.tag;
     $('dCountry').textContent = countryName(p.country) + ' (' + p.country + ')';
