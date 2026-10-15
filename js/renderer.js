@@ -125,6 +125,7 @@ function renderPlayerView() {
             (currentCountryFilter !== 'all' ? ' — ' + countryName(currentCountryFilter) : '');
         $('playerCount').textContent = list.length.toLocaleString() + ' Records';
         var statLbl = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last activity' : SORTS[currentSort]);
+        $('playerView').classList.toggle('pv-peak-mode', currentSort === 'peak');
         $('playerHeader').innerHTML =
             '<div class="col-span-1 text-center">#</div>' +
             '<div class="col-span-1">Country</div>' +
