@@ -32,15 +32,16 @@ function setPager(btnPrevId, indId, btnNextId, pages) {
     bp.disabled = currentPage <= 1;
     bn.disabled = currentPage >= pages;
 
+    // Build page numbers
     var nums = pageNumbers(currentPage, pages), html = '';
     for (var i = 0; i < nums.length; i++) {
         var v = nums[i];
         if (v === '...') {
-            html += '<span class="page-dot">...</span>';
+            html += '<span class="pg-dot">…</span>';
         } else if (v === currentPage) {
-            html += '<span class="page-current">' + v + '</span>';
+            html += '<span class="pg-current">' + v + '</span>';
         } else {
-            html += '<a href="#" class="page-link" onclick="goToPage(' + v + ');return false;">' + v + '</a>';
+            html += '<a href="#" class="pg-link" onclick="goToPage(' + v + ');return false;">' + v + '</a>';
         }
     }
     bi.innerHTML = html;
