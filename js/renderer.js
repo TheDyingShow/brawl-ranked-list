@@ -212,6 +212,7 @@ function renderCountryList() {
         $('countryDetailHeader').classList.add('hidden');
         $('countryRankingWrap').classList.remove('hidden');
         $('countryPagination').classList.remove('hidden');
+        $('countryRankingList').classList.remove('cr-peak-mode');
         
         var html = '<div class="cr-head-list grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
             '<div class="col-span-1 text-center">#</div>' +
@@ -224,7 +225,7 @@ function renderCountryList() {
         pg.slice.forEach(function (c, i) {
             var rank = (currentPage - 1) * RECORDS_PER_PAGE + i + 1;
             var rc = rank <= 3 ? 'rank-' + rank : '';
-            html += '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer" onclick="location.hash=buildHash(\'country\',\'' + currentSort + '\',\'' + c.cc + '\',' + currentMonth + ',1)">' +
+            html += '<div class="player-row country-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer" onclick="location.hash=buildHash(\'country\',\'' + currentSort + '\',\'' + c.cc + '\',' + currentMonth + ',1)">' +
                 '<div class="col-span-1 rank-badge ' + rc + '">' + rank + '</div>' +
                 '<div class="col-span-5 flex items-center gap-3 min-w-0">' +
                     '<img class="flag-icon" src="' + getFlagUrl(c.cc) + '" alt="' + esc(c.cc) + '">' +
@@ -272,6 +273,7 @@ function renderCountryDetail() {
         
         var mainStatLabel = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last Activity' : (currentSort === 'peak' ? 'Peak' : 'Points'));
         var hasPeakColumn = currentSort !== 'peak';
+        $('countryRankingList').classList.toggle('cr-peak-mode', !hasPeakColumn);
         
         $('countryRankingList').innerHTML =
             '<div class="cr-head-detail grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
