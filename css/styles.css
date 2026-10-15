@@ -196,6 +196,8 @@ select, option {
 /* Extra breathing room between Prev/Next and the page numbers */
 #btnPrev, #btnPrevTop, #btnPrevC { margin-right: 5px; }
 #btnNext, #btnNextTop, #btnNextC { margin-left: 5px; }
+#btnPrev, #btnPrevTop, #btnPrevC, #btnPrevCTop { margin-right: 5px; }
+#btnNext, #btnNextTop, #btnNextC, #btnNextCTop { margin-left: 5px; }
 
 .hidden-el { display: none; }
 
