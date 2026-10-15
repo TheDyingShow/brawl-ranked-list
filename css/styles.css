@@ -174,19 +174,35 @@ select, option {
     flex-shrink: 0; min-width: 32px;
 }
 
-/* Pagination bar: osu! style */
-#pageIndicator, #pageIndicatorC {
-    display: inline-flex; gap: 6px; align-items: center; margin: 0 8px;
+/* Unified pagination bar (osu! style) */
+#playerPagination, #countryPagination {
+    display: flex; justify-content: center; align-items: center;
 }
-.page-link, .page-current, .page-dot {
-    display: inline-block; min-width: 26px; padding: 3px 7px;
+#playerPagination > div, #countryPagination > div {
+    display: flex; align-items: center; gap: 3px;
+}
+
+.pg-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 4px; border: 1px solid #030906;
+    background: #0f1c13; color: #e0ece3;
+    font-family: 'Geist', sans-serif; font-size: 0.72rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s ease;
+}
+.pg-btn:hover:not(:disabled) { background: #18291d; border-color: #2f4d3a; }
+.pg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pg-arrow { font-size: 0.68rem; }
+.pg-text { font-size: 0.7rem; }
+
+.pg-link, .pg-current, .pg-dot {
+    display: inline-block; min-width: 24px; padding: 4px 7px;
     text-align: center; border-radius: 4px;
     font-family: 'Geist Mono', monospace; font-size: 0.72rem; font-weight: 700;
 }
-.page-link { background: #0f1c13; color: #e0ece3; border: 1px solid #030906; text-decoration: none; }
-.page-link:hover { background: #18291d; border-color: #2f4d3a; }
-.page-current { background: #101d14; color: #88cc00; border: 1px solid #2f4d3a; }
-.page-dot { color: #558168; user-select: none; }
+.pg-link { background: #0f1c13; color: #e0ece3; border: 1px solid #030906; text-decoration: none; }
+.pg-link:hover { background: #18291d; border-color: #2f4d3a; }
+.pg-current { background: #101d14; color: #88cc00; border: 1px solid #2f4d3a; }
+.pg-dot { color: #558168; font-size: 0.65rem; user-select: none; padding: 4px 2px; }
 
 .hidden-el { display: none; }
 
