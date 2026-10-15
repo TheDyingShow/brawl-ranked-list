@@ -26,25 +26,27 @@ function paginate(list) {
 }
 
 function setPager(btnPrevId, indId, btnNextId, pages) {
-    var bp = $(btnPrevId), bi = $(indId), bn = $(btnNextId);
-    if (!bp || !bi || !bn) return;
+    var sets = [
+        [btnPrevId, indId, btnNextId],
+        [btnPrevId + 'Top', indId + 'Top', btnNextId + 'Top']
+    ];
+    sets.forEach(function (s) {
+        var bp = $(s[0]), bi = $(s[1]), bn = $(s[2]);
+        if (bp) bp.disabled = currentPage <= 1;
+        if (bn) bn.disabled = currentPage >= pages;
+        if (bi) bi.innerHTML = pagerHtml(pages);
+    });
+}
 
-    bp.disabled = currentPage <= 1;
-    bn.disabled = currentPage >= pages;
-
-    // Build page numbers
+function pagerHtml(pages) {
     var nums = pageNumbers(currentPage, pages), html = '';
     for (var i = 0; i < nums.length; i++) {
         var v = nums[i];
-        if (v === '...') {
-            html += '<span class="pg-dot">…</span>';
-        } else if (v === currentPage) {
-            html += '<span class="pg-current">' + v + '</span>';
-        } else {
-            html += '<a href="#" class="pg-link" onclick="goToPage(' + v + ');return false;">' + v + '</a>';
-        }
+        if (v === '...') html += '<span class="pg-dot">…</span>';
+        else if (v === currentPage) html += '<span class="pg-current">' + v + '</span>';
+        else html += '<a href="#" class="pg-link" onclick="goToPage(' + v + ');return false;">' + v + '</a>';
     }
-    bi.innerHTML = html;
+    return html;
 }
 
 function pageNumbers(cur, total) {
