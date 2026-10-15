@@ -25,13 +25,49 @@ function paginate(list) {
     return { slice: list.slice(start, start + RECORDS_PER_PAGE), pages: pages };
 }
 
-function setPager(btnPrevId, indId, btnNextId, pages) {
-    var bp = $(btnPrevId), bi = $(indId), bn = $(btnNextId);
-    if (bp && bi && bn) {
-        bp.disabled = currentPage <= 1;
-        bn.disabled = currentPage >= pages;
-        bi.textContent = 'Page ' + currentPage + '/' + pages;
+function setPager(btnPrevId, pagerContainerId, btnNextId, pages) {
+    var bp = $(btnPrevId), pc = $(pagerContainerId), bn = $(btnNextId);
+    if (!bp || !pc || !bn) return;
+    
+    bp.disabled = currentPage <= 1;
+    bn.disabled = currentPage >= pages;
+    bp.onclick = function () { if (currentPage > 1) { currentPage--; route(); } };
+    bn.onclick = function () { if (currentPage < pages) { currentPage++; route(); } };
+    
+    var html = '';
+    var ranges = [];
+    var minShow = 1, maxShow = pages;
+    var radius = 3; // show ±3 around current
+    
+    // Always include first page
+    ranges.push(minShow);
+    
+    // Determine window around current page
+    var start = Math.max(minShow + 2, currentPage - radius);
+    var end = Math.min(maxShow - 1, currentPage + radius);
+    
+    if (start > minShow + 2) ranges.push(minShow + 1); // gap marker
+    for (var p = start; p <= end; p++) ranges.push(p);
+    if (end < maxShow - 2) ranges.push(maxShow - 1); // gap marker
+    
+    // Always include last page
+    if (pages > 1 && ranges[ranges.length - 1] !== maxShow) ranges.push(maxShow);
+    
+    for (var i = 0; i < ranges.length; i++) {
+        var p = ranges[i];
+        if (p === minShow + 1 && i > 0 && ranges[i - 1] === minShow) continue; // skip redundant marker
+        if (p === maxShow - 1 && i > 0 && ranges[i - 1] === maxShow) continue; // skip redundant marker
+        
+        if (p === minShow + 1 || p === maxShow - 1) {
+            // Ellipsis placeholder
+            html += '<span class="page-dot">...</span>';
+        } else {
+            var cls = (p === currentPage) ? 'page-current' : 'page-link';
+            html += '<a href="#" class="' + cls + '" onclick="currentPage=' + p + ';route();return false;">' + p + '</a>';
+        }
     }
+    
+    pc.innerHTML = html;
 }
 
 function statValue(p) {
