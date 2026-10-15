@@ -114,12 +114,6 @@ select, option {
 
 /* Mobile / Shrunk Desktop spacing (aggressive) */
 @media (max-width: 767px) {
-    /* Header row cells */
-    .grid-cols-12 > div:nth-child(1) { min-width: 40px !important; }
-    .grid-cols-12 > div:nth-child(2) { min-width: 110px !important; }          /* COUNTRY text needs room */
-    .grid-cols-12 > div:nth-child(3) { min-width: 170px !important; padding-left: 1.25rem !important; } /* PLAYER pushed right */
-    .grid-cols-12 > div:nth-child(4) { min-width: 80px !important; }
-    .grid-cols-12 > div:nth-child(5) { min-width: 90px !important; }
     
     /* Data row cells */
     .player-row > div:nth-child(1) { min-width: 40px !important; }
@@ -186,27 +180,22 @@ select, option {
     overflow-x: auto !important;
 }
 
-/* Country LIST: align columns by padding, not grid */
+/* Country LIST */
 .cr-head-list,
 .country-row {
-    display: grid !important;
-    grid-template-columns: 40px 220px 100px 100px 120px !important;
-    grid-template-rows: 1fr !important;
+    grid-template-columns: 40px minmax(160px, 5fr) minmax(70px, 1fr) minmax(90px, 1fr) minmax(100px, 1fr) !important;
 }
 
-/* Country DETAIL (standard 5 columns) */
+/* Country DETAIL (standard) */
 .cr-head-detail,
-.player-row:not(.country-row) {
-    display: grid !important;
-    grid-template-columns: 40px 52px 240px 100px 120px !important;
-    grid-template-rows: 1fr !important;
+#countryRankingList .player-row:not(.country-row) {
+    grid-template-columns: 40px 52px minmax(220px, 4fr) 90px minmax(100px, 4fr) !important;
 }
 
-/* Country DETAIL peak-sort (4 columns) */
+/* Country DETAIL (peak sort) */
 .cr-peak-mode .cr-head-detail,
 .cr-peak-mode .player-row:not(.country-row) {
-    grid-template-columns: 40px 52px 240px 120px !important;
-    grid-template-rows: 1fr !important;
+    grid-template-columns: 40px 52px minmax(220px, 6fr) minmax(100px, 6fr) !important;
 }
 
 /* Each cell takes exactly one track */
@@ -223,6 +212,20 @@ select, option {
 #countryRankingList .player-row > div {
     grid-column: auto !important;
 }
+
+/* ===== Player ranking table ===== */
+#playerTableWrap { overflow-x: auto; }
+
+#playerView:not(.pv-peak-mode) #playerHeader,
+#playerView:not(.pv-peak-mode) #leaderboard .player-row {
+    grid-template-columns: 40px 52px minmax(220px, 4fr) 90px minmax(100px, 4fr) !important;
+}
+#playerView.pv-peak-mode #playerHeader,
+#playerView.pv-peak-mode #leaderboard .player-row {
+    grid-template-columns: 40px 52px minmax(220px, 6fr) minmax(100px, 6fr) !important;
+}
+#playerHeader > div,
+#leaderboard .player-row > div { grid-column: auto !important; }
 
 .hidden-el { display: none; }
 
