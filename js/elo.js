@@ -43,6 +43,16 @@ function computeElo() {
         var fieldSize = players.length, present = {};
         players.forEach(function (p) { present[p.tag] = true; });
 
+        // ---- GUARD 1: missing/empty season file ----
+        // An empty list means the CSV failed to load or exported blank —
+        // it does NOT mean "everybody missed the season". Skipping the
+        // season entirely means: no decay applied, no career-miss counted
+        // (grace slots preserved), no history entry (drawer shows '—').
+        if (fieldSize === 0) {
+            console.warn('computeElo: no data for ' + season.key + ' — season skipped (no decay, no grace burn)');
+            return;
+        }
+
         // Expected-share denominator from pre-season ratings
         // (newcomers count at START_RATING)
         var denom = 0;
@@ -58,8 +68,17 @@ function computeElo() {
             Math.pow(SCARCITY_REF_FIELD / effField, SCARCITY_EXP));
 
         // ---- Present players: expectation-based gains ----
+        // ---- GUARD 2: duplicate tags are ignored (first occurrence wins) ----
+        var seenThisSeason = {};
         players.forEach(function (p) {
             var tag = p.tag;
+            if (seenThisSeason[tag]) {
+                console.warn('computeElo: duplicate tag ' + tag + ' in ' + season.key +
+                    ' (placements ' + seenThisSeason[tag] + ' and ' + p.placement + ') — second row ignored');
+                return;
+            }
+            seenThisSeason[tag] = p.placement;
+
             if (ratings[tag] === undefined) { ratings[tag] = START_RATING; debutIdx[tag] = idx; }
             seasonsPlayed[tag] = (seasonsPlayed[tag] || 0) + 1;
 
