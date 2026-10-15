@@ -194,8 +194,6 @@ select, option {
 .pg-dot { color: #558168; padding: 3px 2px; }
 
 /* Extra breathing room between Prev/Next and the page numbers */
-#btnPrev, #btnPrevTop, #btnPrevC { margin-right: 5px; }
-#btnNext, #btnNextTop, #btnNextC { margin-left: 5px; }
 #btnPrev, #btnPrevTop, #btnPrevC, #btnPrevCTop { margin-right: 5px; }
 #btnNext, #btnNextTop, #btnNextC, #btnNextCTop { margin-left: 5px; }
 
@@ -206,22 +204,21 @@ select, option {
 #countryRankingList .player-row > div:nth-child(4) { min-width: 90px !important; text-align: right !important; } /* points */
 #countryRankingList .player-row > div:nth-child(5) { min-width: 100px !important; text-align: right !important; } /* elo */
 
-/* Country view: force page-level scroll instead of clipping at high zoom */
-@media (min-width: 768px) {
-    #countryView .content-area { min-width: 1400px !important; }
-}
+/* Country ranking box: scroll horizontally instead of clipping when zoomed */
+#countryRankingWrap { overflow-x: auto !important; }
 
-/* Even wider if zoomed heavily — ensures no clipping at 150%+ */
-@media (min-width: 1024px) {
-    #countryView .content-area { min-width: 1600px !important; }
-}
+/* Country LIST header: match its data rows */
+.cr-head-list > div:nth-child(1) { min-width: 36px !important; }
+.cr-head-list > div:nth-child(2) { min-width: 160px !important; }
+.cr-head-list > div:nth-child(3) { min-width: 70px !important; }
+.cr-head-list > div:nth-child(4) { min-width: 90px !important; }
+.cr-head-list > div:nth-child(5) { min-width: 100px !important; }
 
-/* Country ranking: header cells must match data row widths */
-#countryRankingList > div:first-child > div:nth-child(1) { min-width: 36px !important; }
-#countryRankingList > div:first-child > div:nth-child(2) { min-width: 160px !important; }
-#countryRankingList > div:first-child > div:nth-child(3) { min-width: 70px !important; }
-#countryRankingList > div:first-child > div:nth-child(4) { min-width: 90px !important; }
-#countryRankingList > div:first-child > div:nth-child(5) { min-width: 100px !important; }
+/* Country DETAIL + Player view headers: match player rows */
+#playerHeader > div:nth-child(2),
+.cr-head-detail > div:nth-child(2) { min-width: 52px !important; }
+#playerHeader > div:nth-child(3),
+.cr-head-detail > div:nth-child(3) { min-width: 220px !important; }
 
 .hidden-el { display: none; }
 
