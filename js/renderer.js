@@ -35,7 +35,7 @@ function setPager(btnPrevId, indId, btnNextId, pages) {
 }
 
 function statValue(p) {
-    if (currentSort === 'elo') return (isActive(p) ? '' : '<span class="offline-pill">Offline</span>') + fmt(p.elo || 0);
+    if (currentSort === 'elo') return (isActive(p) ? '' : '<span class="offline-pill">Inactive</span>') + fmt(p.elo || 0);
     if (currentSort === 'activity') return p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : '-';
     if (currentSort === 'peak') return (p.peak != null && p.peak > 0) ? '#' + p.peak : '-';
     var mk = (currentMonth !== -1 && SEASONS[currentMonth]) ? SEASONS[currentMonth].key : null;
@@ -281,10 +281,10 @@ function showPlayer(encodedTag) {
     var lastLabel = p.lastIdx >= 0 ? SEASONS[p.lastIdx].label : 'Unknown';
     if (isActive(p)) {
         st.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-400';
-        st.textContent = 'Active — Last Reach Pro (Top 500) ' + lastLabel;
+        st.textContent = 'Active — Last Reached Pro (Top 500) in ' + lastLabel;
     } else {
         st.className = 'text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded bg-red-900/40 text-red-400';
-        st.textContent = 'Inactive — Last Reach Pro (Top 500) ' + lastLabel;
+        st.textContent = 'Inactive — Last Reached Pro (Top 500) in ' + lastLabel;
     }
     $('dPoints').textContent = fmt(p.points);
     $('dPointsRank').textContent = pointsRankMap[p.tag] ? '#' + pointsRankMap[p.tag] : '';
