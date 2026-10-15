@@ -29,6 +29,10 @@ var MAX_DELTA = 600;          // clamp on a single season's swing
 var MIN_PRESENT_GAIN = 8;     // flat qualification reward, scaled by bonus
 var DECAY_FLAT = 20;          // per missed season after grace
 var DECAY_GRACE = 2;          // career free misses before decay starts
+var GAIN_CAP_START = 2500;  // rating where gain dampening begins
+var GAIN_CAP_END = 3000;     // rating where gains are fully capped
+var CAP_GAIN_FULL = 1;       // max gain/season at 3000+, normal season
+var CAP_GAIN_SCARCE = 8;     // max gain/season at 3000+, most scarce season
 
 function computeElo() {
     var ratings = {}, history = {}, debutIdx = {};
@@ -71,6 +75,16 @@ function computeElo() {
 
             // Minimum qualification reward, scaled by scarcity
             if (delta < MIN_PRESENT_GAIN * bonus) delta = MIN_PRESENT_GAIN * bonus;
+
+            // Soft cap: climbing past 2500 gets progressively harder; at 3000+
+            // gains are capped at a scarcity-scaled allowance (1..8). Decay unchanged.
+            if (delta > 0 && ratings[tag] > GAIN_CAP_START) {
+                var capFinal = CAP_GAIN_FULL + (CAP_GAIN_SCARCE - CAP_GAIN_FULL) *
+                    (bonus - 1) / (SCARCITY_MAX_BONUS - 1);
+                var t = Math.min(1, (ratings[tag] - GAIN_CAP_START) / (GAIN_CAP_END - GAIN_CAP_START));
+                delta = delta * (1 - t) + capFinal * t;
+                if (delta < 1) delta = 1;
+            }
 
             delta = Math.round(delta);
 
