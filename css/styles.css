@@ -175,10 +175,7 @@ select, option {
 #btnNext, #btnNextTop, #btnNextC, #btnNextCTop { margin-left: 5px; }
 
 /* Country ranking: fixed minimum width prevents crushing; scroll when zoomed */
-#countryRankingWrap {
-    min-width: 900px;
-    overflow-x: auto !important;
-}
+#countryRankingWrap { overflow-x: auto !important; }
 
 /* Country LIST */
 .cr-head-list,
@@ -203,13 +200,6 @@ select, option {
 .country-row > div,
 .cr-head-detail > div,
 .player-row:not(.country-row) > div {
-    grid-column: auto !important;
-}
-
-/* Neutralize col-span classes (they conflict with the 5-track templates) */
-#countryRankingList .cr-head-list > div,
-#countryRankingList .country-row > div,
-#countryRankingList .player-row > div {
     grid-column: auto !important;
 }
 
