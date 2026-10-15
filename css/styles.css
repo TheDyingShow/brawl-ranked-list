@@ -200,19 +200,19 @@ select, option {
 /* Country ranking box: scroll horizontally instead of clipping when zoomed */
 #countryRankingWrap { overflow-x: auto !important; }
 
-/* Country LIST table: fixed track structure — can never crush, only scroll */
+/* Country LIST table: fixed track structure */
 #countryRankingList .cr-head-list,
 #countryRankingList .country-row {
     grid-template-columns: 40px minmax(160px, 5fr) minmax(70px, 2fr) minmax(90px, 2fr) minmax(100px, 2fr) !important;
 }
 
-/* Country DETAIL table (standard sort): tracks match player rows */
+/* Country DETAIL table (standard sort) */
 #countryRankingList:not(.cr-peak-mode) .cr-head-detail,
 #countryRankingList:not(.cr-peak-mode) .player-row:not(.country-row) {
     grid-template-columns: 40px 52px minmax(220px, 4fr) minmax(90px, 2fr) minmax(100px, 4fr) !important;
 }
 
-/* Country DETAIL table (peak sort): 4 columns, no Peak */
+/* Country DETAIL table (peak sort) */
 #countryRankingList.cr-peak-mode .cr-head-detail,
 #countryRankingList.cr-peak-mode .player-row:not(.country-row) {
     grid-template-columns: 40px 52px minmax(220px, 6fr) minmax(100px, 6fr) !important;
