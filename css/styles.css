@@ -112,23 +112,6 @@ select, option {
     }
 }
 
-/* Tablet/Desktop spacing */
-@media (min-width: 768px) {
-    /* Header row cells */
-    .grid-cols-12 > div:nth-child(1) { min-width: 40px !important; }   /* # */
-    .grid-cols-12 > div:nth-child(2) { min-width: 100px !important; }  /* Country */
-    .grid-cols-12 > div:nth-child(3) { min-width: 220px !important; padding-left: 1.25rem !important; } /* Player */
-    .grid-cols-12 > div:nth-child(4) { min-width: 90px !important; }  /* Peak */
-    .grid-cols-12 > div:nth-child(5) { min-width: 100px !important; } /* Points */
-    
-    /* Data row cells */
-    .player-row > div:nth-child(1) { min-width: 40px !important; }
-    .player-row > div:nth-child(2) { min-width: 52px !important; }
-    .player-row > div:nth-child(3) { min-width: 220px !important; padding-left: 1.25rem !important; }
-    .player-row > div:nth-child(4) { min-width: 90px !important; }
-    .player-row > div:nth-child(5) { min-width: 100px !important; }
-}
-
 /* Mobile / Shrunk Desktop spacing (aggressive) */
 @media (max-width: 767px) {
     /* Header row cells */
@@ -197,25 +180,41 @@ select, option {
 #btnPrev, #btnPrevTop, #btnPrevC, #btnPrevCTop { margin-right: 5px; }
 #btnNext, #btnNextTop, #btnNextC, #btnNextCTop { margin-left: 5px; }
 
-/* Country ranking box: scroll horizontally instead of clipping when zoomed */
-#countryRankingWrap { overflow-x: auto !important; }
-
-/* Country LIST table: fixed track structure */
-#countryRankingList .cr-head-list,
-#countryRankingList .country-row {
-    grid-template-columns: 40px minmax(160px, 5fr) minmax(70px, 2fr) minmax(90px, 2fr) minmax(100px, 2fr) !important;
+/* Country ranking: fixed minimum width prevents crushing; scroll when zoomed */
+#countryRankingWrap {
+    min-width: 900px;
+    overflow-x: auto !important;
 }
 
-/* Country DETAIL table (standard sort) */
-#countryRankingList:not(.cr-peak-mode) .cr-head-detail,
-#countryRankingList:not(.cr-peak-mode) .player-row:not(.country-row) {
-    grid-template-columns: 40px 52px minmax(220px, 4fr) minmax(90px, 2fr) minmax(100px, 4fr) !important;
+/* Country LIST: align columns by padding, not grid */
+.cr-head-list,
+.country-row {
+    display: grid !important;
+    grid-template-columns: 40px 220px 100px 100px 120px !important;
+    grid-template-rows: 1fr !important;
 }
 
-/* Country DETAIL table (peak sort) */
-#countryRankingList.cr-peak-mode .cr-head-detail,
-#countryRankingList.cr-peak-mode .player-row:not(.country-row) {
-    grid-template-columns: 40px 52px minmax(220px, 6fr) minmax(100px, 6fr) !important;
+/* Country DETAIL (standard 5 columns) */
+.cr-head-detail,
+.player-row:not(.country-row) {
+    display: grid !important;
+    grid-template-columns: 40px 52px 240px 100px 120px !important;
+    grid-template-rows: 1fr !important;
+}
+
+/* Country DETAIL peak-sort (4 columns) */
+.cr-peak-mode .cr-head-detail,
+.cr-peak-mode .player-row:not(.country-row) {
+    grid-template-columns: 40px 52px 240px 120px !important;
+    grid-template-rows: 1fr !important;
+}
+
+/* Each cell takes exactly one track */
+.cr-head-list > div,
+.country-row > div,
+.cr-head-detail > div,
+.player-row:not(.country-row) > div {
+    grid-column: auto !important;
 }
 
 /* Neutralize col-span classes (they conflict with the 5-track templates) */
