@@ -193,6 +193,10 @@ select, option {
 .pg-current { background: #aaff00; color: #0a120c; }
 .pg-dot { color: #558168; padding: 3px 2px; }
 
+/* Extra breathing room between Prev/Next and the page numbers */
+#btnPrev, #btnPrevTop, #btnPrevC { margin-right: 5px; }
+#btnNext, #btnNextTop, #btnNextC { margin-left: 5px; }
+
 .hidden-el { display: none; }
 
 #dFlagPh { width: 48px; height: 32px; font-size: 16px; }
