@@ -139,6 +139,13 @@
 
                     <div id="countryDetailHeader" class="hidden mb-5"></div>
 
+                    <!-- Top pagination (country) -->
+                    <div id="countryPaginationTop" class="flex items-center justify-center gap-1 mb-4">
+                        <button id="btnPrevCTop" onclick="changePage(-1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
+                        <span id="pageIndicatorCTop"></span>
+                        <button id="btnNextCTop" onclick="changePage(1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
+                    </div>
+
                     <div id="countryRankingWrap" class="hidden overflow-hidden bg-[#101d14] border border-slate-950 rounded-xl">
                         <div id="countryRankingList"></div>
                     </div>
