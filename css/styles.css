@@ -206,10 +206,22 @@ select, option {
 #countryRankingList .player-row > div:nth-child(4) { min-width: 90px !important; text-align: right !important; } /* points */
 #countryRankingList .player-row > div:nth-child(5) { min-width: 100px !important; text-align: right !important; } /* elo */
 
-/* Force page-level scroll for country ranking on narrow views/high zoom */
+/* Country view: force page-level scroll instead of clipping at high zoom */
 @media (min-width: 768px) {
-    #countryView .content-area { min-width: 1100px; }
+    #countryView .content-area { min-width: 1400px !important; }
 }
+
+/* Even wider if zoomed heavily — ensures no clipping at 150%+ */
+@media (min-width: 1024px) {
+    #countryView .content-area { min-width: 1600px !important; }
+}
+
+/* Country ranking: header cells must match data row widths */
+#countryRankingList > div:first-child > div:nth-child(1) { min-width: 36px !important; }
+#countryRankingList > div:first-child > div:nth-child(2) { min-width: 160px !important; }
+#countryRankingList > div:first-child > div:nth-child(3) { min-width: 70px !important; }
+#countryRankingList > div:first-child > div:nth-child(4) { min-width: 90px !important; }
+#countryRankingList > div:first-child > div:nth-child(5) { min-width: 100px !important; }
 
 .hidden-el { display: none; }
 
