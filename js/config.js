@@ -5,7 +5,7 @@ var START_RATING = 1500, ELO_CEILING = 3000, ELO_FLOOR = 1000,
     MAX_GAIN = 500, PLACE_EXP = 4, FIELD_MIN = 20, FIELD_EXP = 0.42,
     FLOOR_MOMENTUM = 0.2, LOSS_BASE = 25, LOSS_SCALE = 0.25,
     SHIELD_WINDOW = 12, DECAY_RATIO = 0.75;
-var ACTIVE_SEASON_WINDOW = 3;
+var ACTIVE_SEASON_WINDOW = 12;
 
 // ============================= SEASONS =============================
 var SEASONS = [
