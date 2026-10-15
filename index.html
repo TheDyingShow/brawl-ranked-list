@@ -111,10 +111,12 @@
                     </div>
                 </div>
 
-                <div class="mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono pb-6">
-                    <button id="btnPrev" onclick="changePage(-1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
-                    <span id="pageIndicator" class="flex flex-wrap items-center justify-center gap-1 mx-3"></span>
-                    <button id="btnNext" onclick="changePage(1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
+                <div id="playerPagination" class="mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-center pb-6">
+                    <div class="flex items-center gap-1">
+                        <button id="btnPrev" class="pg-btn"><span class="pg-arrow">←</span><span class="pg-text">Prev</span></button>
+                        <span id="pageIndicator"></span>
+                        <button id="btnNext" class="pg-btn"><span class="pg-text">Next</span><span class="pg-arrow">→</span></button>
+                    </div>
                 </div>
             </main>
         </div>
@@ -134,11 +136,12 @@
                         <div id="countryRankingList"></div>
                     </div>
                 </div>
-
-                <div id="countryPagination" class="hidden mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-between text-xs font-mono pb-6">
-                    <button id="btnPrevC" onclick="changePage(-1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
-                    <span id="pageIndicatorC" class="flex flex-wrap items-center justify-center gap-1 mx-3"></span>
-                    <button id="btnNextC" onclick="changePage(1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
+                <div id="countryPagination" class="hidden mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-center pb-6">
+                    <div class="flex items-center gap-1">
+                        <button id="btnPrevC" class="pg-btn"><span class="pg-arrow">←</span><span class="pg-text">Prev</span></button>
+                        <span id="pageIndicatorC"></span>
+                        <button id="btnNextC" class="pg-btn"><span class="pg-text">Next</span><span class="pg-arrow">→</span></button>
+                    </div>
                 </div>
             </main>
         </div>
