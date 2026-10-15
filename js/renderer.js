@@ -25,49 +25,42 @@ function paginate(list) {
     return { slice: list.slice(start, start + RECORDS_PER_PAGE), pages: pages };
 }
 
-function setPager(btnPrevId, pagerContainerId, btnNextId, pages) {
-    var bp = $(btnPrevId), pc = $(pagerContainerId), bn = $(btnNextId);
-    if (!bp || !pc || !bn) return;
-    
+function setPager(btnPrevId, indId, btnNextId, pages) {
+    var bp = $(btnPrevId), bi = $(indId), bn = $(btnNextId);
+    if (!bp || !bi || !bn) return;
+
     bp.disabled = currentPage <= 1;
     bn.disabled = currentPage >= pages;
-    bp.onclick = function () { if (currentPage > 1) { currentPage--; route(); } };
-    bn.onclick = function () { if (currentPage < pages) { currentPage++; route(); } };
-    
-    var html = '';
-    var ranges = [];
-    var minShow = 1, maxShow = pages;
-    var radius = 3; // show ±3 around current
-    
-    // Always include first page
-    ranges.push(minShow);
-    
-    // Determine window around current page
-    var start = Math.max(minShow + 2, currentPage - radius);
-    var end = Math.min(maxShow - 1, currentPage + radius);
-    
-    if (start > minShow + 2) ranges.push(minShow + 1); // gap marker
-    for (var p = start; p <= end; p++) ranges.push(p);
-    if (end < maxShow - 2) ranges.push(maxShow - 1); // gap marker
-    
-    // Always include last page
-    if (pages > 1 && ranges[ranges.length - 1] !== maxShow) ranges.push(maxShow);
-    
-    for (var i = 0; i < ranges.length; i++) {
-        var p = ranges[i];
-        if (p === minShow + 1 && i > 0 && ranges[i - 1] === minShow) continue; // skip redundant marker
-        if (p === maxShow - 1 && i > 0 && ranges[i - 1] === maxShow) continue; // skip redundant marker
-        
-        if (p === minShow + 1 || p === maxShow - 1) {
-            // Ellipsis placeholder
+
+    var nums = pageNumbers(currentPage, pages), html = '';
+    for (var i = 0; i < nums.length; i++) {
+        var v = nums[i];
+        if (v === '...') {
             html += '<span class="page-dot">...</span>';
+        } else if (v === currentPage) {
+            html += '<span class="page-current">' + v + '</span>';
         } else {
-            var cls = (p === currentPage) ? 'page-current' : 'page-link';
-            html += '<a href="#" class="' + cls + '" onclick="currentPage=' + p + ';route();return false;">' + p + '</a>';
+            html += '<a href="#" class="page-link" onclick="goToPage(' + v + ');return false;">' + v + '</a>';
         }
     }
-    
-    pc.innerHTML = html;
+    bi.innerHTML = html;
+}
+
+function pageNumbers(cur, total) {
+    var out = [], i;
+    if (total <= 7) { for (i = 1; i <= total; i++) out.push(i); return out; }
+    out.push(1);
+    var start = Math.max(2, cur - 2), end = Math.min(total - 1, cur + 2);
+    if (start > 2) out.push('...');
+    for (i = start; i <= end; i++) out.push(i);
+    if (end < total - 1) out.push('...');
+    out.push(total);
+    return out;
+}
+
+function goToPage(p) {
+    if (p === currentPage) return;
+    changePage(p - currentPage);
 }
 
 function statValue(p) {
