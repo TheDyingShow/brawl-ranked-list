@@ -199,6 +199,27 @@ select, option {
 #btnPrev, #btnPrevTop, #btnPrevC, #btnPrevCTop { margin-right: 5px; }
 #btnNext, #btnNextTop, #btnNextC, #btnNextCTop { margin-left: 5px; }
 
+/* Country ranking table: enforce min-widths for columns at all zooms */
+@media (min-width: 768px) {
+    .country-ranking-table .col-span-1:first-child { min-width: 32px; } /* rank */
+    .country-ranking-table .col-span-5 { min-width: 180px; } /* country */
+    .country-ranking-table .col-span-2.players { min-width: 60px; }
+    .country-ranking-table .col-span-2.points { min-width: 80px; }
+    .country-ranking-table .col-span-2.elo { min-width: 90px; }
+}
+
+/* Mobile: allow scroll instead of overlap */
+@media (max-width: 767px) {
+    .country-ranking-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    .country-ranking-table .player-row {
+        display: grid !important;
+    }
+}
+
 .hidden-el { display: none; }
 
 #dFlagPh { width: 48px; height: 32px; font-size: 16px; }
