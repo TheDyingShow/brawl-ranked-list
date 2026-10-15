@@ -213,7 +213,7 @@ function renderCountryList() {
         $('countryRankingWrap').classList.remove('hidden');
         $('countryPagination').classList.remove('hidden');
         
-        var html = '<div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
+        var html = '<div class="cr-head-list grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
             '<div class="col-span-1 text-center">#</div>' +
             '<div class="col-span-5">Country</div>' +
             '<div class="col-span-2 text-right">Players</div>' +
@@ -274,7 +274,7 @@ function renderCountryDetail() {
         var hasPeakColumn = currentSort !== 'peak';
         
         $('countryRankingList').innerHTML =
-            '<div class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
+            '<div class="cr-head-detail grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
                 '<div class="col-span-1 text-center">#</div>' +
                 '<div class="col-span-1">Flag</div>' +
                 '<div class="col-span-4">Player</div>' +
