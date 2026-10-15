@@ -99,6 +99,13 @@
 
                     <div id="seasonStatus" class="hidden mb-4 text-[10px] font-mono text-amber-500 bg-amber-950/20 border border-amber-800/30 rounded-lg px-3 py-2"></div>
 
+                    <!-- Top pagination -->
+                    <div class="flex items-center justify-center gap-1 mb-4">
+                        <button id="btnPrevTop" onclick="changePage(-1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
+                        <span id="pageIndicatorTop"></span>
+                        <button id="btnNextTop" onclick="changePage(1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
+                    </div>
+
                     <div class="overflow-hidden bg-[#101d14] border border-slate-950 rounded-xl">
                         <div id="playerHeader" class="grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] text-[9px] uppercase tracking-wider font-bold text-slate-500">
                             <div class="col-span-1 text-center">#</div>
@@ -113,9 +120,9 @@
 
                 <div id="playerPagination" class="mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-center pb-6">
                     <div class="flex items-center gap-1">
-                        <button id="btnPrev" class="pg-btn"><span class="pg-arrow">←</span><span class="pg-text">Prev</span></button>
+                        <button id="btnPrev" onclick="changePage(-1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
                         <span id="pageIndicator"></span>
-                        <button id="btnNext" class="pg-btn"><span class="pg-text">Next</span><span class="pg-arrow">→</span></button>
+                        <button id="btnNext" onclick="changePage(1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
                     </div>
                 </div>
             </main>
@@ -138,9 +145,9 @@
                 </div>
                 <div id="countryPagination" class="hidden mt-6 pt-5 border-t border-slate-900/60 flex items-center justify-center pb-6">
                     <div class="flex items-center gap-1">
-                        <button id="btnPrevC" class="pg-btn"><span class="pg-arrow">←</span><span class="pg-text">Prev</span></button>
+                        <button id="btnPrevC" onclick="changePage(-1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
                         <span id="pageIndicatorC"></span>
-                        <button id="btnNextC" class="pg-btn"><span class="pg-text">Next</span><span class="pg-arrow">→</span></button>
+                        <button id="btnNextC" onclick="changePage(1)" class="bg-[#09120b] border border-slate-800 hover:border-slate-700 text-white px-3 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
                     </div>
                 </div>
             </main>
