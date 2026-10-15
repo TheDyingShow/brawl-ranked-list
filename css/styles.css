@@ -218,6 +218,13 @@ select, option {
     grid-template-columns: 40px 52px minmax(220px, 6fr) minmax(100px, 6fr) !important;
 }
 
+/* Neutralize col-span classes (they conflict with the 5-track templates) */
+#countryRankingList .cr-head-list > div,
+#countryRankingList .country-row > div,
+#countryRankingList .player-row > div {
+    grid-column: auto !important;
+}
+
 .hidden-el { display: none; }
 
 #dFlagPh { width: 48px; height: 32px; font-size: 16px; }
