@@ -62,7 +62,7 @@ function computeElo() {
             var kBase = seasonsPlayed[tag] <= PROVISIONAL_SEASONS ? K_PROVISIONAL : K_ESTABLISHED;
             var kEff = kBase * bonus;
 
-            var S = 1 - (p.placement - 1) / (fieldSize >= 1 ? fieldSize : 1);
+            var S = 1 - (p.placement - 1) / SCARCITY_REF_FIELD;
             var E = Math.pow(10, ratings[tag] / 400) / denom;
 
             var delta = kEff * (S - E);
