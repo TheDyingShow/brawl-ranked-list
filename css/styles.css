@@ -199,25 +199,16 @@ select, option {
 #btnPrev, #btnPrevTop, #btnPrevC, #btnPrevCTop { margin-right: 5px; }
 #btnNext, #btnNextTop, #btnNextC, #btnNextCTop { margin-left: 5px; }
 
-/* Country ranking table: enforce min-widths for columns at all zooms */
-@media (min-width: 768px) {
-    .country-ranking-table .col-span-1:first-child { min-width: 32px; } /* rank */
-    .country-ranking-table .col-span-5 { min-width: 180px; } /* country */
-    .country-ranking-table .col-span-2.players { min-width: 60px; }
-    .country-ranking-table .col-span-2.points { min-width: 80px; }
-    .country-ranking-table .col-span-2.elo { min-width: 90px; }
-}
+/* Country ranking: prevent column overlap at any zoom level */
+#countryRankingList .player-row > div:nth-child(1) { min-width: 36px !important; } /* rank */
+#countryRankingList .player-row > div:nth-child(2) { min-width: 160px !important; } /* country */
+#countryRankingList .player-row > div:nth-child(3) { min-width: 70px !important; text-align: right !important; } /* players */
+#countryRankingList .player-row > div:nth-child(4) { min-width: 90px !important; text-align: right !important; } /* points */
+#countryRankingList .player-row > div:nth-child(5) { min-width: 100px !important; text-align: right !important; } /* elo */
 
-/* Mobile: allow scroll instead of overlap */
-@media (max-width: 767px) {
-    .country-ranking-table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
-    .country-ranking-table .player-row {
-        display: grid !important;
-    }
+/* Force page-level scroll for country ranking on narrow views/high zoom */
+@media (min-width: 768px) {
+    #countryView .content-area { min-width: 1100px; }
 }
 
 .hidden-el { display: none; }
