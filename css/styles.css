@@ -197,28 +197,26 @@ select, option {
 #btnPrev, #btnPrevTop, #btnPrevC, #btnPrevCTop { margin-right: 5px; }
 #btnNext, #btnNextTop, #btnNextC, #btnNextCTop { margin-left: 5px; }
 
-/* Country ranking: prevent column overlap at any zoom level */
-#countryRankingList .player-row > div:nth-child(1) { min-width: 36px !important; } /* rank */
-#countryRankingList .player-row > div:nth-child(2) { min-width: 160px !important; } /* country */
-#countryRankingList .player-row > div:nth-child(3) { min-width: 70px !important; text-align: right !important; } /* players */
-#countryRankingList .player-row > div:nth-child(4) { min-width: 90px !important; text-align: right !important; } /* points */
-#countryRankingList .player-row > div:nth-child(5) { min-width: 100px !important; text-align: right !important; } /* elo */
-
 /* Country ranking box: scroll horizontally instead of clipping when zoomed */
 #countryRankingWrap { overflow-x: auto !important; }
 
-/* Country LIST header: match its data rows */
-.cr-head-list > div:nth-child(1) { min-width: 36px !important; }
-.cr-head-list > div:nth-child(2) { min-width: 160px !important; }
-.cr-head-list > div:nth-child(3) { min-width: 70px !important; }
-.cr-head-list > div:nth-child(4) { min-width: 90px !important; }
-.cr-head-list > div:nth-child(5) { min-width: 100px !important; }
+/* Country LIST table: fixed track structure — can never crush, only scroll */
+#countryRankingList .cr-head-list,
+#countryRankingList .country-row {
+    grid-template-columns: 40px minmax(160px, 5fr) minmax(70px, 2fr) minmax(90px, 2fr) minmax(100px, 2fr) !important;
+}
 
-/* Country DETAIL + Player view headers: match player rows */
-#playerHeader > div:nth-child(2),
-.cr-head-detail > div:nth-child(2) { min-width: 52px !important; }
-#playerHeader > div:nth-child(3),
-.cr-head-detail > div:nth-child(3) { min-width: 220px !important; }
+/* Country DETAIL table (standard sort): tracks match player rows */
+#countryRankingList:not(.cr-peak-mode) .cr-head-detail,
+#countryRankingList:not(.cr-peak-mode) .player-row:not(.country-row) {
+    grid-template-columns: 40px 52px minmax(220px, 4fr) minmax(90px, 2fr) minmax(100px, 4fr) !important;
+}
+
+/* Country DETAIL table (peak sort): 4 columns, no Peak */
+#countryRankingList.cr-peak-mode .cr-head-detail,
+#countryRankingList.cr-peak-mode .player-row:not(.country-row) {
+    grid-template-columns: 40px 52px minmax(220px, 6fr) minmax(100px, 6fr) !important;
+}
 
 .hidden-el { display: none; }
 
