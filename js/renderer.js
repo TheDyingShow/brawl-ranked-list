@@ -204,7 +204,7 @@ function renderCountryList() {
         });
         zeros.sort(function (a, b) { return countryName(a.cc).localeCompare(countryName(b.cc)); });
         list2.sort(function (a, b) { return currentSort === 'elo' ? (b.elo - a.elo) : (b.pts - a.pts); });
-        var shown = list2.concat(zeros);
+        var shown = (currentMonth === -1) ? list2.concat(zeros) : list2;
         var q = $('searchBar').value.trim().toLowerCase();
         if (q) shown = shown.filter(function (c) { return countryName(c.cc).toLowerCase().indexOf(q) !== -1 || c.cc.toLowerCase().indexOf(q) !== -1; });
         var pg = paginate(shown);
