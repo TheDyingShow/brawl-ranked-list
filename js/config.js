@@ -41,7 +41,8 @@ var COUNTRY_NAMES = {
     'TW':'Taiwan','TH':'Thailand','TN':'Tunisia','TR':'Türkiye','UA':'Ukraine',
     'AE':'United Arab Emirates','GB':'United Kingdom','US':'United States',
     'UY':'Uruguay','UZ':'Uzbekistan','VE':'Venezuela','VN':'Vietnam',
-    'HN':'Honduras','MO':'Macao','BH':'Bahrain','BD':'Bangladesh','AM':'Armenia'
+    'HN':'Honduras','MO':'Macao','BH':'Bahrain','BD':'Bangladesh','AM':'Armenia',
+    'SY':'Syria'
 };
 
 // ============================= MISC CONSTANTS =============================
