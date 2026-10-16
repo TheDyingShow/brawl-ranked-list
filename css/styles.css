@@ -191,7 +191,7 @@ select, option {
 
 /* Country DETAIL (peak sort) */
 .cr-peak-mode .cr-head-detail,
-.cr-peak-mode .player-row:not(.country-row) {
+#countryRankingList.cr-peak-mode .player-row:not(.country-row) {
     grid-template-columns: 40px 52px minmax(220px, 6fr) minmax(100px, 6fr) !important;
 }
 
