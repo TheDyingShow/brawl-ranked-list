@@ -46,6 +46,12 @@ body { background-color: #0a120c; color: #e0ece3; }
 .country-option { display: flex; align-items: center; gap: 0.55rem; width: 100%; text-align: left; padding: 0.45rem 0.6rem; font-size: 0.7rem; color: #e0ece3; }
 .country-option:hover { background-color: #18291d; }
 .country-option.active { background-color: #1a3122; }
+.country-stats {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 2.5rem;
+}
 #playerDrawer { transition: transform 0.3s ease; transform: translateX(100%); }
 #playerDrawer.open { transform: translateX(0); }
 .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
