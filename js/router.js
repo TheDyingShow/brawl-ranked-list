@@ -5,6 +5,7 @@
 // #/country/{sort}/{cc|all}/{month}?page=N   (cc = 'all' -> list, else detail)
 var enteredFromState = null; // Tracks where we came from before entering country-detail
 var currentQuery = ''; // Search text persisted in the hash (?q=...)
+var searchTimer = null; // Debounce timer for syncing the search box into the hash
 
 function buildHash(view, sort, cc, month, page, q) {
     return '#/' + view + '/' + sort + '/' + (cc || 'all') + '/' +
@@ -130,17 +131,17 @@ function switchView(view) {
 
 function flagClick(cc, ev) {
     if (ev) ev.stopPropagation();
-    location.hash = buildHash('country', currentSort, cc, currentMonth, 1);
+    var q = $('searchBar').value.trim();
+    location.hash = buildHash('country', currentSort, cc, currentMonth, 1, q);
 }
 
 function goBack() {
+    var q = $('searchBar').value.trim();
     if (enteredFromState) {
-        // Exit country-detail back to the view we came from
-        location.hash = buildHash(enteredFromState.view, enteredFromState.sort, enteredFromState.country || 'all', enteredFromState.month, 1);
+        location.hash = buildHash(enteredFromState.view, enteredFromState.sort, enteredFromState.country || 'all', enteredFromState.month, 1, q);
         enteredFromState = null;
     } else {
-        // Fallback: go to country list if no tracking state
-        location.hash = buildHash('country', 'points', 'all', -1, 1);
+        location.hash = buildHash('country', 'points', 'all', -1, 1, q);
     }
 }
 
@@ -167,4 +168,24 @@ function onControlChange() {
     else location.hash = target;
 }
 
-function onSearchInput() { render(); }
+// Typing re-renders immediately, then (once typing pauses) rewrites the CURRENT
+// history entry via replaceState so ?q= stays truthful. replaceState does not
+// fire hashchange, so this neither re-renders nor pollutes the Back stack.
+function onSearchInput() {
+    currentPage = 1;
+    render();
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(syncSearchToHash, 350);
+}
+
+function syncSearchToHash() {
+    searchTimer = null;
+    currentQuery = $('searchBar').value.trim();
+    var target = currentHash(currentPage);
+    if (location.hash === target) return;
+    try {
+        history.replaceState(null, '', target);
+    } catch (e) {
+        location.hash = target; // fallback for file:// or restricted contexts
+    }
+}
