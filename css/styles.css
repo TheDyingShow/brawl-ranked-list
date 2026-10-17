@@ -26,6 +26,10 @@ body { background-color: #0a120c; color: #e0ece3; }
 }
 .flag-click { cursor: pointer; transition: transform 0.15s ease; }
 .flag-click:hover { transform: scale(1.2); }
+.flag-hero {
+    width: 48px; height: 32px;
+    min-width: 48px;
+}
 .filter-select {
     background-color: #0f1c13; border: 1px solid #030906; color: #e0ece3;
     font-size: 0.7rem; border-radius: 0.5rem; padding: 0.5rem 0.6rem; width: 100%;
