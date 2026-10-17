@@ -264,7 +264,7 @@ function renderCountryDetail() {
                 '<div class="flex flex-col items-center text-center space-y-2 mt-3">' +
                     '<img class="flag-icon flag-hero" src="' + getFlagUrl(cc) + '" alt="' + esc(cc) + '">' +
                     '<span class="block font-black text-white text-lg truncate">' + esc(countryName(cc)) + '</span>' +
-                    '<div class="flex items-baseline justify-center gap-12 font-mono text-xs text-slate-400">' +
+                    '<div class="flex items-baseline justify-center gap-50 font-mono text-xs text-slate-400">' +
                         '<span>' + list.length + ' Players</span>' +
                         '<span class="text-slate-500">&middot;</span>' +
                         '<span class="text-emerald-400 font-bold">' + fmt(totalPts) + ' pts</span>' +
