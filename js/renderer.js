@@ -262,7 +262,7 @@ function renderCountryDetail() {
             '<div class="bg-[#101d14] border border-slate-950 rounded-xl px-4 py-4 mb-5">' +
                 '<span class="back-btn" onclick="goBack()">&larr; Click to go back</span>' +
                 '<div class="flex flex-col items-center text-center space-y-2 mt-3">' +
-                    '<img class="flag-icon flag-hero" src="' + getFlagUrl(cc) + '" alt="' + esc(cc) + '">' +
+                    '<img class="flag-icon flag-hero" src="' + getFlagUrl(cc, 160) + '" alt="' + esc(cc) + '">' +
                     '<span class="block font-black text-white text-lg truncate">' + esc(countryName(cc)) + '</span>' +
                     '<div class="flex items-baseline justify-center gap-50 font-mono text-xs text-slate-400">' +
                         '<span>' + list.length + ' Players</span>' +
@@ -308,7 +308,7 @@ function showPlayer(encodedTag) {
     var hasC = p.country && p.country !== 'XX';
     $('dFlag').classList.toggle('hidden-el', !hasC);
     $('dFlagPh').classList.toggle('hidden-el', !!hasC);
-    if (hasC) $('dFlag').src = getFlagUrl(p.country);
+    if (hasC) $('dFlag').src = getFlagUrl(p.country, 160);
     
     $('dName').textContent = p.name;
     $('dName').textContent = p.name;
