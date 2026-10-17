@@ -46,7 +46,7 @@ var COUNTRY_NAMES = {
 };
 
 // ============================= MISC CONSTANTS =============================
-var FLAG_CDN = 'https://flagcdn.com/w40/';
+var FLAG_CDN = 'https://flagcdn.com/';
 var RECORDS_PER_PAGE = 50;
 var SORTS = { points:'Points', elo:'Elo', peak:'Best placement', activity:'Activity' };
 
