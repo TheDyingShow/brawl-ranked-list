@@ -259,16 +259,16 @@ function renderCountryDetail() {
         $('countryDetailHeader').classList.remove('hidden');
         $('countryRankingWrap').classList.remove('hidden');
         $('countryDetailHeader').innerHTML =
-            '<div class="bg-[#101d14] border border-slate-950 rounded-xl px-4 py-3 mb-5 flex items-center gap-4">' +
+            '<div class="bg-[#101d14] border border-slate-950 rounded-xl px-4 py-4 mb-5">' +
                 '<span class="back-btn" onclick="goBack()">&larr; Click to go back</span>' +
-                '<img class="flag-icon ml-4" src="' + getFlagUrl(cc) + '" alt="' + esc(cc) + '">' +
-                '<div class="flex-1 min-w-0">' +
-                    '<span class="block font-black text-white text-base truncate">' + esc(countryName(cc)) + '</span>' +
-                    '<span class="text-[10px] font-mono text-slate-500">' + list.length + ' total players</span>' +
-                '</div>' +
-                '<div class="text-right">' +
-                    '<div class="font-mono text-sm font-bold text-emerald-400">' + fmt(totalPts) + ' pts</div>' +
-                    '<div class="font-mono text-sm font-bold text-mastersGreen">' + fmt(totalElo) + ' elo</div>' +
+                '<div class="flex flex-col items-center text-center space-y-2 mt-3">' +
+                    '<img class="flag-icon flag-hero" src="' + getFlagUrl(cc) + '" alt="' + esc(cc) + '">' +
+                    '<span class="block font-black text-white text-lg truncate">' + esc(countryName(cc)) + '</span>' +
+                    '<div class="flex items-baseline justify-center gap-6 font-mono">' +
+                        '<span class="text-xs text-slate-400"><span class="font-bold text-white">' + list.length + '</span> Players</span>' +
+                        '<span class="text-sm font-bold text-emerald-400">' + fmt(totalPts) + ' pts</span>' +
+                        '<span class="text-sm font-bold text-mastersGreen">' + fmt(totalElo) + ' elo</span>' +
+                    '</div>' +
                 '</div>' +
             '</div>';
         
