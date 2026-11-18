@@ -120,7 +120,7 @@ function renderPlayerView() {
         if (currentSort === 'elo') {
             list = list.sort(function (a, b) { return (b.elo || 0) - (a.elo || 0); });
         } else {
-            list = list.sort(function (a, b) { return b.points - a.points; });
+            list = sortPlayerList(list);
         }
         var pg = paginate(list);
         $('viewTitle').textContent = 'Player Ranking — ' + monthLabel(currentMonth) +
@@ -262,7 +262,6 @@ function renderCountryDetail() {
         list = sortPlayerList(list);
         var totalPts = 0, totalElo = 0;
         list.forEach(function (p) { totalPts += p.points; totalElo += (p.elo || 0); });
-        var allOfCc = allPlayers.filter(function (p) { return p.country === cc; });
         $('countryViewTitle').textContent = countryName(cc) + ' — ' + monthLabel(currentMonth);
         $('countryTotalPlayers').textContent = list.length + ' Players';
         $('countryDetailHeader').classList.remove('hidden');
@@ -353,7 +352,7 @@ function showPlayer(encodedTag) {
         var place = (seasonPlacementMap[s.key] || {})[p.tag];
         var peakTxt = (place != null) ? ' <span class="text-amber-500">#' + place + '</span>' : '';
         var pts = (place != null && p.seasonPts && p.seasonPts[s.key]) ? p.seasonPts[s.key] : 0;
-        var ptsHtml = pts > 0 ? '<span class="text-emerald-400 font-bold">' + pts + ' pts</span>' : '';
+        var ptsHtml = pts > 0 ? '<span class="text-emerald-400 font-bold">+' + pts + '</span>' : '';
         hist += '<div class="season-row flex justify-between px-2 py-1 rounded cursor-pointer ' + (val !== '—' ? 'bg-[#09120b]' : '') + '" onclick="goToSeason(' + idx + ',\'' + tagParam(p.tag) + '\')">' +
             '<span class="text-slate-500">' + s.label + peakTxt + '</span><span class="flex items-baseline gap-2">' + ptsHtml + '<span class="' + cls + ' font-bold">' + val + '</span></span></div>';
     });
