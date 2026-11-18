@@ -1,12 +1,12 @@
-body { background-color: #0a120c; color: #e0ece3; }
+body { background-color: #0b0b0e; color: #ededf0; }
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #0a120c; }
-::-webkit-scrollbar-thumb { background: #2f4d3a; border-radius: 4px; }
-.player-row { background-color: #101d14; border-bottom: 1px solid #1d3326; transition: all 0.15s ease; }
-.player-row:hover { background-color: #15231a; border-color: #2f4d3a; }
+::-webkit-scrollbar-track { background: #0b0b0e; }
+::-webkit-scrollbar-thumb { background: #33343c; border-radius: 4px; }
+.player-row { background-color: #15151a; border-bottom: 1px solid #232329; transition: all 0.15s ease; }
+.player-row:hover { background-color: #1d1d23; border-color: #33343c; }
 .rank-badge { font-family: 'Geist Mono', monospace; font-weight: 700; font-size: 0.875rem; text-align: center; }
 .rank-1 { color: #fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.4); }
-.rank-2 { color: #9db3a4; }
+.rank-2 { color: #b3b8c2; }
 .rank-3 { color: #cd7f32; }
 .flag-icon {
     width: 32px;
@@ -31,21 +31,21 @@ body { background-color: #0a120c; color: #e0ece3; }
     min-width: 48px;
 }
 .filter-select {
-    background-color: #0f1c13; border: 1px solid #030906; color: #e0ece3;
+    background-color: #121217; border: 1px solid #08080a; color: #ededf0;
     font-size: 0.7rem; border-radius: 0.5rem; padding: 0.5rem 0.6rem; width: 100%;
 }
-.filter-select:focus { outline: none; border-color: #88cc00; }
+.filter-select:focus { outline: none; border-color: #ffd21e; }
 .country-btn { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-.country-btn:hover, .country-btn.open { border-color: #88cc00; }
+.country-btn:hover, .country-btn.open { border-color: #ffd21e; }
 .country-menu {
     position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
     margin-top: 0.25rem; max-height: 16rem; overflow-y: auto; overflow-x: hidden;
-    background-color: #0f1c13; border: 1px solid #030906; border-radius: 0.5rem;
+    background-color: #121217; border: 1px solid #08080a; border-radius: 0.5rem;
     box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
-.country-option { display: flex; align-items: center; gap: 0.55rem; width: 100%; text-align: left; padding: 0.45rem 0.6rem; font-size: 0.7rem; color: #e0ece3; }
-.country-option:hover { background-color: #18291d; }
-.country-option.active { background-color: #1a3122; }
+.country-option { display: flex; align-items: center; gap: 0.55rem; width: 100%; text-align: left; padding: 0.45rem 0.6rem; font-size: 0.7rem; color: #ededf0; }
+.country-option:hover { background-color: #1b1b21; }
+.country-option.active { background-color: #2b2344; }
 .country-stats {
     display: flex;
     align-items: baseline;
@@ -55,20 +55,20 @@ body { background-color: #0a120c; color: #e0ece3; }
 #playerDrawer { transition: transform 0.3s ease; transform: translateX(100%); }
 #playerDrawer.open { transform: translateX(0); }
 .stat-line { display: flex; justify-content: space-between; align-items: baseline; }
-.elo-plus { color: #34d399; }
+.elo-plus { color: #c084fc; }
 .elo-minus { color: #f87171; }
 .dropdown-menu {
     position: absolute; right: 0; top: 100%; z-index: 100;
-    min-width: 180px; background-color: #0f1c13; border: 1px solid #030906; border-radius: 0.5rem;
+    min-width: 180px; background-color: #121217; border: 1px solid #08080a; border-radius: 0.5rem;
     box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin-top: 0.25rem;
 }
-.dropdown-item { display: block; width: 100%; text-align: left; padding: 0.6rem 1rem; font-size: 0.8rem; color: #e0ece3; cursor: pointer; }
-.dropdown-item:hover { background-color: #18291d; }
+.dropdown-item { display: block; width: 100%; text-align: left; padding: 0.6rem 1rem; font-size: 0.8rem; color: #ededf0; cursor: pointer; }
+.dropdown-item:hover { background-color: #1b1b21; }
 .offline-pill { font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900;
     padding: 2px 6px; border-radius: 4px; background-color: #2b2020; color: #f87171; margin-right: 5px; vertical-align: 2px; }
-.back-btn { font-size: 0.75rem; font-weight: 700; color: #88cc00; cursor: pointer;
+.back-btn { font-size: 0.75rem; font-weight: 700; color: #ffd21e; cursor: pointer;
     display: inline-flex; align-items: center; gap: 0.4rem; }
-.back-btn:hover { color: #ccff66; }
+.back-btn:hover { color: #ffe066; }
 @media (min-width: 768px) {
     .content-area { margin-right: 24rem; }
 }
@@ -80,13 +80,13 @@ select, option {
     font-family: 'Geist', 'ui-sans-serif', 'system-ui', sans-serif;
 }
 
-/* Request 4: drawer gets a distinct green scrollbar */
+/* Request 4: drawer gets a distinct yellow scrollbar */
 #playerDrawer::-webkit-scrollbar { width: 10px; }
-#playerDrawer::-webkit-scrollbar-track { background: #09120b; }
+#playerDrawer::-webkit-scrollbar-track { background: #0d0d11; }
 #playerDrawer::-webkit-scrollbar-thumb {
-    background: #88cc00;
+    background: #ffd21e;
     border-radius: 5px;
-    border: 2px solid #09120b;
+    border: 2px solid #0d0d11;
 }
 
 /* More button aligned with the sidebar filter dropdown arrows — Desktop only */
@@ -124,7 +124,7 @@ select, option {
 
 /* Mobile / Shrunk Desktop spacing (aggressive) */
 @media (max-width: 767px) {
-    
+
     /* Data row cells */
     .player-row > div:nth-child(1) { min-width: 40px !important; }
     .player-row > div:nth-child(2) { min-width: 64px !important; }
@@ -150,12 +150,12 @@ select, option {
 
 /* Season history rows: hover identical to player rows */
 .season-row { transition: all 0.15s ease; }
-.season-row:hover { background-color: #15231a; }
+.season-row:hover { background-color: #1d1d23; }
 
 /* Placeholder for players with no known country */
 .flag-placeholder {
     width: 32px; height: 22px; border-radius: 4px;
-    background: #1d3326; color: #558168;
+    background: #232329; color: #5b5b64;
     display: flex; align-items: center; justify-content: center;
     font-size: 11px; font-weight: 700;
     flex-shrink: 0; min-width: 32px;
@@ -175,10 +175,10 @@ select, option {
     text-align: center; border-radius: 9999px;
     font-family: 'Geist Mono', monospace; font-size: 0.72rem; font-weight: 700;
 }
-.pg-link { color: #8fa396; text-decoration: none; }
+.pg-link { color: #9a9aa3; text-decoration: none; }
 .pg-link:hover { color: #ffffff; }
-.pg-current { background: #aaff00; color: #0a120c; }
-.pg-dot { color: #558168; padding: 3px 2px; }
+.pg-current { background: #ffd21e; color: #0b0b0e; }
+.pg-dot { color: #5b5b64; padding: 3px 2px; }
 
 /* Extra breathing room between Prev/Next and the page numbers */
 #btnPrev, #btnPrevTop, #btnPrevC, #btnPrevCTop { margin-right: 5px; }
