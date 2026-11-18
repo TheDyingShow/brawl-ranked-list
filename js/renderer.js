@@ -1,5 +1,7 @@
 'use strict';
 
+var pendingHighlightTag = null;
+
 // ============================= RENDER =============================
 function render() {
     try {
@@ -77,30 +79,30 @@ function statValue(p) {
 function playerRowHtml(p, rank) {
     var rc = rank <= 3 ? 'rank-' + rank : '';
     var stCls = currentSort === 'elo' ? 'text-mastersGreen' : 'text-emerald-400';
-    
-    var html = '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer' + (currentSort === 'elo' && !isActive(p) ? ' player-row-offline' : '') + '" onclick="showPlayer(\'' + tagParam(p.tag) + '\')">' +
+
+    var html = '<div class="player-row grid grid-cols-12 gap-3 px-4 py-3 items-center cursor-pointer' + (currentSort === 'elo' && !isActive(p) ? ' player-row-offline' : '') + '" data-tag="' + esc(p.tag) + '" onclick="showPlayer(\'' + tagParam(p.tag) + '\')">' +
         '<div class="col-span-1 rank-badge ' + rc + '">' + rank + '</div>';
-    
+
     // Flag column
     html += '<div class="col-span-1 flex justify-start">' +
         (p.country && p.country !== 'XX'
             ? '<img class="flag-icon flag-click" src="' + getFlagUrl(p.country) + '" alt="' + esc(p.country) + '" title="' + esc(countryName(p.country)) + '" onclick="flagClick(\'' + p.country + '\', event)">'
             : '<div class="flag-placeholder" title="Unknown country">?</div>') +
     '</div>';
-    
+
     // Player name
     html += '<div class="col-span-4 min-w-0"><span class="font-bold text-white text-sm truncate block">' + esc(p.name) + '</span>' +
         '<span class="text-[10px] font-mono text-slate-600">' + esc(p.tag) + '</span></div>';
-    
+
     // Peak column - HIDE it when sorting by peak (shown in main stat column instead)
     if (currentSort !== 'peak') {
         html += '<div class="col-span-2 text-right font-mono text-xs text-amber-500 font-bold">' + ((p.peak != null && p.peak > 0) ? '#' + p.peak : '-') + '</div>';
     }
-    
+
     // Main stat column
     var statSpan = currentSort === 'peak' ? 'col-span-6' : 'col-span-4';
     html += '<div class="' + statSpan + ' text-right font-mono text-sm font-bold ' + stCls + '">' + statValue(p) + '</div>';
-    
+
     html += '</div>';
     return html;
 }
@@ -118,7 +120,7 @@ function renderPlayerView() {
         if (currentSort === 'elo') {
             list = list.sort(function (a, b) { return (b.elo || 0) - (a.elo || 0); });
         } else {
-            list = sortPlayerList(list);
+            list = list.sort(function (a, b) { return b.points - a.points; });
         }
         var pg = paginate(list);
         $('viewTitle').textContent = 'Player Ranking — ' + monthLabel(currentMonth) +
@@ -138,6 +140,13 @@ function renderPlayerView() {
         pg.slice.forEach(function (p, i) { html += playerRowHtml(p, (currentPage - 1) * RECORDS_PER_PAGE + i + 1); });
         $('leaderboard').innerHTML = html || emptyRow('No players found');
         setPager('btnPrev', 'pageIndicator', 'btnNext', pg.pages);
+
+        // Jumped here from a player's season history? Locate and flash the row.
+        if (pendingHighlightTag) {
+            var ht = pendingHighlightTag;
+            pendingHighlightTag = null;
+            setTimeout(function () { highlightRow(ht); }, 60);
+        }
     } catch (err) {
         console.error('renderPlayerView error:', err);
     }
@@ -214,7 +223,7 @@ function renderCountryList() {
         $('countryRankingWrap').classList.remove('hidden');
         $('countryPagination').classList.remove('hidden');
         $('countryRankingList').classList.remove('cr-peak-mode');
-        
+
         var html = '<div class="cr-head-list grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
             '<div class="col-span-1 text-center">#</div>' +
             '<div class="col-span-5">Country</div>' +
@@ -222,7 +231,7 @@ function renderCountryList() {
             '<div class="col-span-2 text-right">Points</div>' +
             '<div class="col-span-2 text-right">Elo</div>' +
         '</div>';
-        
+
         pg.slice.forEach(function (c, i) {
             var rank = (currentPage - 1) * RECORDS_PER_PAGE + i + 1;
             var rc = rank <= 3 ? 'rank-' + rank : '';
@@ -273,11 +282,11 @@ function renderCountryDetail() {
                     '</div>' +
                 '</div>' +
             '</div>';
-        
+
         var mainStatLabel = currentSort === 'elo' ? 'Elo' : (currentSort === 'activity' ? 'Last Activity' : (currentSort === 'peak' ? 'Peak' : 'Points'));
         var hasPeakColumn = currentSort !== 'peak';
         $('countryRankingList').classList.toggle('cr-peak-mode', !hasPeakColumn);
-        
+
         $('countryRankingList').innerHTML =
             '<div class="cr-head-detail grid grid-cols-12 gap-3 px-4 py-3 bg-[#09120b] border-b border-slate-950 text-[9px] uppercase tracking-wider font-bold text-slate-500">' +
                 '<div class="col-span-1 text-center">#</div>' +
@@ -286,7 +295,7 @@ function renderCountryDetail() {
                 (hasPeakColumn ? '<div class="col-span-2 text-right">Peak</div>' : '') +
                 '<div class="col-span-' + (hasPeakColumn ? '4' : '6') + ' text-right">' + mainStatLabel + '</div>' +
             '</div>';
-        
+
         var pg = paginate(list);
         var html = '';
         pg.slice.forEach(function (p, i) { html += playerRowHtml(p, (currentPage - 1) * RECORDS_PER_PAGE + i + 1); });
@@ -303,14 +312,13 @@ function showPlayer(encodedTag) {
     var tag = decodeURIComponent(encodedTag);
     var p = playerByTag[tag];
     if (!p) return;
-    
+
     // Flag placeholder handling
     var hasC = p.country && p.country !== 'XX';
     $('dFlag').classList.toggle('hidden-el', !hasC);
     $('dFlagPh').classList.toggle('hidden-el', !!hasC);
     if (hasC) $('dFlag').src = getFlagUrl(p.country, 160);
-    
-    $('dName').textContent = p.name;
+
     $('dName').textContent = p.name;
     $('dTag').textContent = p.tag;
     $('dCountry').textContent = (p.country && p.country !== 'XX') ? countryName(p.country) + ' (' + p.country + ')' : 'Country Not Found';
@@ -344,16 +352,34 @@ function showPlayer(encodedTag) {
         var cls = (d !== null && d !== undefined && d > 0) ? 'elo-plus' : ((d < 0) ? 'elo-minus' : 'text-slate-600');
         var place = (seasonPlacementMap[s.key] || {})[p.tag];
         var peakTxt = (place != null) ? ' <span class="text-amber-500">#' + place + '</span>' : '';
-        hist += '<div class="season-row flex justify-between px-2 py-1 rounded cursor-pointer ' + (val !== '—' ? 'bg-[#09120b]' : '') + '" onclick="goToSeason(' + idx + ')">' +
-            '<span class="text-slate-500">' + s.label + peakTxt + '</span><span class="' + cls + ' font-bold">' + val + '</span></div>';
+        var pts = (place != null && p.seasonPts && p.seasonPts[s.key]) ? p.seasonPts[s.key] : 0;
+        var ptsHtml = pts > 0 ? '<span class="text-emerald-400 font-bold">' + pts + ' pts</span>' : '';
+        hist += '<div class="season-row flex justify-between px-2 py-1 rounded cursor-pointer ' + (val !== '—' ? 'bg-[#09120b]' : '') + '" onclick="goToSeason(' + idx + ',\'' + tagParam(p.tag) + '\')">' +
+            '<span class="text-slate-500">' + s.label + peakTxt + '</span><span class="flex items-baseline gap-2">' + ptsHtml + '<span class="' + cls + ' font-bold">' + val + '</span></span></div>';
     });
     if (hist === '') hist = '<div class="text-center text-slate-600 text-xs py-4">No season history available</div>';
     $('dHistory').innerHTML = hist;
     $('playerDrawer').classList.add('open');
 }
 
-function goToSeason(idx) {
-    location.hash = buildHash('player', 'points', 'all', idx, 1);
+function goToSeason(idx, encodedTag) {
+    var tag = encodedTag ? decodeURIComponent(encodedTag) : '';
+    var page = 1;
+    if (tag) {
+        var place = (seasonPlacementMap[SEASONS[idx].key] || {})[tag];
+        if (place != null) page = Math.ceil(place / RECORDS_PER_PAGE);
+    }
+    pendingHighlightTag = tag;
+    location.hash = buildHash('player', 'points', 'all', idx, page);
+}
+
+// Locate a player row in the current view and flash it briefly
+function highlightRow(tag) {
+    var row = document.querySelector('#leaderboard .player-row[data-tag="' + tag + '"]');
+    if (!row) return;
+    row.classList.add('row-highlight');
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(function () { row.classList.remove('row-highlight'); }, 1600);
 }
 
 function closeDrawer() { $('playerDrawer').classList.remove('open'); }
