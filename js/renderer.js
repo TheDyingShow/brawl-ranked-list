@@ -353,7 +353,9 @@ function showPlayer(encodedTag) {
         var peakTxt = (place != null) ? ' <span class="text-amber-500">#' + place + '</span>' : '';
         var pts = (place != null && p.seasonPts && p.seasonPts[s.key]) ? p.seasonPts[s.key] : 0;
         var ptsHtml = pts > 0 ? '<span class="text-emerald-400 font-bold">+' + pts + '</span>' : '';
-        hist += '<div class="season-row flex justify-between px-2 py-1 rounded cursor-pointer ' + (val !== '—' ? 'bg-[#09120b]' : '') + '" onclick="goToSeason(' + idx + ',\'' + tagParam(p.tag) + '\')">' +
+        var attended = place != null;
+        hist += '<div class="season-row flex justify-between px-2 py-1 rounded' + (attended ? ' cursor-pointer' : '') + ' ' + (val !== '—' ? 'bg-[#09120b]' : '') + '"' +
+            (attended ? ' onclick="goToSeason(' + idx + ',\'' + tagParam(p.tag) + '\')"' : '') + '>' +
             '<span class="text-slate-500">' + s.label + peakTxt + '</span><span class="flex items-baseline gap-2">' + ptsHtml + '<span class="' + cls + ' font-bold">' + val + '</span></span></div>';
     });
     if (hist === '') hist = '<div class="text-center text-slate-600 text-xs py-4">No season history available</div>';
