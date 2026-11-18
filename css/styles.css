@@ -235,6 +235,17 @@ select, option {
 #playerHeader > div,
 #leaderboard .player-row > div { grid-column: auto !important; }
 
+/* Flash highlight when jumping to a player from their season history */
+.player-row.row-highlight {
+    background-color: #23232b;
+    border-color: #3d3d47;
+    animation: rowFlashOut 1.6s ease forwards;
+}
+@keyframes rowFlashOut {
+    0%, 35% { background-color: #23232b; }
+    100% { background-color: #15151a; }
+}
+
 .hidden-el { display: none; }
 
 #dFlagPh { width: 48px; height: 32px; font-size: 16px; }
