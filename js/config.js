@@ -9,16 +9,16 @@ var ACTIVE_SEASON_WINDOW = 12;
 
 // ============================= SEASONS =============================
 var SEASONS = [
-    { key: 'mars25',      label: 'March 2025' }, { key: 'avril25',     label: 'April 2025' },
-    { key: 'mai25',       label: 'May 2025' },   { key: 'juin25',      label: 'June 2025' },
-    { key: 'juillet25',   label: 'July 2025' },  { key: 'aout25',      label: 'August 2025' },
+    { key: 'mars25',      label: 'March 2025' }, { key: 'avril25',        label: 'April 2025' },
+    { key: 'mai25',       label: 'May 2025' },   { key: 'juin25',         label: 'June 2025' },
+    { key: 'juillet25',   label: 'July 2025' },  { key: 'aout25',         label: 'August 2025' },
     { key: 'septembre25', label: 'September 2025' }, { key: 'octobre25',  label: 'October 2025' },
-    { key: 'novembre25',  label: 'November 2025' }, { key: 'decembre25', label: 'December 2025' },
-    { key: 'janvier26',   label: 'January 2026' }, { key: 'fevrier26',   label: 'February 2026' },
-    { key: 'mars26',      label: 'March 2026' }, { key: 'avril26',     label: 'April 2026' },
-    { key: 'mai26',       label: 'May 2026' },   { key: 'juin26',      label: 'June 2026' },
-    { key: 'juillet26',   label: 'July 2026' },  { key: 'aout26',      label: 'August 2026' },
-    { key: 'septembre26', label: 'September 2026' }
+    { key: 'novembre25',  label: 'November 2025' }, { key: 'decembre25',  label: 'December 2025' },
+    { key: 'janvier26',   label: 'January 2026' }, { key: 'fevrier26',    label: 'February 2026' },
+    { key: 'mars26',      label: 'March 2026' }, { key: 'avril26',        label: 'April 2026' },
+    { key: 'mai26',       label: 'May 2026' },   { key: 'juin26',         label: 'June 2026' },
+    { key: 'juillet26',   label: 'July 2026' },  { key: 'aout26',         label: 'August 2026' },
+    { key: 'septembre26', label: 'September 2026' },  { key: 'octobre26', label: 'October 2026' }
 ];
 var LAST_SEASON_IDX = SEASONS.length - 1;
 
