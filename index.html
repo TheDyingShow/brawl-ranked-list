@@ -89,22 +89,30 @@
                 <div class="space-y-2">
                     <p>Points &mdash; how the season table is scored.</p>
                     <p>
-                        Each month a player reaches the Top 500, they earn points by placement:
-                        Top 10 = 15, Top 30 = 10, Top 50 = 7, Top 100 = 4, Top 500 = 1.
-                        A player's total is the sum of these rewards across all seasons
-                        (March 2025 to October 2026). Points never decrease.
+                        If a player ends the season with the Pro rank title in Top 500, they earn points by placement:
+                        
+                        Top 10 = 15 points
+                        Top 30 = 10 points
+                        Top 50 = 7 points
+                        Top 100 = 4 points
+                        Top 500 = 1 points
+                        
+                        A player's total is the sum of their points across all seasons (March 2025 to October 2026).
                     </p>
                 </div>
                 <div class="space-y-2">
                     <p>Elo &mdash; a skill rating that rises and falls.</p>
                     <p>
                         Each season, every player's result is compared to what was expected
-                        from the pre-season ratings of all attendees (Bradley&ndash;Terry model):
+                        from the pre-season ratings of all players:
+                        
                         delta = K &times; (S &minus; E), where E is the expected share and
                         S = (1 &minus; (placement &minus; 1) / 500)&sup2; is the actual share, weighted toward
-                        top finishes. K depends on rating certainty: new and returning players
+                        top finishes.
+                        
+                        K depends on rating certainty. New and returning players
                         move fast (up to 240) while established players move slowly (60), and
-                        small fields multiply every placement (up to 3&times;). Attendees always gain
+                        small fields multiply every placement (up to 3&times;). Players always gain
                         at least +8 &times; scarcity. Missing a season costs &minus;20, plus 5% of the
                         rating above 1500, after two career grace misses.
                     </p>
