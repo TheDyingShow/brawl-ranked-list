@@ -85,31 +85,29 @@
             </div>
 
             <!-- Rating systems explainer -->
-            <div class="mt-3 pt-2 border-t border-slate-950 space-y-2 text-left" style="font-family: inherit;">
-                <div class="text-[10px] leading-relaxed">
-                    <span class="font-bold text-emerald-400 uppercase tracking-wider">Points</span>
-                    <span class="text-slate-500"> &mdash; how the season table is scored.</span>
-                    <span class="text-slate-400">
+            <div class="mt-3 pt-2 border-t border-slate-950 space-y-3 text-left font-mono">
+                <div class="space-y-2">
+                    <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider leading-loose">Points &mdash; how the season table is scored.</p>
+                    <p class="text-[10px] text-emerald-400 leading-loose">
                         Each month a player reaches the Top 500, they earn points by placement:
                         Top 10 = 15, Top 30 = 10, Top 50 = 7, Top 100 = 4, Top 500 = 1.
                         A player's total is the sum of these rewards across all seasons
                         (March 2025 to October 2026). Points never decrease.
-                    </span>
+                    </p>
                 </div>
-                <div class="text-[10px] leading-relaxed">
-                    <span class="font-bold text-mastersGreen uppercase tracking-wider">Elo</span>
-                    <span class="text-slate-500"> &mdash; a skill rating that rises and falls.</span>
-                    <span class="text-slate-400">
+                <div class="space-y-2">
+                    <p class="text-[10px] font-bold text-mastersGreen uppercase tracking-wider leading-loose">Elo &mdash; a skill rating that rises and falls.</p>
+                    <p class="text-[10px] text-mastersGreen leading-loose">
                         Each season, every player's result is compared to what was expected
-                        from the pre-season ratings of all players (Bradley&ndash;Terry model):
+                        from the pre-season ratings of all attendees (Bradley&ndash;Terry model):
                         delta = K &times; (S &minus; E), where E is the expected share and
                         S = (1 &minus; (placement &minus; 1) / 500)&sup2; is the actual share, weighted toward
                         top finishes. K depends on rating certainty: new and returning players
                         move fast (up to 240) while established players move slowly (60), and
-                        small fields multiply every placement (up to 3&times;). Players always gain
+                        small fields multiply every placement (up to 3&times;). Attendees always gain
                         at least +8 &times; scarcity. Missing a season costs &minus;20, plus 5% of the
                         rating above 1500, after two career grace misses.
-                    </span>
+                    </p>
                 </div>
             </div>
         </div>
