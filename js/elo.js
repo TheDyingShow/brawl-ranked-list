@@ -101,8 +101,11 @@ function computeElo() {
             var kMult = Math.min(K_RD_MULT_MAX, (rd[tag] || RD_MIN) / RD_MIN);
             var kEff = K_BASE * kMult * bonus;
 
-            // Top-heavy actual share: #1 -> 1.0, #85 -> ~0.69, #500 -> ~0
-            var S = Math.pow(1 - (p.placement - 1) / SCARCITY_REF_FIELD, S_SHAPING);
+            // Top-heavy actual share, measured against the real field:
+            // beat the fraction of humans you actually beat. Sub-500
+            // seasons no longer hand out phantom placements, and the
+            // scarcity bonus prices the harder qualification instead.
+            var S = Math.pow(1 - (p.placement - 1) / effField, S_SHAPING);
             var E = Math.pow(10, ratings[tag] / 400) / denom;
 
             var delta = kEff * (S - E);
